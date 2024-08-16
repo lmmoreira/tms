@@ -1,0 +1,52 @@
+services:
+  tms-database:
+    image: postgres:latest
+    container_name: tms-database
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres' ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: tms
+      POSTGRES_PASSWORD: tms
+      POSTGRES_DB: tms
+    ports:
+      - "5432:5432"
+    volumes:
+      - tms-database:/var/lib/postgresql/data
+  tms-broker:
+    image: bitnami/rabbitmq:latest
+    container_name: tms-broker
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./infra/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+    environment:
+      RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS: "true"
+      RABBITMQ_LOAD_DEFINITIONS: "true"
+      RABBITMQ_DEFINITIONS_FILE: /etc/rabbitmq/definitions.json
+  tms-flyway:
+    image: flyway/flyway:latest
+    container_name: tms-flyway
+    command: -locations=filesystem:/flyway/sql -connectRetries=60 migrate
+    volumes:
+      - ./infra/database/migration:/flyway/sql
+    depends_on:
+      - tms-database
+    environment:
+      - FLYWAY_USER=tms
+      - FLYWAY_PASSWORD=tms
+      - FLYWAY_URL=jdbc:postgresql://tms-database:5432/tms
+      - FLYWAY_SCHEMAS=flyway
+volumes:
+  tms-database:
+networks:
+  default:
+    name: tms-network
