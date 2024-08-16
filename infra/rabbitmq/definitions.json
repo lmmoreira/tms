@@ -1,0 +1,58 @@
+{
+  "rabbit_version": "3.8.9",
+  "users": [
+    {
+      "name": "tms",
+      "password_hash": "7Kznx2r9FE8BQ3CJ2NBt5TymqkC5iD5FFkIwrDv59WhrtLd3",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": [
+        "administrator"
+      ],
+      "limits": {}
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "tms",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "queues": [
+    {
+      "name": "your_queue",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "your_exchange",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "your_exchange",
+      "vhost": "/",
+      "destination": "your_queue",
+      "destination_type": "queue",
+      "routing_key": "your_routing_key",
+      "arguments": {}
+    }
+  ]
+}
