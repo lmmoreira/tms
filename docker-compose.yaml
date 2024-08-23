@@ -3,7 +3,10 @@ services:
     image: nginx:latest
     container_name: tms-nginx
     depends_on:
-      - tms-keycloak
+      tms-keycloak:
+        condition: service_healthy
+      tms-keycloak-oauth2-proxy:
+        condition: service_started
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -66,7 +69,6 @@ services:
     image: quay.io/oauth2-proxy/oauth2-proxy:latest
     container_name: tms-keycloak-oauth2-proxy
     command: --config /oauth2-proxy.cfg
-    #network_mode: host
     ports:
       - 4180:4180
     volumes:
