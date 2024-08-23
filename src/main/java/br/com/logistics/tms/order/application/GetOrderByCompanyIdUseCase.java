@@ -7,8 +7,8 @@ import java.util.Set;
 public class GetOrderByCompanyIdUseCase {
 
     public Output execute(final Input input) {
-        final Set<Order> orders = Set.of(new Order(1L, "external_1", Instant.now()),
-            new Order(2L, "external_2", Instant.now()));
+        final Set<Order> orders = Set.of(new Order(1L, false, "external_1", Instant.now(), Instant.now()),
+            new Order(2L, false,"external_2", Instant.now(), Instant.now()));
         return new Output(orders);
     }
 

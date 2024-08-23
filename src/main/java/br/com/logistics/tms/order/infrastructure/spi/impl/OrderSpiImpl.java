@@ -18,7 +18,7 @@ public class OrderSpiImpl implements OrderSpi {
     public Set<OrderDTO> getOrderByCompanyId(Long companyId) {
         return getOrderByCompanyIdUseCase.execute(new GetOrderByCompanyIdUseCase.Input(companyId)).order()
             .stream()
-            .map(order -> new OrderDTO(order.id(), order.externalId(), order.date()))
+            .map(order -> new OrderDTO(order.id(), order.archived(), order.externalId(), order.createdAt(), order.updatedAt() ))
             .collect(Collectors.toSet());
     }
 }

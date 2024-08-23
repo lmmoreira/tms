@@ -1,0 +1,99 @@
+{
+  "realm": "tms-realm",
+  "displayName": "TMS Keycloak Sign-In",
+  "displayNameHtml": "<h1 style=\"font-size: 40pt; font-weight: 400;\">TMS Keycloak HTML Sign-In</h1>",
+  "enabled": true,
+  "users": [
+    {
+      "username": "leonardo.moreira.sales",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Leonardo",
+      "lastName": "Machado Moreira",
+      "email": "leonardo.moreira.sales@tms.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "123456",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["company-sales"]
+    },
+    {
+      "username": "leonardo.moreira.backoffice",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Leonardo",
+      "lastName": "Machado Moreira",
+      "email": "leonardo.moreira.backoffice@tms.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "123456",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["company-sales"]
+    },
+    {
+      "username": "leonardo.moreira.full",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Leonardo",
+      "lastName": "Machado Moreira",
+      "email": "leonardo.moreira.full@tms.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "123456",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["company-sales", "company-backoffice"]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "backend-tms-client",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "secret-key",
+      "redirectUris": [
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [],
+      "directAccessGrantsEnabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect"
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "company-backoffice",
+        "description": "User role responsible to keep company data updated"
+      },
+      {
+        "name": "company-sales",
+        "description": "User role responsible to see order data of a company"
+      }
+    ]
+  },
+  "protocolMappers": [
+    {
+      "name": "username",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usermodel-property-mapper",
+      "consentRequired": false,
+      "config": {
+        "userinfo.token.claim": "true",
+        "user.attribute": "username",
+        "id.token.claim": "true",
+        "access.token.claim": "true",
+        "claim.name": "preferred_username",
+        "jsonType.label": "String"
+      }
+    }
+  ]
+}

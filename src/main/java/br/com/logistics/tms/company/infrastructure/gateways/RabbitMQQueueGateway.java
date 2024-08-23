@@ -5,7 +5,7 @@ import br.com.logistics.tms.commons.application.gateways.QueueGateway;
 public class RabbitMQQueueGateway implements QueueGateway {
 
     @Override
-    public void publish(String router, Object content) {
+    public void publish(String router, String routingKey, Object content) {
         System.out.println("Publishing to RabbitMQ router " + router + " content " + content);
     }
 }
