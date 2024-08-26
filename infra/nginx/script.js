@@ -1,7 +1,12 @@
-function hasCompanySalesRole(r) {
-    const obj = JSON.parse(Buffer.from(r.headersIn['authorization'].split('.')[1], 'base64').toString());
+function hasSalesRole(r) {
+    const authHeader = r.headersIn['authorization'];
+    if (!authHeader) {
+        return false;
+    }
+
+    const obj = JSON.parse(Buffer.from(authHeader.split('.')[1], 'base64').toString());
     const roles = obj.realm_access.roles || [];
-    return roles.includes("company-sales");
+    return roles.includes("sales");
 }
 
-export default {hasCompanySalesRole};
+export default {hasSalesRole};
