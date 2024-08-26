@@ -14,6 +14,7 @@ services:
       - "443:443"
     volumes:
       - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./infra/nginx/script.js:/etc/nginx/js/script.js
     networks:
       - tms-network
   tms-keycloak-database:
