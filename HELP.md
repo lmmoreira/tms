@@ -18,42 +18,12 @@
 * [`java:21`](https://sdkman.io/usage)
 * [`maven:3.9.7`](https://sdkman.io/sdks/#maven)
 
-## High Level
-
-```mermaid
-graph TD
-    Client((Client))
-    PostgreSQL[(Database)]
-    RabbitMQ[[RabbitMQ]]
-    
-    Client -->|Sends Request| NGINX
-    NGINX -->|Validated API Key| TMS
-    NGINX -->|Returns Response| Client
-
-    NGINX -->|Forward Bearer Token| OAuth2-Proxy
-    OAuth2-Proxy -->|Forward Bearer Token| Keycloak
-    Keycloak -->|Verify Token and Authenticate| OAuth2-Proxy
-    OAuth2-Proxy -->|Send Authentication Response| NGINX
-    NGINX -->|Forward Authenticated Request| TMS
-    
-    subgraph "TMS Modules"
-        TMS -->|Accesses| CompanyModule
-        TMS -->|Accesses| OrderModule
-    end
-
-    CompanyModule -->|domain-event| RabbitMQ
-    OrderModule -->|domain-event| RabbitMQ
-    CompanyModule -->|persistence| PostgreSQL
-    OrderModule -->|persistence| PostgreSQL
-```
 ## C4
+### Context
 ```mermaid
 C4Context
-title System Context diagram for TMS
-
 Person(marketplace, "Marketplace", "Shein, Shopee Amazon, etc.")
 Person(logistic-provider, "Logistic Provider", "Correios, Loggi, etc.")
-
 
 Enterprise_Boundary(edge, "Edge Boundary") {
     System(ngix, "NGIX", "NGIX Edge")
