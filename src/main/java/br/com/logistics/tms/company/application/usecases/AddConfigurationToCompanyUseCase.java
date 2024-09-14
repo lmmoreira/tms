@@ -11,11 +11,11 @@ public class AddConfigurationToCompanyUseCase {
     }
 
     public void execute(final Input input) {
-        System.out.println("Adding configuration to company " + input.companyId() + " configuration " + input.configurationId() + " value " + input.value());
+        System.out.println("Adding configuration to company " + input.id() + " configuration " + input.configurationId() + " value " + input.value());
         queueGateway.publish("add_configuration_to_company", "add_configuration_to_company_routing_key", input);
     }
 
-    public record Input(Long companyId, Long configurationId, String value) {
+    public record Input(String id, String configurationId, String value) {
 
     }
 

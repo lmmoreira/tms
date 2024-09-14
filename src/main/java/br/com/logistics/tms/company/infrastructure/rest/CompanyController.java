@@ -24,13 +24,13 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}")
-    public Object get(@PathVariable Long id) {
+    public Object get(@PathVariable String id) {
         return getCompanyByIdUseCase.execute(new GetCompanyByIdUseCase.Input(id));
     }
 
     @PostMapping(path = "/{id}/config/{configurationId}")
-    public ResponseEntity<Void> addConfigurationToCompany(@PathVariable Long id,
-        @PathVariable Long configurationId) {
+    public ResponseEntity<Void> addConfigurationToCompany(@PathVariable String id,
+        @PathVariable String configurationId) {
         addConfigurationToCompanyUseCase.execute(
             new AddConfigurationToCompanyUseCase.Input(id, configurationId, "valor"));
         return ResponseEntity.ok().build();

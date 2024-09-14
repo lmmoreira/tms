@@ -1,7 +1,7 @@
 CREATE TABLE shipment_order.shipment_order (
      id SERIAL,
      is_archived boolean default false,
-     company_id bigint NOT NULL REFERENCES company.company(id),
+     company_id UUID NOT NULL REFERENCES company.company(id),
      external_id VARCHAR(255) NOT NULL,
      created_at TIMESTAMP WITH TIME ZONE NOT NULL,
      updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
