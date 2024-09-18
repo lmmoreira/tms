@@ -27,4 +27,5 @@ SELECT ah.id,
        childCompany.name AS childName
 FROM ascendent_hierarchy ah
          LEFT JOIN company.company parentCompany ON ah.parent_id = parentCompany.id
-         LEFT JOIN company.company childCompany ON ah.child_id = childCompany.id;
+         LEFT JOIN company.company childCompany ON ah.child_id = childCompany.id
+ORDER BY (ah.parent_id = :companyId AND ah.child_id IS NULL) DESC;

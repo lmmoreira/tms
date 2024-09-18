@@ -5,6 +5,7 @@ import java.util.Set;
 
 public record Company(CompanyId companyId,
                       String name,
+                      Cnpj cnpj,
                       Set<Configuration> configurations,
                       Set<Company> parents,
                       Set<Company> children) {
@@ -15,11 +16,12 @@ public record Company(CompanyId companyId,
         }
     }
 
-    public static Company newCompany(String name,
-        Set<Configuration> configurations,
-        Set<Company> parents,
-        Set<Company> children) {
-        return new Company(null, name, configurations, parents, children);
+    public Company(CompanyId unique, String name, Cnpj cnpj) {
+        this(unique, name, cnpj, Set.of(), Set.of(), Set.of());
+    }
+
+    public static Company createCompany(final String name, final String cnpj) {
+        return new Company(CompanyId.unique(), name, new Cnpj(cnpj));
     }
 
 }

@@ -1,7 +1,7 @@
 package br.com.logistics.tms.company.domain;
 
-import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import br.com.logistics.tms.commons.domain.Id;
+import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import java.util.UUID;
 
 public record CompanyId(UUID value) {
@@ -18,6 +18,10 @@ public record CompanyId(UUID value) {
 
     public static CompanyId with(final String value) {
         return new CompanyId(Id.with(value));
+    }
+
+    public static CompanyId with(final UUID value) {
+        return new CompanyId(value);
     }
 
 }

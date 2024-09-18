@@ -1,6 +1,7 @@
 CREATE TABLE company.company (
      id UUID PRIMARY KEY,
-     name VARCHAR(255) NOT NULL
+     name VARCHAR(255) NOT NULL,
+     cnpj VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE company.relationship_configuration (

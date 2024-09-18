@@ -2,6 +2,7 @@ package br.com.logistics.tms.company.infrastructure.config;
 
 import br.com.logistics.tms.company.application.repositories.CompanyRepository;
 import br.com.logistics.tms.company.application.usecases.AddConfigurationToCompanyUseCase;
+import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;
 import br.com.logistics.tms.company.infrastructure.gateways.RabbitMQQueueGateway;
 import br.com.logistics.tms.order.infrastructure.spi.OrderSpi;
@@ -25,6 +26,11 @@ public class CompanyUseCaseConfig {
     @Bean
     public GetCompanyByIdUseCase getMarketplaceByIdUseCase() {
         return new GetCompanyByIdUseCase(orderSpi, companyRepository);
+    }
+
+    @Bean
+    public CreateCompanyUseCase createCompanyUseCase() {
+        return new CreateCompanyUseCase(companyRepository, rabbitMQQueueGateway);
     }
 
 }

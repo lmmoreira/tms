@@ -27,3 +27,4 @@ SELECT dh.id,
 FROM descendent_hierarchy dh
          LEFT JOIN company.company parentCompany ON dh.parent_id = parentCompany.id
          LEFT JOIN company.company childCompany ON dh.child_id = childCompany.id
+ORDER BY (dh.parent_id = :companyId AND dh.child_id IS NULL) DESC;

@@ -16,7 +16,12 @@ public record Hierarchy(
 ) {
 
     public Map<String, Object> getConfigurationValue() {
-        return new JsonToMapConverter().convertToEntityAttribute(configurationValue);
+        return new JsonToMapConverter().convertToEntityAttribute(this.configurationValue);
+    }
+
+    public Map<String, Map<String, Object>> getCompanyConfiguration() {
+        return Map.of(
+            this.configurationKey, getConfigurationValue());
     }
 
 }
