@@ -15,6 +15,11 @@ spring:
     port: ${RABBITMQ_PORT}
     username: ${RABBITMQ_USER}
     password: ${RABBITMQ_PASS}
+  neo4j:
+    uri: bolt://${DB_NEO4J_HOST}:${DB_NEO4J_PORT}
+    authentication:
+      username: ${DB_NEO4J_USER}
+      password: ${DB_NEO4J_PASS}
 
 management:
   endpoints:
@@ -24,3 +29,14 @@ management:
 
 server:
   shutdown: graceful
+
+tms-logging:
+  format: plain
+  path: tmp/logs/tms
+  file:
+    name: tms.v1
+    max-history: 100
+    total-size-cap: 3GB
+    max-size: 10MB
+  pattern:
+    rolling-file-name: ${tms-logging.path}/${tms-logging.file.name}-%d{yyyy-MM-dd}-%i

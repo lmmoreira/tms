@@ -15,7 +15,7 @@ public class OrderSpiImpl implements OrderSpi {
     GetOrderByCompanyIdUseCase getOrderByCompanyIdUseCase;
 
     @Override
-    public Set<OrderDTO> getOrderByCompanyId(Long companyId) {
+    public Set<OrderDTO> getOrderByCompanyId(String companyId) {
         return getOrderByCompanyIdUseCase.execute(new GetOrderByCompanyIdUseCase.Input(companyId)).order()
             .stream()
             .map(order -> new OrderDTO(order.id(), order.archived(), order.externalId(), order.createdAt(), order.updatedAt() ))

@@ -1,13 +1,13 @@
 package br.com.logistics.tms.commons.domain.exception;
 
-public class ValidationException extends RuntimeException {
+public class ValidationException extends DomainException {
 
     public ValidationException(String message) {
-        super(message, null, true, false);
+        super(message);
     }
 
     public ValidationException(String message, Throwable cause) {
-        super(message, cause, true, false);
+        super(message, cause);
     }
 
 }

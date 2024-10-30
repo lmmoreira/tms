@@ -1,4 +1,4 @@
-package br.com.logistics.tms.commons.infrastructure.jpa.entities;
+package br.com.logistics.tms.commons.infrastructure.json;
 
 public class JsonFormatException extends RuntimeException {
 

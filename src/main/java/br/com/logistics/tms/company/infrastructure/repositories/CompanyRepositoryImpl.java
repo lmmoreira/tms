@@ -1,20 +1,15 @@
 package br.com.logistics.tms.company.infrastructure.repositories;
 
-import br.com.logistics.tms.commons.domain.Id;
 import br.com.logistics.tms.company.application.repositories.CompanyRepository;
 import br.com.logistics.tms.company.domain.Cnpj;
 import br.com.logistics.tms.company.domain.Company;
 import br.com.logistics.tms.company.domain.CompanyId;
-import br.com.logistics.tms.company.domain.Configuration;
 import br.com.logistics.tms.company.infrastructure.jpa.entities.CompanyEntity;
+import br.com.logistics.tms.company.infrastructure.jpa.entities.RelationshipEntity;
 import br.com.logistics.tms.company.infrastructure.jpa.repositories.CompanyJpaRepository;
-import br.com.logistics.tms.company.infrastructure.jpa.repositories.RelationshipConfigurationJpaJpaRepository;
-import br.com.logistics.tms.company.infrastructure.jpa.repositories.projections.Hierarchy;
-import java.util.Map;
-import java.util.Objects;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,29 +19,100 @@ import org.springframework.transaction.annotation.Transactional;
 public class CompanyRepositoryImpl implements CompanyRepository {
 
     private final CompanyJpaRepository companyJpaRepository;
-    private final RelationshipConfigurationJpaJpaRepository relationshipConfigurationJpaRepository;
 
     @Override
+    @Transactional
     public Optional<Company> getCompanyById(CompanyId id) {
 
+        final String uuidShein = "b314b21e-df37-4d1b-ad66-8e26b9ac696c";
+        final String uuidShopee = "74e926dc-7b59-4f40-a089-4d4be853e56e";
+        final String uuidPerfume = "ca938fbf-f2b8-4b77-b913-78915d60449a";
+        final String uuidCorreio = "51022566-6986-46ff-bba5-d3ad20f59a0d";
+
+        CompanyEntity shein = null;
+        CompanyEntity shopee = null;
+        CompanyEntity perfime = null;
+        CompanyEntity correio = null;
+
+        if (companyJpaRepository.findById(uuidShein).isEmpty()) {
+            shein = CompanyEntity.builder().name("Shein").id(uuidShein).cnpj("54.713.528/0001-37")
+                .build();
+            companyJpaRepository.save(shein);
+        }
+
+        if (companyJpaRepository.findById(uuidShopee).isEmpty()) {
+            shopee = CompanyEntity.builder().name("Shopee").id(uuidShopee)
+                .cnpj("13.554.215/0001-04").build();
+            companyJpaRepository.save(shopee);
+        }
+
+        if (companyJpaRepository.findById(uuidPerfume).isEmpty()) {
+            perfime = CompanyEntity.builder().name("Perfume").id(uuidPerfume)
+                .cnpj("87.464.841/0001-38").build();
+            companyJpaRepository.save(perfime);
+        }
+
+        if (companyJpaRepository.findById(uuidCorreio).isEmpty()) {
+            correio = CompanyEntity.builder().name("Correio").id(uuidCorreio)
+                .cnpj("35.893.532/0001-80").build();
+            companyJpaRepository.save(correio);
+        }
+
+        CompanyEntity sheinBusca = companyJpaRepository.findById(uuidShein).orElse(null);
+        CompanyEntity shopeeBusca = companyJpaRepository.findById(uuidShopee).orElse(null);
+        CompanyEntity perfumeBusca = companyJpaRepository.findById(uuidPerfume).orElse(null);
+        CompanyEntity correioBUsca = companyJpaRepository.findById(uuidCorreio).orElse(null);
+
+        sheinBusca.setRelation(Set.of(RelationshipEntity.builder()
+            .created(LocalDate.now())
+            .child(perfumeBusca)
+            .numVolumes(10)
+            .cuttimes("leonzin")
+            .build()));
+
+        shopeeBusca.setRelation(Set.of(RelationshipEntity.builder()
+            .created(LocalDate.now())
+            .child(perfumeBusca)
+            .numVolumes(15)
+            .cuttimes("onnnnn")
+            .build()));
+
+        perfumeBusca.setRelation(Set.of(RelationshipEntity.builder()
+                .created(LocalDate.now())
+                .child(correioBUsca)
+                .numVolumes(15)
+                .cuttimes("08-10")
+                .source(sheinBusca.getName())
+                .build(),
+            RelationshipEntity.builder()
+                .created(LocalDate.now())
+                .child(correioBUsca)
+                .numVolumes(1)
+                .cuttimes("01-10")
+                .source(shopeeBusca.getName())
+                .build()));
+
+        /*companyJpaRepository.save(sheinBusca);
+        companyJpaRepository.save(shopeeBusca);
+        companyJpaRepository.save(perfumeBusca);
+        companyJpaRepository.save(correioBUsca);*/
+
+
+        //CompanyEntity shein = CompanyEntity.builder().name("Shein").companyId(UUID.randomUUID().toString()).cnpj("123").configurationValue(
+        //    Map.of("Config1", "ValueConfig1")).build();
+
+        //CompanyEntity shein = CompanyEntity.builder().name("Shein").companyId(UUID.randomUUID().toString()).cnpj("123").build();
+        //    Map.of("Config1", "ValueConfig1")).build();
+
+        //companyJpaRepository.save(shein);
 
 
 
-        relationshipConfigurationJpaRepository.findById(Id.with("09b6d001-a301-4b61-a951-d50659c5e54d"));
-        companyJpaRepository.findById(Id.with("5037d51b-d34b-4f99-ae4d-0d100155202c"));
+        //sheinBusca = companyJpaRepository.findById(companyId.value().toString()).orElse(null);
+        sheinBusca = companyJpaRepository.findCompanyWithRelations(uuidPerfume).orElse(null);
+        var parents = companyJpaRepository.findCompanyWithIncomingRelations(uuidPerfume);
 
-
-        final Set<Hierarchy> descendentHierarchy = relationshipConfigurationJpaRepository.findDescendentHierarchyById(id.value());
-        Hierarchy entryPoint =descendentHierarchy.stream().findFirst()
-            .orElseThrow(() -> new RuntimeException("No hierarchy found"));
-        
-        Company monster = this.getCompany(entryPoint, descendentHierarchy);
-
-   //     final Set<Hierarchy> ascendentHierarchy = relationshipConfigurationJpaRepository.findAscendentHierarchyById(3L);
-     //   Hierarchy entryPoint2 = ascendentHierarchy.stream().filter(it -> it.getParentId().equals(3L) && it.getChildId() == null).findFirst().get();
-      //  Company correio = this.getCompanyAsc(entryPoint2, ascendentHierarchy);
-
-        return Optional.ofNullable(monster);
+        return Optional.of(sheinBusca.toCompany());
 
     }
 
@@ -66,92 +132,6 @@ public class CompanyRepositoryImpl implements CompanyRepository {
         return null;
     }
 
-    private Company getCompany(Hierarchy entryPoint, Set<Hierarchy> descendentHierarchy) {
-        try {
-            final Map<String, Map<String, Object>> companyConfiguration = entryPoint.getCompanyConfiguration();
-
-            return
-                new Company(new CompanyId(entryPoint.parentId()), entryPoint.parentName(), null,
-                    companyConfiguration.keySet().stream().map(key -> {
-                        Map<String, Object> value = companyConfiguration.get(key);
-                        return new Configuration(key, value);
-                    }).collect(Collectors.toSet()), null, this.getCompanyChildren(entryPoint, descendentHierarchy));
-
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
-
-
-    private Set<Company> getCompanyChildren(Hierarchy entryPoint, Set<Hierarchy> descendentHierarchy) {
-        try {
-
-            Set<Hierarchy> childrenHierarchy = descendentHierarchy.stream().filter(it -> Objects.equals(
-                it.relationshipConfigurationParentId(), entryPoint.id())).collect(
-                Collectors.toSet());
-
-            Set<Company> children = childrenHierarchy.stream().map(child -> {
-
-                final Map<String, Map<String, Object>> childConfig = child.getCompanyConfiguration();
-
-                return new Company(new CompanyId(child.childId()),
-                    child.childName(), null,
-                    childConfig.keySet().stream().map(key -> {
-                        Map<String, Object> value = childConfig.get(key);
-                        return new Configuration(key, value);
-                    }).collect(Collectors.toSet()), null, getCompanyChildren(child,  descendentHierarchy));
-            }).collect(Collectors.toSet());
-            return children;
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
-    private Company getCompanyAsc(Hierarchy entryPoint, Set<Hierarchy> ascendentHierarchy) {
-        try {
-            final Map<String, Map<String, Object>> companyConfiguration = entryPoint.getCompanyConfiguration();
-
-            return
-                new Company(new CompanyId(entryPoint.parentId()), entryPoint.parentName(), null,
-                    companyConfiguration.keySet().stream().map(key -> {
-                        Map<String, Object> value = companyConfiguration.get(key);
-                        return new Configuration(key, value);
-                    }).collect(Collectors.toSet()), this.getCompanyParents(entryPoint, ascendentHierarchy), null);
-
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
-    private Set<Company> getCompanyParents(Hierarchy entryPoint, Set<Hierarchy> ascendentHierarchy) {
-        try {
-
-            Set<Hierarchy> parentHierarchy = ascendentHierarchy.stream().filter(it -> {
-                if (entryPoint.relationshipConfigurationParentId() == null) {
-                    return Objects.equals(it.childId(), entryPoint.parentId());
-                } else {
-                    return Objects.equals(
-                        it.id(), entryPoint.relationshipConfigurationParentId());
-                }
-            }).collect(
-                Collectors.toSet());
-
-            Set<Company> parents = parentHierarchy.stream().map(parent -> {
-
-                final Map<String, Map<String, Object>> parentConfig = parent.getCompanyConfiguration();
-
-                return new Company(new CompanyId(parent.parentId()),
-                    parent.parentName(), null,
-                    parentConfig.keySet().stream().map(key -> {
-                        Map<String, Object> value = parentConfig.get(key);
-                        return new Configuration(key, value);
-                    }).collect(Collectors.toSet()), getCompanyParents(parent,  ascendentHierarchy), null);
-            }).collect(Collectors.toSet());
-            return parents;
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
 }
+
+

@@ -4,7 +4,7 @@ import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import br.com.logistics.tms.company.application.usecases.AddConfigurationToCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;
-import br.com.logistics.tms.company.infrastructure.dto.CreateCompanyDTO;
+import br.com.logistics.tms.company.infrastructure.rest.dto.CreateCompanyDTO;
 import java.net.URI;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,9 +47,9 @@ public class CompanyController {
         try {
             final var output =
                 createCompanyUseCase.execute(new CreateCompanyUseCase.Input(createCompanyDTO.name(),
-                    createCompanyDTO.cnpj()));
+                    createCompanyDTO.cnpj(), createCompanyDTO.types()));
 
-            return ResponseEntity.created(URI.create("/companies/" + output.id())).body(output);
+            return ResponseEntity.created(URI.create("/companies/" + output.companyId())).body(output);
         } catch (ValidationException ex) {
             return ResponseEntity.unprocessableEntity().body(ex.getMessage());
         }

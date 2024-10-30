@@ -18,6 +18,9 @@
 * [`java:21`](https://sdkman.io/usage)
 * [`maven:3.9.7`](https://sdkman.io/sdks/#maven)
 
+### Documentation
+* [Mermaid](https://mermaid.js.org/intro/getting-started.html)
+
 ## C4
 ### Context
 ```mermaid

@@ -32,7 +32,7 @@ public class OrderController {
     }
 
     @GetMapping("/company/{id}")
-    public Set<OrderDTO> getByCompany(@PathVariable Long id) {
+    public Set<OrderDTO> getByCompany(@PathVariable String id) {
         return getOrderByCompanyIdUseCase.execute(new Input(id)).order()
             .stream()
             .map(order -> new OrderDTO(order.id(), order.archived(), order.externalId(), order.createdAt(), order.updatedAt()))

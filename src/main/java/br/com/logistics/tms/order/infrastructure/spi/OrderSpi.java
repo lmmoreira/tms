@@ -5,6 +5,6 @@ import java.util.Set;
 
 public interface OrderSpi {
 
-    Set<OrderDTO> getOrderByCompanyId(Long companyId);
+    Set<OrderDTO> getOrderByCompanyId(String companyId);
 
 }

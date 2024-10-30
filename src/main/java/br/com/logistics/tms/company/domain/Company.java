@@ -6,22 +6,34 @@ import java.util.Set;
 public record Company(CompanyId companyId,
                       String name,
                       Cnpj cnpj,
-                      Set<Configuration> configurations,
-                      Set<Company> parents,
-                      Set<Company> children) {
+                      Set<Type> types,
+                      Configuration configuration,
+                      Set<Relationship> outgoingPaths,
+                      Set<Relationship> incomingPaths) {
 
     public Company {
         if (companyId == null) {
             throw new ValidationException("Invalid companyId for Company");
         }
+
+        if (cnpj == null) {
+            throw new ValidationException("Invalid cnpj for Company");
+        }
+
+        if ((types == null) || (types.isEmpty())) {
+            throw new ValidationException("Invalid type for Company");
+        }
     }
 
-    public Company(CompanyId unique, String name, Cnpj cnpj) {
-        this(unique, name, cnpj, Set.of(), Set.of(), Set.of());
+    public static Company createCompany(final String name, final String cnpj, final Set<Type> types) {
+        return new Company(CompanyId.unique(), name, new Cnpj(cnpj), types, null, null,
+            null);
     }
 
-    public static Company createCompany(final String name, final String cnpj) {
-        return new Company(CompanyId.unique(), name, new Cnpj(cnpj));
+    public void addRelationship(Company to, Company source, Configuration configuration) {
+        final Relationship path = new Relationship(this, to, source, configuration);
+        this.outgoingPaths.add(path);
+        to.incomingPaths.add(path);
     }
 
 }

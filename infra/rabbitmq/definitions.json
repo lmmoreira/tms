@@ -27,18 +27,29 @@
   ],
   "queues": [
     {
-      "name": "your_queue",
+      "name": "integration.company.created",
       "vhost": "/",
       "durable": true,
       "auto_delete": false,
-      "arguments": {}
+      "arguments": {
+        "x-message-ttl": 86400000
+      }
+    },
+    {
+      "name": "integration.company.all",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 86400000
+      }
     }
   ],
   "exchanges": [
     {
-      "name": "your_exchange",
+      "name": "tms.events",
       "vhost": "/",
-      "type": "direct",
+      "type": "topic",
       "durable": true,
       "auto_delete": false,
       "internal": false,
@@ -47,11 +58,19 @@
   ],
   "bindings": [
     {
-      "source": "your_exchange",
+      "source": "tms.events",
       "vhost": "/",
-      "destination": "your_queue",
+      "destination": "integration.company.created",
       "destination_type": "queue",
-      "routing_key": "your_routing_key",
+      "routing_key": "integration.company.CompanyCreated",
+      "arguments": {}
+    },
+    {
+      "source": "tms.events",
+      "vhost": "/",
+      "destination": "integration.company.all",
+      "destination_type": "queue",
+      "routing_key": "integration.company.*",
       "arguments": {}
     }
   ]

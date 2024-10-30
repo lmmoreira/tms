@@ -2,44 +2,50 @@ package br.com.logistics.tms.company.infrastructure.jpa.entities;
 
 import br.com.logistics.tms.company.domain.Cnpj;
 import br.com.logistics.tms.company.domain.Company;
+import br.com.logistics.tms.company.domain.CompanyBuilder;
 import br.com.logistics.tms.company.domain.CompanyId;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import java.util.UUID;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import br.com.logistics.tms.company.domain.Type;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
-@Entity
-@Table(name = "company", schema = "company")
-@Data
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@NoArgsConstructor
+@Node("Company")
 @Builder
+@Data
 public class CompanyEntity {
 
     @Id
-    private UUID id;
+    private String id;
 
-    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "cnpj", nullable = false)
     private String cnpj;
+
+    private Set<String> types;
+
+    @Relationship(type = "PARENT_OF")
+    private Set<RelationshipEntity> relation;
 
     public static CompanyEntity of(final Company company) {
         return CompanyEntity.builder()
-            .id(company.companyId().value())
+            .id(company.companyId().value().toString())
             .name(company.name())
-            .cnpj(company.cnpj().value()).build();
+            .cnpj(company.cnpj().value())
+            .types(company.types().stream().map(Type::toString).collect(Collectors.toSet()))
+            .build();
     }
 
     public Company toCompany() {
-        return new Company(CompanyId.with(this.id), name, Cnpj.with(cnpj));
+        return CompanyBuilder.builder()
+            .companyId(CompanyId.with(this.id))
+            .name(this.name)
+            .cnpj(Cnpj.with(this.cnpj))
+            .types(this.types.stream().map(Type::with).collect(
+                    Collectors.toSet())).build();
     }
 
 }
