@@ -1,0 +1,35 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: "info"
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://tms-loki:3100/loki/api/v1/push
+    tenant_id: docker
+
+scrape_configs:
+  - job_name: generated-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: generated-logs
+          __path__: /var/log/tms/*.json
+      - targets:
+          - localhost
+        labels:
+          job: generated-logs
+          __path__: /var/log/nginx/access.log
+    pipeline_stages:
+      - json:
+          expressions:
+            http_method: "method"
+            http_status: "status"
+            application: "Application"
+      - labels:
+          http_method:
+          http_status:
+          application:

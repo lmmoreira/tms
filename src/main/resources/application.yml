@@ -29,13 +29,16 @@ management:
 
 server:
   shutdown: graceful
+  compression:
+    enabled: true
 
 tms-logging:
-  format: plain
-  path: tmp/logs/tms
+  format: json
+  path: tmp/logs/${spring.application.name}
   file:
-    name: tms.v1
-    max-history: 100
+    enabled: 'false'
+    name: ${spring.application.name}
+    max-history-days: 5
     total-size-cap: 3GB
     max-size: 10MB
   pattern:

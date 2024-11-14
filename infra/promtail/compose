@@ -1,0 +1,14 @@
+#  tms-promtail:
+#    image: grafana/promtail:latest
+#    container_name: tms-promtail
+#    ports:
+#      - "9080:9080"
+#    volumes:
+#      - ./tmp/logs/TMS:/var/log/tms
+#      - ./tmp/logs/NGINX:/var/log/nginx
+#      - ./infra/promtail/promtail-config.yaml:/etc/promtail/config.yaml
+#    command: -config.file=/etc/promtail/config.yaml
+#    depends_on:
+#      - tms-loki
+#    networks:
+#      - tms-network

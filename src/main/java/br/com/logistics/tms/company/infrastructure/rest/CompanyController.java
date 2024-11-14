@@ -6,16 +6,22 @@ import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;
 import br.com.logistics.tms.company.infrastructure.rest.dto.CreateCompanyDTO;
 import java.net.URI;
+import java.util.Map;
+import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "companies")
+@Slf4j
 public class CompanyController {
 
     private AddConfigurationToCompanyUseCase addConfigurationToCompanyUseCase;
@@ -32,6 +38,18 @@ public class CompanyController {
     @GetMapping("/{id}")
     public Object get(@PathVariable String id) {
         return getCompanyByIdUseCase.execute(new GetCompanyByIdUseCase.Input(id));
+    }
+
+    @GetMapping("/leo")
+    public Object getLeo(@RequestHeader Map<String, String> headers) {
+
+        MDC.put("module", "Company");
+        MDC.put("user", "Leonardo");
+        MDC.put("X-Request-ID",  headers.get("x-request-id"));
+
+        log.info("Leonardo Machado Moreira");
+
+        return "leo";
     }
 
     @PostMapping(path = "/{id}/config/{configurationId}")

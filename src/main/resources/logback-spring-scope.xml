@@ -3,7 +3,8 @@
     <springProperty scope="context" name="LOG_FILE" source="tms-logging.file.name"/>
     <springProperty scope="context" name="LOG_FILE_PATTERN" source="tms-logging.pattern.rolling-file-name"/>
     <springProperty scope="context" name="LOG_FILE_MAX_SIZE" source="tms-logging.file.max-size"/>
-    <springProperty scope="context" name="LOG_FILE_MAX_HISTORY" source="tms-logging.file.max-history"/>
+    <springProperty scope="context" name="LOG_FILE_MAX_HISTORY" source="tms-logging.file.max-history-days"/>
     <springProperty scope="context" name="LOG_FILE_SIZE_CAP" source="tms-logging.file.total-size-cap"/>
     <springProperty scope="context" name="LOG_FORMAT" source="tms-logging.format"/>
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name"/>
 </included>

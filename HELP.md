@@ -21,6 +21,21 @@
 ### Documentation
 * [Mermaid](https://mermaid.js.org/intro/getting-started.html)
 
+### Localhost Shortcuts
+
+* [Minio](http://127.0.0.1:9001/login) 
+  * tms-user - tms-password
+* [RabbitMQ](http://127.0.0.1:15672/)
+  * tms - bitnami
+* [Keycloak](http://127.0.0.0:8000/) 
+  * admin - password
+* [Loki](http://127.0.0.0:3100/ready)
+* [Grafana](http://127.0.0.0:3000/)
+  * admin - admin
+* [Promtail](http://127.0.0.1:9080/targets)
+* [Neo4J](http://localhost:7474/browser/)
+
+
 ## C4
 ### Context
 ```mermaid

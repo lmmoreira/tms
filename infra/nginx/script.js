@@ -9,4 +9,18 @@ function hasSalesRole(r) {
     return roles.includes("sales");
 }
 
-export default {hasSalesRole};
+function headers_json(r) {
+    return JSON.stringify(r.headersIn)
+}
+
+function body_json(r) {
+    var body  = r.requestText;
+
+    if (!body) {
+        return '{}';
+    }
+
+    return body;
+}
+
+export default {hasSalesRole, headers_json, body_json};
