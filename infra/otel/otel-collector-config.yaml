@@ -2,7 +2,7 @@ receivers:
   otlp:
     protocols:
       http:
-      grpc:
+      grpc: tms-otel-collector:4317
   filelog:
     include: ["/var/log/tms/*.json", "/var/log/nginx/access.log"]
     operators:
@@ -24,18 +24,8 @@ extensions:
   zpages:
 
 exporters:
-  debug:
-    verbosity: detailed
-  otlphttp/prometheus:
-    endpoint: http://tms-prometheus:9090/api/v1/otlp
-    tls:
-      insecure: true
-  prometheusremotewrite:
-    endpoint: http://http://tms-prometheus:9090/api/v1/otlp:9090/api/v1/write
-    tls:
-      insecure: true
-    resource_to_telemetry_conversion:
-      enabled: true
+  prometheus:
+    endpoint: "tms-prometheus:9090"
   loki:
     endpoint: "http://tms-loki:3100/loki/api/v1/push"
     default_labels_enabled:
@@ -48,7 +38,7 @@ service:
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [prometheusremotewrite, debug]
+      exporters: [prometheus]
     logs:
       receivers: [filelog]
       processors: [attributes]
