@@ -1,8 +1,8 @@
 receivers:
   otlp:
     protocols:
-      http:
-      grpc: tms-otel-collector:4317
+      grpc:
+        endpoint: 0.0.0.0:4317
   filelog:
     include: ["/var/log/tms/*.json", "/var/log/nginx/access.log"]
     operators:
@@ -25,7 +25,8 @@ extensions:
 
 exporters:
   prometheus:
-    endpoint: "tms-prometheus:9090"
+    endpoint: "0.0.0.0:8889"
+  debug:
   loki:
     endpoint: "http://tms-loki:3100/loki/api/v1/push"
     default_labels_enabled:
@@ -38,7 +39,7 @@ service:
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [prometheus]
+      exporters: [debug,prometheus]
     logs:
       receivers: [filelog]
       processors: [attributes]
