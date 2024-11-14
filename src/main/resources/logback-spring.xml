@@ -14,6 +14,11 @@
                 <appender-ref ref="ASYNC_FILE_JSON"/>
                 <appender-ref ref="ASYNC_STDOUT_JSON"/>
             </logger>
+
+            <logger level="debug" name="io.opentelemetry">
+                <appender-ref ref="ASYNC_FILE_JSON"/>
+                <appender-ref ref="ASYNC_STDOUT_JSON"/>
+            </logger>
         </then>
         <else>
             <root level="info">

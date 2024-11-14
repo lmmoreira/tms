@@ -2,7 +2,6 @@ receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: 0.0.0.0:4317
   filelog:
     include: ["/var/log/tms/*.json", "/var/log/nginx/access.log"]
     operators:
@@ -27,6 +26,7 @@ exporters:
   prometheus:
     endpoint: "0.0.0.0:8889"
   debug:
+    verbosity: detailed
   loki:
     endpoint: "http://tms-loki:3100/loki/api/v1/push"
     default_labels_enabled:
