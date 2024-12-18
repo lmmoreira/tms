@@ -10,12 +10,12 @@
                 <appender-ref ref="ASYNC_FILE_JSON"/>
                 <appender-ref ref="ASYNC_STDOUT_JSON"/>
             </root>
-            <logger level="debug" name="com.zaxxer.hikari">
+            <logger level="info" name="com.zaxxer.hikari">
                 <appender-ref ref="ASYNC_FILE_JSON"/>
                 <appender-ref ref="ASYNC_STDOUT_JSON"/>
             </logger>
 
-            <logger level="debug" name="io.opentelemetry">
+            <logger level="info" name="io.opentelemetry">
                 <appender-ref ref="ASYNC_FILE_JSON"/>
                 <appender-ref ref="ASYNC_STDOUT_JSON"/>
             </logger>

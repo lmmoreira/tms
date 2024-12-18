@@ -2,6 +2,9 @@ receivers:
   otlp:
     protocols:
       grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
   filelog:
     include: ["/var/log/tms/*.json", "/var/log/nginx/access.log"]
     operators:
@@ -25,6 +28,11 @@ extensions:
 exporters:
   prometheus:
     endpoint: "0.0.0.0:8889"
+    namespace: default
+  prometheusremotewrite:
+    endpoint: "http://prometheus:9090/api/v1/write"
+    tls:
+      insecure: true
   debug:
     verbosity: detailed
   loki:
