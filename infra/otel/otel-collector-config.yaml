@@ -5,6 +5,14 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+  rabbitmq:
+    endpoint: http://tms-broker:15672
+    username: tms-otel
+    password: bitnami
+    collection_interval: 10s
+  nginx:
+    endpoint: "http://tms-nginx/nginx_status"
+    collection_interval: 10s
   filelog:
     include: ["/var/log/tms/*.json", "/var/log/nginx/access.log"]
     operators:
@@ -26,11 +34,11 @@ extensions:
   zpages:
 
 exporters:
-  prometheus:
-    endpoint: "0.0.0.0:8889"
-    namespace: default
+  #prometheus:
+  #  endpoint: "0.0.0.0:8889"
+  #  namespace: default
   prometheusremotewrite:
-    endpoint: "http://prometheus:9090/api/v1/write"
+    endpoint: "http://tms-prometheus:9090/api/v1/write"
     tls:
       insecure: true
   debug:
@@ -45,9 +53,9 @@ service:
   extensions: [health_check, pprof, zpages]
   pipelines:
     metrics:
-      receivers: [otlp]
+      receivers: [otlp, rabbitmq, nginx]
       processors: [batch]
-      exporters: [debug,prometheus]
+      exporters: [debug, prometheusremotewrite]
     logs:
       receivers: [filelog]
       processors: [attributes]

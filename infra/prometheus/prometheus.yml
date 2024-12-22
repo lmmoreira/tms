@@ -2,9 +2,12 @@ global:
   scrape_interval: 10s
   evaluation_interval: 10s
 
-scrape_configs:
-  - job_name: 'otel-collector'
-    scrape_interval: 10s
-    static_configs:
-      - targets: ['tms-otel-collector-alias.127.0.0.1.nip.io:8889']
-      - targets: ['tms-otel-collector-alias.127.0.0.1.nip.io:8888']
+#scrape_configs:
+#  - job_name: 'otel-collector'
+#    scrape_interval: 10s
+#    static_configs:
+#      - targets: ['tms-otel-collector-alias.127.0.0.1.nip.io:8889']
+#  - job_name: 'rabbitmq'
+#    scrape_interval: 10s
+#    static_configs:
+#      - targets: ['host.docker.internal:15692']

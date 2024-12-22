@@ -9,6 +9,15 @@
         "administrator"
       ],
       "limits": {}
+    },
+    {
+      "name": "tms-otel",
+      "password_hash": "7Kznx2r9FE8BQ3CJ2NBt5TymqkC5iD5FFkIwrDv59WhrtLd3",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": [
+        "administrator"
+      ],
+      "limits": {}
     }
   ],
   "vhosts": [

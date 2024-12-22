@@ -13,5 +13,6 @@ DB_NEO4J_PORT=7687
 DB_NEO4J_USER=neo4j
 DB_NEO4J_PASS=tms
 
-SPRING_PROFILES_ACTIVE=dev
-OTEL_METRICS_EXPORTER=otlp
+JAVA_TOOL_OPTIONS=-javaagent:./opentelemetry/opentelemetry-javaagent.jar
+OTEL_JAVAAGENT_CONFIGURATION_FILE=./opentelemetry/dev.properties
+OTEL_SERVICE_NAME=TMS

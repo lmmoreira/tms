@@ -137,11 +137,13 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+      - "15692:15692"
     volumes:
       - ./infra/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
     environment:
       RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS: "true"
       RABBITMQ_LOAD_DEFINITIONS: "true"
+      RABBITMQ_PLUGINS: rabbitmq_management rabbitmq_prometheus
       RABBITMQ_DEFINITIONS_FILE: /etc/rabbitmq/definitions.json
     networks:
       - tms-network
@@ -202,10 +204,13 @@ services:
     image: prom/prometheus:latest
     command:
       - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-remote-write-receiver
     volumes:
       - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - tms-network
   tms-grafana:
