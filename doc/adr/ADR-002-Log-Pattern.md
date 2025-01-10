@@ -12,6 +12,8 @@ Evaluate the best framework for logging patterns between Logback and Log4j2. Slf
 
 Both frameworks are equally good, but Logback was chosen because Logback is the default logging framework in Spring Boot decreasing complexity.
 
+Logback interacts well with OpenTelemetry exporting MDC context to logs exporters with Experimental feature on OpenTelemetryAppender. 
+
 - Rolling logging is a must be.
 - Async logging is a must be in order to do not decrease performance on mount and unmount of virtual threads.
 - Log configuration should be straightforward and thoroughly externalized, utilizing both XML and application.yml files for comprehensive management. Is mandatory the files to become comprehensive and easy to maintain.
@@ -27,6 +29,8 @@ Both frameworks are equally good, but Logback was chosen because Logback is the 
 
 - Centralization of configuration.
 - Readability and maintainability of log configuration.
+- Standardization of log configuration with other OpenTelemetry exporters.
+- Easy interaction with OpenTelemetry Collector and Loki.
 
 ## Future
 
@@ -36,3 +40,4 @@ Both frameworks are equally good, but Logback was chosen because Logback is the 
 - https://faun.pub/java-23-springboot-3-3-4-logback-setup-part-3-c2ffe2d0a358
 - https://github.com/arafkarsh/ms-springboot-334-vanilla/
 - https://medium.com/javarevisited/effective-logging-strategies-for-java-microservices-081658ce92ac
+- https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/instrumentation/logback/logback-appender-1.0/library/README.md
