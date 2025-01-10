@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "orders")
+@Slf4j
 public class OrderController {
 
     @Autowired
@@ -23,11 +25,7 @@ public class OrderController {
 
     @GetMapping("/{id}")
     public OrderDTO get(@PathVariable Long id, @RequestHeader Map<String, String> headers) {
-
-        headers.forEach((key, value) -> {
-            System.out.printf("Header '%s' = %s%n", key, value);
-        });
-
+        log.info("Iai");
         return new OrderDTO(1L, false,"12345678909", Instant.now(), Instant.now());
     }
 

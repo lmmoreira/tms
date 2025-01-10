@@ -1,6 +1,6 @@
 package br.com.logistics.tms.commons.application.presenters;
 
-public interface Presenter<IN, OUT> {
+public interface Presenter<IN, OUT extends View> {
 
     OUT present(IN input);
 

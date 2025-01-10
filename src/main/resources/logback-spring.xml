@@ -3,29 +3,39 @@
     <include resource="logback-spring-scope.xml"/>
     <include resource="logback-spring-appenders-text.xml"/>
     <include resource="logback-spring-appenders-json.xml"/>
+    <include resource="logback-spring-appenders-otel.xml"/>
+
+    <appender name="OpenTelemetry" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+        <captureExperimentalAttributes>true</captureExperimentalAttributes>
+        <captureMdcAttributes>*</captureMdcAttributes>
+    </appender>
 
     <if condition='property("LOG_FORMAT").contains("json")'>
         <then>
-            <root level="INFO">
+            <root level="info">
+                <appender-ref ref="OpenTelemetry"/>
                 <appender-ref ref="ASYNC_FILE_JSON"/>
                 <appender-ref ref="ASYNC_STDOUT_JSON"/>
             </root>
             <logger level="info" name="com.zaxxer.hikari">
+                <appender-ref ref="OpenTelemetry"/>
                 <appender-ref ref="ASYNC_FILE_JSON"/>
                 <appender-ref ref="ASYNC_STDOUT_JSON"/>
             </logger>
-
             <logger level="info" name="io.opentelemetry">
+                <appender-ref ref="OpenTelemetry"/>
                 <appender-ref ref="ASYNC_FILE_JSON"/>
                 <appender-ref ref="ASYNC_STDOUT_JSON"/>
             </logger>
         </then>
         <else>
             <root level="info">
+                <appender-ref ref="OpenTelemetry"/>
                 <appender-ref ref="ASYNC_FILE_TEXT"/>
                 <appender-ref ref="ASYNC_STDOUT_TEXT"/>
             </root>
-            <logger level="debug" name="com.zaxxer.hikari">
+            <logger level="info" name="com.zaxxer.hikari">
+                <appender-ref ref="OpenTelemetry"/>
                 <appender-ref ref="ASYNC_FILE_TEXT"/>
                 <appender-ref ref="ASYNC_STDOUT_TEXT" />
             </logger>

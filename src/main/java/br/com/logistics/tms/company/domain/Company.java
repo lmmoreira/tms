@@ -16,6 +16,10 @@ public record Company(CompanyId companyId,
             throw new ValidationException("Invalid companyId for Company");
         }
 
+        if ((name == null) || (name.isBlank())) {
+            throw new ValidationException("Invalid name for Company");
+        }
+
         if (cnpj == null) {
             throw new ValidationException("Invalid cnpj for Company");
         }

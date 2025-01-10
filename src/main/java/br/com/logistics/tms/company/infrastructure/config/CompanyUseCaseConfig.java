@@ -6,6 +6,7 @@ import br.com.logistics.tms.company.application.usecases.AddConfigurationToCompa
 import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;
 import br.com.logistics.tms.company.domain.CompanyCreated;
+import br.com.logistics.tms.order.infrastructure.spi.OrderSpi;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +17,7 @@ public class CompanyUseCaseConfig {
 
     private final DomainEventQueueGateway<CompanyCreated> companyCreatedRabbitMQDomainEventQueueGateway;
     private final CompanyRepository companyRepository;
+    private final OrderSpi orderSpi;
 
     @Bean
     public AddConfigurationToCompanyUseCase addSellerToMarketplaceUseCase() {
@@ -30,7 +32,7 @@ public class CompanyUseCaseConfig {
     @Bean
     public CreateCompanyUseCase createCompanyUseCase() {
         return new CreateCompanyUseCase(companyRepository,
-            companyCreatedRabbitMQDomainEventQueueGateway);
+            companyCreatedRabbitMQDomainEventQueueGateway, orderSpi);
     }
 
 }

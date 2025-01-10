@@ -8,6 +8,7 @@ import br.com.logistics.tms.company.domain.Cnpj;
 import br.com.logistics.tms.company.domain.Company;
 import br.com.logistics.tms.company.domain.CompanyCreated;
 import br.com.logistics.tms.company.domain.Type;
+import br.com.logistics.tms.order.infrastructure.spi.OrderSpi;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,17 +17,21 @@ public class CreateCompanyUseCase extends
 
     private final CompanyRepository companyRepository;
     private final DomainEventQueueGateway<CompanyCreated> companyCreatedDomainEventQueueGateway;
+    private final OrderSpi orderSpi;
 
     public CreateCompanyUseCase(CompanyRepository companyRepository,
-        DomainEventQueueGateway<CompanyCreated> companyCreatedDomainEventQueueGateway) {
+        DomainEventQueueGateway<CompanyCreated> companyCreatedDomainEventQueueGateway, OrderSpi orderSpi) {
         this.companyRepository = companyRepository;
         this.companyCreatedDomainEventQueueGateway = companyCreatedDomainEventQueueGateway;
+        this.orderSpi = orderSpi;
     }
 
     public Output execute(final Input input) {
         if (companyRepository.getCompanyByCnpj(new Cnpj(input.cnpj)).isPresent()) {
             throw new ValidationException("Company already exists");
         }
+
+        orderSpi.getOrderByCompanyId("1");
 
         final Company company = companyRepository.create(
             Company.createCompany(input.name, input.cnpj,

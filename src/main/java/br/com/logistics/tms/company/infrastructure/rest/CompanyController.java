@@ -1,13 +1,13 @@
 package br.com.logistics.tms.company.infrastructure.rest;
 
-import br.com.logistics.tms.commons.domain.exception.ValidationException;
+import br.com.logistics.tms.commons.application.presenters.View;
+import br.com.logistics.tms.commons.infrastructure.rest.presenter.DefaultRestPresenter;
 import br.com.logistics.tms.company.application.usecases.AddConfigurationToCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;
 import br.com.logistics.tms.company.infrastructure.rest.dto.CreateCompanyDTO;
 import java.net.URI;
 import java.util.Map;
-import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
@@ -27,12 +27,16 @@ public class CompanyController {
     private AddConfigurationToCompanyUseCase addConfigurationToCompanyUseCase;
     private GetCompanyByIdUseCase getCompanyByIdUseCase;
     private CreateCompanyUseCase createCompanyUseCase;
+    private DefaultRestPresenter<CreateCompanyUseCase.Output> defaultRestPresenter;
 
     public CompanyController(AddConfigurationToCompanyUseCase addConfigurationToCompanyUseCase,
-        GetCompanyByIdUseCase getCompanyByIdUseCase, CreateCompanyUseCase createCompanyUseCase) {
+        GetCompanyByIdUseCase getCompanyByIdUseCase,
+        CreateCompanyUseCase createCompanyUseCase,
+        DefaultRestPresenter<CreateCompanyUseCase.Output> defaultRestPresenter) {
         this.addConfigurationToCompanyUseCase = addConfigurationToCompanyUseCase;
         this.getCompanyByIdUseCase = getCompanyByIdUseCase;
         this.createCompanyUseCase = createCompanyUseCase;
+        this.defaultRestPresenter = defaultRestPresenter;
     }
 
     @GetMapping("/{id}")
@@ -42,13 +46,7 @@ public class CompanyController {
 
     @GetMapping("/leo")
     public Object getLeo(@RequestHeader Map<String, String> headers) {
-
-        MDC.put("module", "Company");
-        MDC.put("user", "Leonardo");
-        MDC.put("X-Request-ID",  headers.get("x-request-id"));
-
         log.info("Leonardo Machado Moreira");
-
         return "leo";
     }
 
@@ -62,15 +60,9 @@ public class CompanyController {
 
     @PostMapping
     public ResponseEntity<?> create(@RequestBody CreateCompanyDTO createCompanyDTO) {
-        try {
-            final var output =
-                createCompanyUseCase.execute(new CreateCompanyUseCase.Input(createCompanyDTO.name(),
-                    createCompanyDTO.cnpj(), createCompanyDTO.types()));
-
-            return ResponseEntity.created(URI.create("/companies/" + output.companyId())).body(output);
-        } catch (ValidationException ex) {
-            return ResponseEntity.unprocessableEntity().body(ex.getMessage());
-        }
+        final View output =
+            createCompanyUseCase.execute(new CreateCompanyUseCase.Input(createCompanyDTO.name(),
+                createCompanyDTO.cnpj(), createCompanyDTO.types()), defaultRestPresenter);
+        return ResponseEntity.created(URI.create("/companies/")).body(output.of());
     }
-
 }

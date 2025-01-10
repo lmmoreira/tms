@@ -12,7 +12,7 @@
         <spring-modulith.version>1.2.3</spring-modulith.version>
         <codehaus.janino>3.1.12</codehaus.janino>
         <logstash.encoder>8.0</logstash.encoder>
-        <opentelemetry.api>1.45.0</opentelemetry.api>
+        <opentelemetry.instrumentation>2.11.0</opentelemetry.instrumentation>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -44,9 +44,9 @@
                 <version>${logstash.encoder}</version>
             </dependency>
             <dependency>
-                <groupId>io.opentelemetry</groupId>
-                <artifactId>opentelemetry-bom</artifactId>
-                <version>${opentelemetry.api}</version>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-instrumentation-bom</artifactId>
+                <version>${opentelemetry.instrumentation}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

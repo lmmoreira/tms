@@ -254,6 +254,15 @@ services:
     command: server /data --console-address ":9001"
     networks:
       - tms-network
+  tms-jaeger:
+    container_name: tms-jaeger
+    image: jaegertracing/jaeger:latest
+    ports:
+      - "16686:16686"
+      - "14317:4317" # OTLP gRPC receiver from jaeger new port '1'
+      - "14318:4318" # OTLP http receiver from jaeger new port '1'
+    networks:
+      - tms-network
 
 volumes:
   tms-minio-data:

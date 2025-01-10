@@ -11,11 +11,13 @@ import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @AllArgsConstructor
+@Slf4j
 public class CompanyRepositoryImpl implements CompanyRepository {
 
     private final CompanyJpaRepository companyJpaRepository;
@@ -124,6 +126,7 @@ public class CompanyRepositoryImpl implements CompanyRepository {
     @Override
     @Transactional
     public Company create(Company company) {
+        log.info("Creating company: {}", company);
         return companyJpaRepository.save(CompanyEntity.of(company)).toCompany();
     }
 

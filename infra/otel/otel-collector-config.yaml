@@ -14,7 +14,7 @@ receivers:
     endpoint: "http://tms-nginx/nginx_status"
     collection_interval: 10s
   filelog:
-    include: ["/var/log/tms/*.json", "/var/log/nginx/access.log"]
+    include: ["/var/log/nginx/access.log"]
     operators:
       - type: json_parser
         if: 'body matches "^{.*}$"'
@@ -34,29 +34,32 @@ extensions:
   zpages:
 
 exporters:
-  #prometheus:
-  #  endpoint: "0.0.0.0:8889"
-  #  namespace: default
   prometheusremotewrite:
     endpoint: "http://tms-prometheus:9090/api/v1/write"
     tls:
       insecure: true
   debug:
     verbosity: detailed
-  loki:
-    endpoint: "http://tms-loki:3100/loki/api/v1/push"
-    default_labels_enabled:
-      exporter: true
-      job: true
+  otlphttp/logs:
+    endpoint: "http://tms-loki:3100/otlp"
+    tls:
+      insecure: true
+  otlp:
+    endpoint: "http://tms-jaeger:4317"
+    tls:
+      insecure: true
 
 service:
   extensions: [health_check, pprof, zpages]
   pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [otlp]
     metrics:
       receivers: [otlp, rabbitmq, nginx]
       processors: [batch]
-      exporters: [debug, prometheusremotewrite]
+      exporters: [prometheusremotewrite]
     logs:
-      receivers: [filelog]
+      receivers: [otlp, filelog]
       processors: [attributes]
-      exporters: [loki]
+      exporters: [otlphttp/logs, debug]

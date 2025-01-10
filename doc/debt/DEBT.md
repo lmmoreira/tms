@@ -13,3 +13,6 @@ List of technical debt to be paid.
 ## NOT URGENT
 
 - [x] **DEBT-003** - Enable compression of endpoints in order to improve performance.
+- [x] **DEBT-005** - Enable RFC 9457 for error standardization on spring-boot.
+  - Ref.: https://datatracker.ietf.org/doc/html/rfc9457
+  - Ref.: https://dev.to/abdelrani/error-handling-in-spring-web-using-rfc-9457-specification-5dj1
