@@ -9,29 +9,49 @@
         <then>
             <root level="info">
                 <appender-ref ref="OpenTelemetry"/>
-                <appender-ref ref="ASYNC_FILE_JSON"/>
+                <if condition='property("LOG_FILE_ENABLED").contains("true")'>
+                    <then>
+                        <appender-ref ref="ASYNC_FILE_JSON"/>
+                    </then>
+                </if>
                 <appender-ref ref="ASYNC_STDOUT_JSON"/>
             </root>
             <logger level="info" name="com.zaxxer.hikari">
                 <appender-ref ref="OpenTelemetry"/>
-                <appender-ref ref="ASYNC_FILE_JSON"/>
+                <if condition='property("LOG_FILE_ENABLED").contains("true")'>
+                    <then>
+                        <appender-ref ref="ASYNC_FILE_JSON"/>
+                    </then>
+                </if>
                 <appender-ref ref="ASYNC_STDOUT_JSON"/>
             </logger>
             <logger level="info" name="io.opentelemetry">
                 <appender-ref ref="OpenTelemetry"/>
-                <appender-ref ref="ASYNC_FILE_JSON"/>
+                <if condition='property("LOG_FILE_ENABLED").contains("true")'>
+                    <then>
+                        <appender-ref ref="ASYNC_FILE_JSON"/>
+                    </then>
+                </if>
                 <appender-ref ref="ASYNC_STDOUT_JSON"/>
             </logger>
         </then>
         <else>
             <root level="info">
                 <appender-ref ref="OpenTelemetry"/>
-                <appender-ref ref="ASYNC_FILE_TEXT"/>
+                <if condition='property("LOG_FILE_ENABLED").contains("true")'>
+                    <then>
+                        <appender-ref ref="ASYNC_FILE_TEXT"/>
+                    </then>
+                </if>
                 <appender-ref ref="ASYNC_STDOUT_TEXT"/>
             </root>
             <logger level="info" name="com.zaxxer.hikari">
                 <appender-ref ref="OpenTelemetry"/>
-                <appender-ref ref="ASYNC_FILE_TEXT"/>
+                <if condition='property("LOG_FILE_ENABLED").contains("true")'>
+                    <then>
+                        <appender-ref ref="ASYNC_FILE_TEXT"/>
+                    </then>
+                </if>
                 <appender-ref ref="ASYNC_STDOUT_TEXT" />
             </logger>
         </else>
