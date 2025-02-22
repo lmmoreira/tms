@@ -14,6 +14,7 @@ Both frameworks are equally good, but Logback was chosen because Logback is the 
 
 Logback interacts well with OpenTelemetry exporting MDC context to logs exporters with Experimental feature on OpenTelemetryAppender. 
 
+- File logging is a must be, but it should be disabled using env.
 - Rolling logging is a must be.
 - Async logging is a must be in order to do not decrease performance on mount and unmount of virtual threads.
 - Log configuration should be straightforward and thoroughly externalized, utilizing both XML and application.yml files for comprehensive management. Is mandatory the files to become comprehensive and easy to maintain.
@@ -23,7 +24,7 @@ Logback interacts well with OpenTelemetry exporting MDC context to logs exporter
     - [logback-spring-appenders-text.xml](..%2F..%2Fsrc%2Fmain%2Fresources%2Flogback-spring-appenders-text.xml)
     - [logback-spring-scope.xml](..%2F..%2Fsrc%2Fmain%2Fresources%2Flogback-spring-scope.xml)
   - Logstash Encoder was added for enabling JSON logging, which is essential for log aggregation and analysis in centralized logging systems like ELK Stack.
-  - Janino was added to enable tags like if and else in logback-spring.xml to improve readability and maintainability and avoid profile dependent configuration.
+  - Janino was added to enable tags like if and else in logback-spring.xml to improve readability, flexibility maintainability and avoid profile dependent configuration.
 
 ## Consequences
 
@@ -41,3 +42,4 @@ Logback interacts well with OpenTelemetry exporting MDC context to logs exporter
 - https://github.com/arafkarsh/ms-springboot-334-vanilla/
 - https://medium.com/javarevisited/effective-logging-strategies-for-java-microservices-081658ce92ac
 - https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/instrumentation/logback/logback-appender-1.0/library/README.md
+- https://logback.qos.ch/setup.html#janino

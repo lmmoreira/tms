@@ -2,6 +2,7 @@
     <springProperty scope="context" name="APP_NAME" source="spring.application.name"/>
     <springProperty scope="context" name="LOG_FORMAT" source="tms-logging.format"/>
     <springProperty scope="context" name="LOG_FILE_ENABLED" source="tms-logging.file.enabled"/>
+    <springProperty scope="context" name="LOG_CONSOLE_ENABLED" source="tms-logging.console.enabled"/>
     <springProperty scope="context" name="LOG_PATH" source="tms-logging.file.path"/>
     <springProperty scope="context" name="LOG_FILE" source="tms-logging.file.name"/>
     <springProperty scope="context" name="LOG_FILE_PATTERN" source="tms-logging.file.pattern.rolling-file-name"/>

@@ -37,6 +37,8 @@ server:
 
 tms-logging:
   format: ${LOG_FORMAT}
+  console:
+    enabled: 'true'
   file:
     enabled: 'false'
     path: tmp/logs/${spring.application.name}
@@ -61,7 +63,7 @@ otel:
       protocol: grpc
       endpoint: http://0.0.0.0:4317
   sdk:
-    disabled: false
+    disabled: ${OTEL_SDK_DISABLED}
   instrumentation:
     jdbc:
       enabled: true

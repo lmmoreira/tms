@@ -14,7 +14,11 @@
                         <appender-ref ref="ASYNC_FILE_JSON"/>
                     </then>
                 </if>
-                <appender-ref ref="ASYNC_STDOUT_JSON"/>
+                <if condition='property("LOG_CONSOLE_ENABLED").contains("true")'>
+                    <then>
+                        <appender-ref ref="ASYNC_STDOUT_JSON"/>
+                    </then>
+                </if>
             </root>
             <logger level="info" name="com.zaxxer.hikari">
                 <appender-ref ref="OpenTelemetry"/>
@@ -23,7 +27,11 @@
                         <appender-ref ref="ASYNC_FILE_JSON"/>
                     </then>
                 </if>
-                <appender-ref ref="ASYNC_STDOUT_JSON"/>
+                <if condition='property("LOG_CONSOLE_ENABLED").contains("true")'>
+                    <then>
+                        <appender-ref ref="ASYNC_STDOUT_JSON"/>
+                    </then>
+                </if>
             </logger>
             <logger level="info" name="io.opentelemetry">
                 <appender-ref ref="OpenTelemetry"/>
@@ -32,7 +40,11 @@
                         <appender-ref ref="ASYNC_FILE_JSON"/>
                     </then>
                 </if>
-                <appender-ref ref="ASYNC_STDOUT_JSON"/>
+                <if condition='property("LOG_CONSOLE_ENABLED").contains("true")'>
+                    <then>
+                        <appender-ref ref="ASYNC_STDOUT_JSON"/>
+                    </then>
+                </if>
             </logger>
         </then>
         <else>
@@ -43,7 +55,11 @@
                         <appender-ref ref="ASYNC_FILE_TEXT"/>
                     </then>
                 </if>
-                <appender-ref ref="ASYNC_STDOUT_TEXT"/>
+                <if condition='property("LOG_CONSOLE_ENABLED").contains("true")'>
+                    <then>
+                        <appender-ref ref="ASYNC_STDOUT_TEXT"/>
+                    </then>
+                </if>
             </root>
             <logger level="info" name="com.zaxxer.hikari">
                 <appender-ref ref="OpenTelemetry"/>
@@ -52,7 +68,11 @@
                         <appender-ref ref="ASYNC_FILE_TEXT"/>
                     </then>
                 </if>
-                <appender-ref ref="ASYNC_STDOUT_TEXT" />
+                <if condition='property("LOG_CONSOLE_ENABLED").contains("true")'>
+                    <then>
+                        <appender-ref ref="ASYNC_STDOUT_TEXT"/>
+                    </then>
+                </if>
             </logger>
         </else>
     </if>

@@ -1,16 +1,12 @@
 package br.com.logistics.tms.commons.infrastructure.filters;
 
-import com.auth0.jwt.JWT;
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.Optional;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.Optional;
 
 @Component
 public class MDCFilter implements Filter {
@@ -27,13 +23,12 @@ public class MDCFilter implements Filter {
                 .ifPresent(value -> MDC.put("module", value));
             Optional.ofNullable(httpRequest.getHeader("x-client-name"))
                 .ifPresent(value -> MDC.put("client_name", value));
-            Optional.ofNullable(httpRequest.getHeader("authorization"))
-                .map(token -> token.replace("Bearer ", ""))
-                .map(JWT::decode)
-                .ifPresent(jwt -> {
-                    MDC.put("user_name", jwt.getClaim("given_name").asString());
-                    MDC.put("user_email", jwt.getClaim("email").asString());
-                });
+            Optional.ofNullable(httpRequest.getHeader("x-jwt-details"))
+                    .ifPresent(jwt -> {
+                        final String[] jwtDetails = jwt.split("\\|");
+                        MDC.put("user_name", jwtDetails[0]);
+                        MDC.put("user_email", jwtDetails[1]);
+                    });
 
             chain.doFilter(request, response);
         } finally {
