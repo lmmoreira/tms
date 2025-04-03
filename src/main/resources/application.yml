@@ -4,6 +4,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  main:
+    lazy-initialization: true
   jpa:
     open-in-view: false
   datasource:
@@ -31,6 +33,8 @@ management:
         include: ${MANAGEMENT_ENDPOINTS}
 
 server:
+  http2:
+    enabled: true
   shutdown: graceful
   compression:
     enabled: true

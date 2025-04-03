@@ -186,6 +186,7 @@ services:
       - 55679:55679 # zpages extension
   tms-loki:
     image: grafana/loki:latest
+    user: root
     container_name: tms-loki
     healthcheck:
       test: [ "CMD", "wget", "-q", "--spider", "http://localhost:3100/ready" ]
@@ -196,6 +197,7 @@ services:
       - "3100:3100"
     volumes:
       - ./infra/loki/loki-config.yaml:/etc/loki/local-config.yaml
+      - tms-loki-data:/data
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - tms-network
@@ -248,10 +250,11 @@ services:
       - MINIO_ROOT_PASSWORD=tms-password
     volumes:
       - tms-minio-data:/data
+      - ./infra/minio/create-bucket.sh:/usr/bin/create-bucket.sh
     ports:
       - "9000:9000"
       - "9001:9001"
-    command: server /data --console-address ":9001"
+    entrypoint: ["/bin/sh", "-c", "minio server /data --console-address ':9001' & sleep 5 && /usr/bin/create-bucket.sh && wait"]
     networks:
       - tms-network
   tms-jaeger:
@@ -268,6 +271,7 @@ volumes:
   tms-minio-data:
   tms-database:
   tms-keycloak-database:
+  tms-loki-data:
   tms-neo4j_data:
   tms-neo4j_logs:
   tms-neo4j_import:
