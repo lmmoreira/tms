@@ -33,7 +33,7 @@ function body_json(r) {
         return '{}';
     }
 
-    return body;
+    return JSON.stringify(body);
 }
 
 export default {hasSalesRole, jwt_details, headers_json, body_json};
