@@ -22,6 +22,11 @@ receivers:
 
 processors:
   batch:
+  resource:
+    attributes:
+      - key: service.name
+        value: "NGINX-OTEL-SERVICE"
+        action: upsert
   attributes:
     actions:
       - key: Source
@@ -59,7 +64,11 @@ service:
       receivers: [otlp, rabbitmq, nginx]
       processors: [batch]
       exporters: [prometheusremotewrite]
-    logs:
-      receivers: [otlp, filelog]
-      processors: [attributes]
+    logs/filelog:
+      receivers: [filelog]
+      processors: [attributes, resource]
       exporters: [otlphttp/logs, debug]
+    logs/otlp:
+      receivers: [ otlp ]
+      processors: [ attributes ]
+      exporters: [ otlphttp/logs, debug ]
