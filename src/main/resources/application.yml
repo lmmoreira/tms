@@ -39,6 +39,14 @@ server:
   compression:
     enabled: true
 
+modules:
+  commons:
+    enabled: ${MODULES_COMMONS_ENABLED}
+  company:
+    enabled: ${MODULES_COMPANY_ENABLED}
+  order:
+    enabled: ${MODULES_ORDER_ENABLED}
+
 tms-logging:
   format: ${LOG_FORMAT}
   console:

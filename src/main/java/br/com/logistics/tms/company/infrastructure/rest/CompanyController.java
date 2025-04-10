@@ -6,18 +6,12 @@ import br.com.logistics.tms.company.application.usecases.AddConfigurationToCompa
 import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;
 import br.com.logistics.tms.company.infrastructure.rest.dto.CreateCompanyDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import java.net.URI;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "companies")
