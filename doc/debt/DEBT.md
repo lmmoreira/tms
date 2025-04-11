@@ -18,4 +18,4 @@ List of technical debt to be paid.
   - Ref.: https://dev.to/abdelrani/error-handling-in-spring-web-using-rfc-9457-specification-5dj1
 - [] **DEBT-006** - Metrics on ports and adapters - create a pattern
 - [] **DEBT-007** - Consistency on integration events inside usecases. Should be thrown by the aggregate
-- [x] **DEBT-008** - Monorepo study. Modular monolith controlled by env and component scanning 
+- [x] **DEBT-008** - Monorepo study. Modular monolith controlled by env and component scanning limitation.

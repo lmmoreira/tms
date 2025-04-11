@@ -1,6 +1,7 @@
 package br.com.logistics.tms.company.infrastructure.config;
 
 import br.com.logistics.tms.commons.application.gateways.DomainEventQueueGateway;
+import br.com.logistics.tms.commons.application.mapper.Mapper;
 import br.com.logistics.tms.company.application.repositories.CompanyRepository;
 import br.com.logistics.tms.company.application.usecases.AddConfigurationToCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
@@ -17,6 +18,7 @@ public class CompanyUseCaseConfig {
 
     private final DomainEventQueueGateway<CompanyCreated> companyCreatedRabbitMQDomainEventQueueGateway;
     private final CompanyRepository companyRepository;
+    private final Mapper mapper;
     private final OrderSpi orderSpi;
 
     @Bean
@@ -31,7 +33,7 @@ public class CompanyUseCaseConfig {
 
     @Bean
     public CreateCompanyUseCase createCompanyUseCase() {
-        return new CreateCompanyUseCase(companyRepository,
+        return new CreateCompanyUseCase(mapper, companyRepository,
             companyCreatedRabbitMQDomainEventQueueGateway, orderSpi);
     }
 

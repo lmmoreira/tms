@@ -1,6 +1,7 @@
 package br.com.logistics.tms.company.application.usecases;
 
 import br.com.logistics.tms.commons.application.gateways.DomainEventQueueGateway;
+import br.com.logistics.tms.commons.application.mapper.Mapper;
 import br.com.logistics.tms.commons.application.usecases.UseCase;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import br.com.logistics.tms.company.application.repositories.CompanyRepository;
@@ -19,8 +20,10 @@ public class CreateCompanyUseCase extends
     private final DomainEventQueueGateway<CompanyCreated> companyCreatedDomainEventQueueGateway;
     private final OrderSpi orderSpi;
 
-    public CreateCompanyUseCase(CompanyRepository companyRepository,
-        DomainEventQueueGateway<CompanyCreated> companyCreatedDomainEventQueueGateway, OrderSpi orderSpi) {
+    public CreateCompanyUseCase(Mapper mapper,
+                                CompanyRepository companyRepository,
+                                DomainEventQueueGateway<CompanyCreated> companyCreatedDomainEventQueueGateway, OrderSpi orderSpi) {
+        super(mapper);
         this.companyRepository = companyRepository;
         this.companyCreatedDomainEventQueueGateway = companyCreatedDomainEventQueueGateway;
         this.orderSpi = orderSpi;

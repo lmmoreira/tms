@@ -41,10 +41,6 @@
 			<artifactId>java-uuid-generator</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.modelmapper</groupId>
-			<artifactId>modelmapper</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>org.codehaus.janino</groupId>
 			<artifactId>janino</artifactId>
 		</dependency>

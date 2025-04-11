@@ -1,8 +1,9 @@
 package br.com.logistics.tms.commons.application.presenters;
 
-public interface Presenter<IN, OUT extends View> {
+public interface Presenter<USECASE_OUTPUT, PRESENTER_OUTPUT> {
 
-    OUT present(IN input);
+    PRESENTER_OUTPUT present(USECASE_OUTPUT input);
 
-    OUT present(Throwable error);
+    PRESENTER_OUTPUT present(Throwable error);
+
 }
