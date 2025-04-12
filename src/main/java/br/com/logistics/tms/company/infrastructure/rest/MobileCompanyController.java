@@ -22,8 +22,9 @@ public class MobileCompanyController {
 
     @GetMapping("/{id}")
     public Object get(@PathVariable String id) {
-        return getCompanyByIdUseCase.execute(new GetCompanyByIdUseCase.Input(id),
-            getCompanyByIdUseCaseMobilePresenter);
+        /*return getCompanyByIdUseCase.execute(new GetCompanyByIdUseCase.Input(id),
+            getCompanyByIdUseCaseMobilePresenter);*/
+        return null;
     }
 
 }

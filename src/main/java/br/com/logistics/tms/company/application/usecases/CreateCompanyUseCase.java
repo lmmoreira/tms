@@ -13,17 +13,14 @@ import br.com.logistics.tms.order.infrastructure.spi.OrderSpi;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class CreateCompanyUseCase extends
-    UseCase<CreateCompanyUseCase.Input, CreateCompanyUseCase.Output> {
+public class CreateCompanyUseCase implements UseCase<CreateCompanyUseCase.Input, CreateCompanyUseCase.Output> {
 
     private final CompanyRepository companyRepository;
     private final DomainEventQueueGateway<CompanyCreated> companyCreatedDomainEventQueueGateway;
     private final OrderSpi orderSpi;
 
-    public CreateCompanyUseCase(Mapper mapper,
-                                CompanyRepository companyRepository,
+    public CreateCompanyUseCase(CompanyRepository companyRepository,
                                 DomainEventQueueGateway<CompanyCreated> companyCreatedDomainEventQueueGateway, OrderSpi orderSpi) {
-        super(mapper);
         this.companyRepository = companyRepository;
         this.companyCreatedDomainEventQueueGateway = companyCreatedDomainEventQueueGateway;
         this.orderSpi = orderSpi;

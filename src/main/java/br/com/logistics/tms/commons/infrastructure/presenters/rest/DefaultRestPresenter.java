@@ -25,11 +25,6 @@ public class DefaultRestPresenter implements Presenter<Object, ResponseEntity<?>
         this.request = request;
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> Presenter<T, ResponseEntity<?>> typed() {
-        return (Presenter<T, ResponseEntity<?>>) this;
-    }
-
     public DefaultRestPresenter withResponseStatus(HttpStatus status) {
         this.success = status;
         return this;

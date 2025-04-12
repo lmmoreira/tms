@@ -1,6 +1,7 @@
 package br.com.logistics.tms.commons.application.usecases;
 
-public abstract class VoidUseCase<INPUT> {
+@FunctionalInterface
+public interface VoidUseCase<INPUT> {
 
-    public abstract void execute(INPUT input);
+    void execute(INPUT input);
 }

@@ -10,8 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class GetCompanyByIdUseCase extends
-    UseCase<GetCompanyByIdUseCase.Input, GetCompanyByIdUseCase.Output> {
+public class GetCompanyByIdUseCase implements UseCase<GetCompanyByIdUseCase.Input, GetCompanyByIdUseCase.Output> {
 
     private CompanyRepository companyRepository;
 

@@ -1,6 +1,7 @@
 package br.com.logistics.tms.company.infrastructure.rest;
 
 import br.com.logistics.tms.commons.application.presenters.Presenter;
+import br.com.logistics.tms.commons.application.usecases.UseCaseExecutor;
 import br.com.logistics.tms.commons.infrastructure.presenters.rest.DefaultRestPresenter;
 import br.com.logistics.tms.company.application.usecases.AddConfigurationToCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
@@ -21,11 +22,11 @@ import java.util.Map;
 @Slf4j
 public class CompanyController {
 
-    private AddConfigurationToCompanyUseCase addConfigurationToCompanyUseCase;
-    private GetCompanyByIdUseCase getCompanyByIdUseCase;
-    private CreateCompanyUseCase createCompanyUseCase;
-    private ObjectFactory<DefaultRestPresenter> defaultRestPresenterObjectFactory;
-    private ObjectFactory<CreatedCompanyByCliIdPresenter> createdCompanyByCliIdPresenterFactory;
+    private final AddConfigurationToCompanyUseCase addConfigurationToCompanyUseCase;
+    private final GetCompanyByIdUseCase getCompanyByIdUseCase;
+    private final CreateCompanyUseCase createCompanyUseCase;
+    private final ObjectFactory<DefaultRestPresenter> defaultRestPresenterObjectFactory;
+    private final ObjectFactory<CreatedCompanyByCliIdPresenter> createdCompanyByCliIdPresenterFactory;
 
     public CompanyController(AddConfigurationToCompanyUseCase addConfigurationToCompanyUseCase,
                              GetCompanyByIdUseCase getCompanyByIdUseCase,
@@ -61,16 +62,36 @@ public class CompanyController {
     @PostMapping
     public Object create(@RequestHeader Map<String, String> headers,
                          @RequestBody CreateCompanyDTO createCompanyDTO) {
-        Presenter<CreateCompanyResponseDTO, ResponseEntity<?>> presenter = defaultRestPresenterObjectFactory.getObject().withResponseStatus(HttpStatus.CREATED).typed();
-        Presenter<CreateCompanyUseCase.Output, String> cliPresenter = createdCompanyByCliIdPresenterFactory.getObject();
 
-        if (headers.get("cli") != null && headers.get("cli").equals("1")) {
-            return createCompanyUseCase.execute(new CreateCompanyUseCase.Input(createCompanyDTO.name(),
-                    createCompanyDTO.cnpj(), createCompanyDTO.types()), cliPresenter);
+        if ("1".equals(headers.get("cli"))) {
+            final Presenter<CreateCompanyUseCase.Output, String> cliPresenter =
+                    createdCompanyByCliIdPresenterFactory.getObject();
+            return UseCaseExecutor
+                    .from(createCompanyUseCase)
+                    .withInput(createCompanyDTO)
+                    .presentWith(cliPresenter)
+                    .execute();
         }
 
-        return createCompanyUseCase.execute(new CreateCompanyUseCase.Input(createCompanyDTO.name(),
-                createCompanyDTO.cnpj(), createCompanyDTO.types()), CreateCompanyResponseDTO.class, presenter);
+        final Presenter<Object, ResponseEntity<?>> presenter =
+                defaultRestPresenterObjectFactory.getObject()
+                        .withResponseStatus(HttpStatus.CREATED);
+
+        if ("1".equals(headers.get("fullentity"))) {
+            return UseCaseExecutor
+                    .from(createCompanyUseCase)
+                    .withInput(new CreateCompanyUseCase.Input(createCompanyDTO.name(),
+                            createCompanyDTO.cnpj(), createCompanyDTO.types()))
+                    .presentWith(presenter)
+                    .execute();
+        }
+
+        return UseCaseExecutor
+                .from(createCompanyUseCase)
+                .withInput(createCompanyDTO)
+                .mapOutputTo(CreateCompanyResponseDTO.class)
+                .presentWith(presenter)
+                .execute();
     }
 
 }

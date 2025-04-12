@@ -33,8 +33,7 @@ public class CompanyUseCaseConfig {
 
     @Bean
     public CreateCompanyUseCase createCompanyUseCase() {
-        return new CreateCompanyUseCase(mapper, companyRepository,
-            companyCreatedRabbitMQDomainEventQueueGateway, orderSpi);
+        return new CreateCompanyUseCase(companyRepository, companyCreatedRabbitMQDomainEventQueueGateway, orderSpi);
     }
 
 }

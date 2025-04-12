@@ -1,16 +1,8 @@
 package br.com.logistics.tms.commons.application.usecases;
 
-import br.com.logistics.tms.commons.application.presenters.Presenter;
+@FunctionalInterface
+public interface NullaryUseCase<OUTPUT> {
 
-public abstract class NullaryUseCase<OUTPUT> {
+    OUTPUT execute();
 
-    public abstract OUTPUT execute();
-
-    public Object execute(Presenter presenter) {
-        try {
-            return presenter.present(execute());
-        } catch (Throwable t) {
-            return presenter.present(t);
-        }
-    }
 }
