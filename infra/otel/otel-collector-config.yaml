@@ -22,10 +22,15 @@ receivers:
 
 processors:
   batch:
-  resource:
+  resource/nginx:
     attributes:
       - key: service.name
         value: "NGINX-OTEL-SERVICE"
+        action: upsert
+  resource/ecosystem:
+    attributes:
+      - key: service.namespace
+        value: "TMS-NAMESPACE"
         action: upsert
   attributes:
     actions:
@@ -66,9 +71,9 @@ service:
       exporters: [prometheusremotewrite]
     logs/filelog:
       receivers: [filelog]
-      processors: [attributes, resource]
+      processors: [attributes, resource/nginx, resource/ecosystem]
       exporters: [otlphttp/logs, debug]
     logs/otlp:
       receivers: [ otlp ]
-      processors: [ attributes ]
+      processors: [ attributes, resource/ecosystem ]
       exporters: [ otlphttp/logs, debug ]
