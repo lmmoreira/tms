@@ -4,7 +4,6 @@ import br.com.logistics.tms.commons.application.presenters.Presenter;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -12,28 +11,26 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-@Scope("prototype")
 public class DefaultRestPresenter implements Presenter<Object, ResponseEntity<?>> {
 
-    private final HttpServletRequest request;
-    private HttpStatus success = HttpStatus.OK;
-
     private static Map<Class<?>, HttpStatus> errorStatusMap = Map.of(ValidationException.class, HttpStatus.BAD_REQUEST);
+
+    private final HttpServletRequest request;
 
     @Autowired
     public DefaultRestPresenter(HttpServletRequest request) {
         this.request = request;
     }
 
-    public DefaultRestPresenter withResponseStatus(HttpStatus status) {
-        this.success = status;
-        return this;
+    @Override
+    public ResponseEntity<?> present(Object input) {
+        return present(input, HttpStatus.OK);
     }
 
     @Override
-    public ResponseEntity<?> present(Object input) {
+    public ResponseEntity<?> present(Object input, HttpStatus successStatus) {
         return ResponseEntity
-                .status(success)
+                .status(successStatus)
                 .body(input);
     }
 

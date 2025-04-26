@@ -6,6 +6,7 @@ import br.com.logistics.tms.commons.application.usecases.exception.UseCaseExcept
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.function.Function;
 
 public class UseCaseBuilder<INPUT, OUTPUT> {
     private final UseCase<INPUT, OUTPUT> useCase;
@@ -15,6 +16,7 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
     private Object externalInput;
     private Class<?> outputClass;
     private Presenter<?, ?> presenter;
+    private Function<Object, ?> presenterFunction;
 
     public UseCaseBuilder(UseCase<INPUT, OUTPUT> useCase) {
         this.useCase = useCase;
@@ -41,6 +43,12 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
         return this;
     }
 
+    public <IN, OUT> UseCaseBuilder<INPUT, OUTPUT> presentWith(Presenter<IN, OUT> presenter, Function<Object, OUT> presenterFunction) {
+        this.presenter = presenter;
+        this.presenterFunction = presenterFunction;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     public <FINAL_OUTPUT> FINAL_OUTPUT execute() {
         try {
@@ -55,7 +63,13 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
                     : output;
 
             if (presenter != null) {
-                return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(finalOutput);
+
+                if (presenterFunction != null) {
+                    return (FINAL_OUTPUT) presenterFunction.apply(finalOutput);
+                } else {
+                    return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(finalOutput);
+                }
+
             }
 
             return (FINAL_OUTPUT) finalOutput;

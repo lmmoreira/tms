@@ -1,6 +1,5 @@
 package br.com.logistics.tms.company.infrastructure.rest;
 
-import br.com.logistics.tms.commons.application.presenters.Presenter;
 import br.com.logistics.tms.commons.application.usecases.UseCaseExecutor;
 import br.com.logistics.tms.commons.infrastructure.presenters.rest.DefaultRestPresenter;
 import br.com.logistics.tms.company.application.usecases.AddConfigurationToCompanyUseCase;
@@ -10,7 +9,6 @@ import br.com.logistics.tms.company.infrastructure.rest.dto.CreateCompanyDTO;
 import br.com.logistics.tms.company.infrastructure.rest.dto.CreateCompanyResponseDTO;
 import br.com.logistics.tms.company.infrastructure.rest.presenters.CreatedCompanyByCliIdPresenter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,19 +23,19 @@ public class CompanyController {
     private final AddConfigurationToCompanyUseCase addConfigurationToCompanyUseCase;
     private final GetCompanyByIdUseCase getCompanyByIdUseCase;
     private final CreateCompanyUseCase createCompanyUseCase;
-    private final ObjectFactory<DefaultRestPresenter> defaultRestPresenterObjectFactory;
-    private final ObjectFactory<CreatedCompanyByCliIdPresenter> createdCompanyByCliIdPresenterFactory;
+    private final DefaultRestPresenter defaultRestPresenter;
+    private final CreatedCompanyByCliIdPresenter createdCompanyByCliIdPresenter;
 
     public CompanyController(AddConfigurationToCompanyUseCase addConfigurationToCompanyUseCase,
                              GetCompanyByIdUseCase getCompanyByIdUseCase,
                              CreateCompanyUseCase createCompanyUseCase,
-                             ObjectFactory<DefaultRestPresenter> defaultRestPresenterObjectFactory,
-                             ObjectFactory<CreatedCompanyByCliIdPresenter> createdCompanyByCliIdPresenterFactory) {
+                             DefaultRestPresenter defaultRestPresenter,
+                             CreatedCompanyByCliIdPresenter createdCompanyByCliIdPresenter) {
         this.addConfigurationToCompanyUseCase = addConfigurationToCompanyUseCase;
         this.getCompanyByIdUseCase = getCompanyByIdUseCase;
         this.createCompanyUseCase = createCompanyUseCase;
-        this.defaultRestPresenterObjectFactory = defaultRestPresenterObjectFactory;
-        this.createdCompanyByCliIdPresenterFactory = createdCompanyByCliIdPresenterFactory;
+        this.defaultRestPresenter = defaultRestPresenter;
+        this.createdCompanyByCliIdPresenter = createdCompanyByCliIdPresenter;
     }
 
     @GetMapping("/{id}")
@@ -64,25 +62,20 @@ public class CompanyController {
                          @RequestBody CreateCompanyDTO createCompanyDTO) {
 
         if ("1".equals(headers.get("cli"))) {
-            final Presenter<CreateCompanyUseCase.Output, String> cliPresenter =
-                    createdCompanyByCliIdPresenterFactory.getObject();
             return UseCaseExecutor
                     .from(createCompanyUseCase)
                     .withInput(createCompanyDTO)
-                    .presentWith(cliPresenter)
+                    .presentWith(createdCompanyByCliIdPresenter)
                     .execute();
         }
-
-        final Presenter<Object, ResponseEntity<?>> presenter =
-                defaultRestPresenterObjectFactory.getObject()
-                        .withResponseStatus(HttpStatus.CREATED);
 
         if ("1".equals(headers.get("fullentity"))) {
             return UseCaseExecutor
                     .from(createCompanyUseCase)
                     .withInput(new CreateCompanyUseCase.Input(createCompanyDTO.name(),
                             createCompanyDTO.cnpj(), createCompanyDTO.types()))
-                    .presentWith(presenter)
+                    .presentWith(defaultRestPresenter, output -> defaultRestPresenter.present(output,
+                            HttpStatus.CREATED))
                     .execute();
         }
 
@@ -90,7 +83,7 @@ public class CompanyController {
                 .from(createCompanyUseCase)
                 .withInput(createCompanyDTO)
                 .mapOutputTo(CreateCompanyResponseDTO.class)
-                .presentWith(presenter)
+                .presentWith(defaultRestPresenter)
                 .execute();
     }
 
