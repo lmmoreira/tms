@@ -1,0 +1,21 @@
+apiVersion: 1
+
+providers:
+  - name: 'app-dashboards'
+    folder: 'app'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    options:
+      path: /etc/grafana/provisioning/dashboards/app
+  - name: 'rabbit-dashboards'
+    folder: 'rabbit'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    options:
+      path: /etc/grafana/provisioning/dashboards/rabbit
+
+# JVM (Micrometer)          - https://grafana.com/grafana/dashboards/4701-jvm-micrometer/
+# Spring Boot Observability - https://grafana.com/grafana/dashboards/17175-spring-boot-observability/
+# RabbitMQ-Overview         - https://grafana.com/grafana/dashboards/10991-rabbitmq-overview/

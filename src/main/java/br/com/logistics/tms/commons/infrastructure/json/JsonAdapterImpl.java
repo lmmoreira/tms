@@ -1,9 +1,13 @@
 package br.com.logistics.tms.commons.infrastructure.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 @Component
 public class JsonAdapterImpl implements JsonAdapter {
@@ -12,6 +16,8 @@ public class JsonAdapterImpl implements JsonAdapter {
 
     public JsonAdapterImpl() {
         this.objectMapper = new ObjectMapper();
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.objectMapper.setSerializationInclusion(NON_NULL);
     }
 
     @Override

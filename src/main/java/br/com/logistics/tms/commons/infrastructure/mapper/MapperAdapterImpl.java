@@ -4,7 +4,10 @@ import br.com.logistics.tms.commons.application.mapper.Mapper;
 import br.com.logistics.tms.commons.application.usecases.UseCaseMapperProvider;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.springframework.stereotype.Component;
+
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 @Component
 public class MapperAdapterImpl implements Mapper {
@@ -14,6 +17,7 @@ public class MapperAdapterImpl implements Mapper {
     public MapperAdapterImpl() {
         this.objectMapper = new ObjectMapper();
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.objectMapper.setSerializationInclusion(NON_NULL);
         UseCaseMapperProvider.setMapper(this);
     }
 

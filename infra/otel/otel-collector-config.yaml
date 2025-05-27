@@ -10,6 +10,13 @@ receivers:
     username: tms-otel
     password: bitnami
     collection_interval: 10s
+  prometheus/rabbitmq:
+    config:
+      scrape_configs:
+        - job_name: 'rabbitmq'
+          metrics_path: /metrics
+          static_configs:
+            - targets: ['tms-broker:15692']
   nginx:
     endpoint: "http://tms-nginx/nginx_status"
     collection_interval: 10s
@@ -22,6 +29,7 @@ receivers:
 
 processors:
   batch:
+  #Logs
   resource/nginx:
     attributes:
       - key: service.name
@@ -32,10 +40,31 @@ processors:
       - key: service.namespace
         value: "TMS-NAMESPACE"
         action: upsert
+  #Metrics and Logs
   attributes:
     actions:
       - key: Source
         value: "Otel-Collector"
+        action: upsert
+  attributes/namespace:
+    actions:
+      - key: namespace
+        value: "TMS-NAMESPACE"
+        action: upsert
+  attributes/app:
+    actions:
+      - key: application
+        value: "TMS"
+        action: upsert
+  attributes/rabbit:
+    actions:
+      - key: application
+        value: "RabbitMQ"
+        action: upsert
+  attributes/nginx:
+    actions:
+      - key: application
+        value: "NGIX"
         action: upsert
 
 extensions:
@@ -44,10 +73,14 @@ extensions:
   zpages:
 
 exporters:
-  prometheusremotewrite:
-    endpoint: "http://tms-prometheus:9090/api/v1/write"
-    tls:
-      insecure: true
+  #pull based on prometheus
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+  #push based on prometheus
+  #prometheusremotewrite:
+  #  endpoint: "http://tms-prometheus:9090/api/v1/write"
+  #  tls:
+  #    insecure: true
   debug:
     verbosity: detailed
   otlphttp/logs:
@@ -65,10 +98,21 @@ service:
     traces:
       receivers: [otlp]
       exporters: [otlp]
-    metrics:
-      receivers: [otlp, rabbitmq, nginx]
-      processors: [batch]
-      exporters: [prometheusremotewrite]
+    metrics/otlp:
+      receivers: [otlp]
+      processors: [batch, attributes, attributes/namespace, attributes/app]
+      exporters: [prometheus]
+      #exporters: [prometheusremotewrite]
+    metrics/rabbitmq:
+      receivers: [ rabbitmq, prometheus/rabbitmq ]
+      processors: [ batch, attributes, attributes/namespace, attributes/rabbit ]
+      exporters: [ prometheus ]
+      #exporters: [prometheusremotewrite]
+    metrics/nginx:
+      receivers: [ nginx ]
+      processors: [ batch, attributes, attributes/namespace, attributes/nginx ]
+      exporters: [ prometheus ]
+      #exporters: [prometheusremotewrite]
     logs/filelog:
       receivers: [filelog]
       processors: [attributes, resource/nginx, resource/ecosystem]

@@ -233,6 +233,8 @@ services:
       - GF_AUTH_DISABLE_LOGIN_FORM=true
     volumes:
       - ./infra/grafana/datasources/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./infra/grafana/dashboards/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/grafana-dashboards.yml
+      - ./infra/grafana/dashboards/:/etc/grafana/provisioning/dashboards/
     depends_on:
       - tms-loki
     networks:
