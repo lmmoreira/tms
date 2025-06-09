@@ -4,12 +4,13 @@ import br.com.logistics.tms.commons.application.mapper.Mapper;
 import br.com.logistics.tms.commons.application.usecases.UseCaseMapperProvider;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 @Component
+@Lazy(false)
 public class MapperAdapterImpl implements Mapper {
 
     private final ObjectMapper objectMapper;

@@ -1,9 +1,12 @@
 package br.com.logistics.tms.order.application;
 
+import br.com.logistics.tms.commons.annotation.DomainService;
 import br.com.logistics.tms.order.domain.Order;
+
 import java.time.Instant;
 import java.util.Set;
 
+@DomainService
 public class GetOrderByCompanyIdUseCase {
 
 

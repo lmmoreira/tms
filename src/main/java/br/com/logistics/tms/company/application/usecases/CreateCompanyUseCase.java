@@ -1,7 +1,7 @@
 package br.com.logistics.tms.company.application.usecases;
 
+import br.com.logistics.tms.commons.annotation.DomainService;
 import br.com.logistics.tms.commons.application.gateways.DomainEventQueueGateway;
-import br.com.logistics.tms.commons.application.mapper.Mapper;
 import br.com.logistics.tms.commons.application.usecases.UseCase;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import br.com.logistics.tms.company.application.repositories.CompanyRepository;
@@ -10,9 +10,11 @@ import br.com.logistics.tms.company.domain.Company;
 import br.com.logistics.tms.company.domain.CompanyCreated;
 import br.com.logistics.tms.company.domain.Type;
 import br.com.logistics.tms.order.infrastructure.spi.OrderSpi;
+
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@DomainService
 public class CreateCompanyUseCase implements UseCase<CreateCompanyUseCase.Input, CreateCompanyUseCase.Output> {
 
     private final CompanyRepository companyRepository;

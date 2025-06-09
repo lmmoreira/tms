@@ -1,5 +1,6 @@
 package br.com.logistics.tms.company.application.usecases;
 
+import br.com.logistics.tms.commons.annotation.DomainService;
 import br.com.logistics.tms.commons.application.usecases.UseCase;
 import br.com.logistics.tms.company.application.repositories.CompanyRepository;
 import br.com.logistics.tms.company.domain.Company;
@@ -10,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@DomainService
 public class GetCompanyByIdUseCase implements UseCase<GetCompanyByIdUseCase.Input, GetCompanyByIdUseCase.Output> {
 
     private CompanyRepository companyRepository;
