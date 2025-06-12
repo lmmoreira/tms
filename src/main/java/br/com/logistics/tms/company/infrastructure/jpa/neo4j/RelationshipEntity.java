@@ -1,12 +1,12 @@
-package br.com.logistics.tms.company.infrastructure.jpa.entities;
+package br.com.logistics.tms.company.infrastructure.jpa.neo4j;
 
-import java.time.LocalDate;
-import java.util.UUID;
 import lombok.Builder;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 import org.springframework.data.neo4j.core.schema.TargetNode;
+
+import java.time.LocalDate;
 
 @RelationshipProperties
 @Builder

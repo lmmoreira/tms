@@ -4,12 +4,16 @@ import br.com.logistics.tms.company.application.repositories.CompanyRepository;
 import br.com.logistics.tms.company.domain.Cnpj;
 import br.com.logistics.tms.company.domain.Company;
 import br.com.logistics.tms.company.domain.CompanyId;
-import br.com.logistics.tms.company.infrastructure.jpa.entities.CompanyEntity;
-import br.com.logistics.tms.company.infrastructure.jpa.entities.RelationshipEntity;
-import br.com.logistics.tms.company.infrastructure.jpa.repositories.CompanyJpaRepository;
+import br.com.logistics.tms.company.infrastructure.jpa.neo4j.CompanyEntity;
+import br.com.logistics.tms.company.infrastructure.jpa.pg.CompanyPgEntity;
+import br.com.logistics.tms.company.infrastructure.jpa.neo4j.RelationshipEntity;
+import br.com.logistics.tms.company.infrastructure.jpa.neo4j.CompanyJpaRepository;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.Set;
+
+import br.com.logistics.tms.company.infrastructure.jpa.pg.CompanyPgJpaRepository;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -21,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CompanyRepositoryImpl implements CompanyRepository {
 
     private final CompanyJpaRepository companyJpaRepository;
+    private final CompanyPgJpaRepository companyPgJpaRepository;
 
     @Override
     @Transactional
@@ -124,9 +129,26 @@ public class CompanyRepositoryImpl implements CompanyRepository {
     }
 
     @Override
-    @Transactional
+    @WithSpan
     public Company create(Company company) {
         log.info("Creating company: {}", company);
+        createPG(company);
+        createNeo(company);
+        return company;
+    }
+
+    @Transactional("jpaTransactionManager")
+    public void createPG(Company company) {
+        log.info("Creating company in PG: {}", company);
+
+        CompanyPgEntity pgEntity = new CompanyPgEntity(company.companyId().value(),
+                company.name(), company.cnpj().value());
+        companyPgJpaRepository.save(pgEntity);
+    }
+
+    @Transactional("neo4JTransactionManager")
+    public Company createNeo(Company company) {
+        log.info("Creating company in NEO: {}", company);
         return companyJpaRepository.save(CompanyEntity.of(company)).toCompany();
     }
 

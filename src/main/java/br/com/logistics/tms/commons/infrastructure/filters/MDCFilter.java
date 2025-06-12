@@ -19,6 +19,8 @@ public class MDCFilter implements Filter {
 
             Optional.ofNullable(httpRequest.getHeader("x-request-id"))
                 .ifPresent(value -> MDC.put("request_id", value));
+            Optional.ofNullable(httpRequest.getHeader("x-correlation-id"))
+                    .ifPresent(value -> MDC.put("correlation_id", value));
             Optional.ofNullable(httpRequest.getHeader("x-module"))
                 .ifPresent(value -> MDC.put("module", value));
             Optional.ofNullable(httpRequest.getHeader("x-client-name"))

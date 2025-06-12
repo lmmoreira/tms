@@ -45,6 +45,11 @@ function generateHex(bytesLength) {
     return hex;
 }
 
+function correlation_id(r) {
+    var correlationId = generateHex(16);
+    return correlationId;
+}
+
 function traceparent(r) {
     var traceId = generateHex(16);
     var spanId = generateHex(8);
@@ -55,4 +60,4 @@ function traceparent(r) {
     return traceparent;
 }
 
-export default {hasSalesRole, jwt_details, headers_json, body_json, traceparent};
+export default {hasSalesRole, jwt_details, headers_json, body_json, traceparent, correlation_id};

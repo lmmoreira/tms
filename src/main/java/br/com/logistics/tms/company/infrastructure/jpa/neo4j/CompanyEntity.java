@@ -1,4 +1,4 @@
-package br.com.logistics.tms.company.infrastructure.jpa.entities;
+package br.com.logistics.tms.company.infrastructure.jpa.neo4j;
 
 import br.com.logistics.tms.company.domain.Cnpj;
 import br.com.logistics.tms.company.domain.Company;

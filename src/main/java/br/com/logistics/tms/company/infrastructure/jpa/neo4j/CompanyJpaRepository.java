@@ -1,9 +1,8 @@
-package br.com.logistics.tms.company.infrastructure.jpa.repositories;
+package br.com.logistics.tms.company.infrastructure.jpa.neo4j;
 
-import br.com.logistics.tms.company.infrastructure.jpa.entities.CompanyEntity;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 
