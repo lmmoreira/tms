@@ -1,28 +1,34 @@
 package br.com.logistics.tms.company.infrastructure.repositories;
 
+import br.com.logistics.tms.commons.application.gateways.DomainEventQueueGateway;
 import br.com.logistics.tms.company.application.repositories.CompanyRepository;
 import br.com.logistics.tms.company.domain.Cnpj;
 import br.com.logistics.tms.company.domain.Company;
 import br.com.logistics.tms.company.domain.CompanyId;
 import br.com.logistics.tms.company.infrastructure.jpa.neo4j.CompanyEntity;
-import br.com.logistics.tms.company.infrastructure.jpa.pg.CompanyPgEntity;
-import br.com.logistics.tms.company.infrastructure.jpa.neo4j.RelationshipEntity;
 import br.com.logistics.tms.company.infrastructure.jpa.neo4j.CompanyJpaRepository;
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.Set;
-
+import br.com.logistics.tms.company.infrastructure.jpa.neo4j.RelationshipEntity;
+import br.com.logistics.tms.company.infrastructure.jpa.pg.CompanyPgEntity;
 import br.com.logistics.tms.company.infrastructure.jpa.pg.CompanyPgJpaRepository;
+import br.com.logistics.tms.company.infrastructure.jpa.pg.OutboxPgEntity;
+import br.com.logistics.tms.company.infrastructure.jpa.pg.OutboxPgJpaRepository;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.Set;
+
 @Component
 @AllArgsConstructor
 @Slf4j
 public class CompanyRepositoryImpl implements CompanyRepository {
+
+    private final DomainEventQueueGateway domainEventQueueGateway;
+    private final OutboxPgJpaRepository outboxPgJpaRepository;
 
     private final CompanyJpaRepository companyJpaRepository;
     private final CompanyPgJpaRepository companyPgJpaRepository;
@@ -43,25 +49,25 @@ public class CompanyRepositoryImpl implements CompanyRepository {
 
         if (companyJpaRepository.findById(uuidShein).isEmpty()) {
             shein = CompanyEntity.builder().name("Shein").id(uuidShein).cnpj("54.713.528/0001-37")
-                .build();
+                    .build();
             companyJpaRepository.save(shein);
         }
 
         if (companyJpaRepository.findById(uuidShopee).isEmpty()) {
             shopee = CompanyEntity.builder().name("Shopee").id(uuidShopee)
-                .cnpj("13.554.215/0001-04").build();
+                    .cnpj("13.554.215/0001-04").build();
             companyJpaRepository.save(shopee);
         }
 
         if (companyJpaRepository.findById(uuidPerfume).isEmpty()) {
             perfime = CompanyEntity.builder().name("Perfume").id(uuidPerfume)
-                .cnpj("87.464.841/0001-38").build();
+                    .cnpj("87.464.841/0001-38").build();
             companyJpaRepository.save(perfime);
         }
 
         if (companyJpaRepository.findById(uuidCorreio).isEmpty()) {
             correio = CompanyEntity.builder().name("Correio").id(uuidCorreio)
-                .cnpj("35.893.532/0001-80").build();
+                    .cnpj("35.893.532/0001-80").build();
             companyJpaRepository.save(correio);
         }
 
@@ -71,33 +77,33 @@ public class CompanyRepositoryImpl implements CompanyRepository {
         CompanyEntity correioBUsca = companyJpaRepository.findById(uuidCorreio).orElse(null);
 
         sheinBusca.setRelation(Set.of(RelationshipEntity.builder()
-            .created(LocalDate.now())
-            .child(perfumeBusca)
-            .numVolumes(10)
-            .cuttimes("leonzin")
-            .build()));
+                .created(LocalDate.now())
+                .child(perfumeBusca)
+                .numVolumes(10)
+                .cuttimes("leonzin")
+                .build()));
 
         shopeeBusca.setRelation(Set.of(RelationshipEntity.builder()
-            .created(LocalDate.now())
-            .child(perfumeBusca)
-            .numVolumes(15)
-            .cuttimes("onnnnn")
-            .build()));
+                .created(LocalDate.now())
+                .child(perfumeBusca)
+                .numVolumes(15)
+                .cuttimes("onnnnn")
+                .build()));
 
         perfumeBusca.setRelation(Set.of(RelationshipEntity.builder()
-                .created(LocalDate.now())
-                .child(correioBUsca)
-                .numVolumes(15)
-                .cuttimes("08-10")
-                .source(sheinBusca.getName())
-                .build(),
-            RelationshipEntity.builder()
-                .created(LocalDate.now())
-                .child(correioBUsca)
-                .numVolumes(1)
-                .cuttimes("01-10")
-                .source(shopeeBusca.getName())
-                .build()));
+                        .created(LocalDate.now())
+                        .child(correioBUsca)
+                        .numVolumes(15)
+                        .cuttimes("08-10")
+                        .source(sheinBusca.getName())
+                        .build(),
+                RelationshipEntity.builder()
+                        .created(LocalDate.now())
+                        .child(correioBUsca)
+                        .numVolumes(1)
+                        .cuttimes("01-10")
+                        .source(shopeeBusca.getName())
+                        .build()));
 
         /*companyJpaRepository.save(sheinBusca);
         companyJpaRepository.save(shopeeBusca);
@@ -112,7 +118,6 @@ public class CompanyRepositoryImpl implements CompanyRepository {
         //    Map.of("Config1", "ValueConfig1")).build();
 
         //companyJpaRepository.save(shein);
-
 
 
         //sheinBusca = companyJpaRepository.findById(companyId.value().toString()).orElse(null);
@@ -134,6 +139,12 @@ public class CompanyRepositoryImpl implements CompanyRepository {
         log.info("Creating company: {}", company);
         createPG(company);
         createNeo(company);
+
+        //PROPAGATE DOMAIN EVENTS
+        // BY OUTBOX OR BY EVENT QUEUE
+        company.domainEvents().forEach(domainEventQueueGateway::publish);
+
+
         return company;
     }
 
@@ -144,6 +155,8 @@ public class CompanyRepositoryImpl implements CompanyRepository {
         CompanyPgEntity pgEntity = new CompanyPgEntity(company.companyId().value(),
                 company.name(), company.cnpj().value());
         companyPgJpaRepository.save(pgEntity);
+
+        outboxPgJpaRepository.saveAll(company.domainEvents().stream().map(OutboxPgEntity::of).toList());
     }
 
     @Transactional("neo4JTransactionManager")

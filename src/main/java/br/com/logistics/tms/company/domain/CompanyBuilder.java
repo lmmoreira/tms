@@ -56,6 +56,6 @@ public class CompanyBuilder {
 
     public Company build() {
         return new Company(companyId, name, cnpj, types, configuration, outgoingPaths,
-            incomingPaths);
+            incomingPaths, Set.of());
     }
 }

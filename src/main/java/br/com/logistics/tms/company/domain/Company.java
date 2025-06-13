@@ -1,6 +1,8 @@
 package br.com.logistics.tms.company.domain;
 
+import br.com.logistics.tms.commons.domain.DomainEvent;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
+
 import java.util.Set;
 
 public record Company(CompanyId companyId,
@@ -9,7 +11,8 @@ public record Company(CompanyId companyId,
                       Set<Type> types,
                       Configuration configuration,
                       Set<Relationship> outgoingPaths,
-                      Set<Relationship> incomingPaths) {
+                      Set<Relationship> incomingPaths,
+                      Set<DomainEvent> domainEvents) {
 
     public Company {
         if (companyId == null) {
@@ -30,8 +33,9 @@ public record Company(CompanyId companyId,
     }
 
     public static Company createCompany(final String name, final String cnpj, final Set<Type> types) {
-        return new Company(CompanyId.unique(), name, new Cnpj(cnpj), types, null, null,
-            null);
+        final CompanyId id = CompanyId.unique();
+        return new Company(id, name, new Cnpj(cnpj), types, null, null,
+                null, Set.of(new CompanyCreated(id.value().toString())));
     }
 
     public void addRelationship(Company to, Company source, Configuration configuration) {
