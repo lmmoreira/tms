@@ -1,6 +1,6 @@
 package br.com.logistics.tms.company.application.usecases;
 
-import br.com.logistics.tms.commons.annotation.DomainService;
+import br.com.logistics.tms.commons.application.annotation.DomainService;
 import br.com.logistics.tms.commons.application.gateways.DomainEventQueueGateway;
 
 @DomainService

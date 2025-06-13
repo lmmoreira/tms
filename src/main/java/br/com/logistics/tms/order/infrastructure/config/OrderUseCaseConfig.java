@@ -1,6 +1,6 @@
 package br.com.logistics.tms.order.infrastructure.config;
 
-import br.com.logistics.tms.commons.annotation.DomainService;
+import br.com.logistics.tms.commons.application.annotation.DomainService;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;

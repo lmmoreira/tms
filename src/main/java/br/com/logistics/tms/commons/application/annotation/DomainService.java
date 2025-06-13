@@ -1,4 +1,4 @@
-package br.com.logistics.tms.commons.annotation;
+package br.com.logistics.tms.commons.application.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

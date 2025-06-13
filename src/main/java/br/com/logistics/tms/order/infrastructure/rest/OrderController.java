@@ -1,5 +1,7 @@
 package br.com.logistics.tms.order.infrastructure.rest;
 
+import br.com.logistics.tms.commons.telemetry.Counterable;
+import br.com.logistics.tms.commons.telemetry.MetricCounter;
 import br.com.logistics.tms.order.application.GetOrderByCompanyIdUseCase;
 import br.com.logistics.tms.order.application.GetOrderByCompanyIdUseCase.Input;
 import br.com.logistics.tms.order.infrastructure.rest.dto.OrderDTO;
@@ -7,7 +9,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongGauge;
 import io.opentelemetry.api.metrics.Meter;
 import jakarta.annotation.PostConstruct;
@@ -29,20 +30,21 @@ public class OrderController {
     private final GetOrderByCompanyIdUseCase getOrderByCompanyIdUseCase;
     private final OpenTelemetry openTelemetry;
     private final Meter meter;
-    private final LongCounter orderRequestCounter;
     private final LongGauge ordersInProcessGauge;
     private final DoubleHistogram orderProcessingTimeHistogram;
 
+    private final Counterable counterable;
+    private final MetricCounter orderRequestCounter;
+
     @Autowired
-    public OrderController(GetOrderByCompanyIdUseCase getOrderByCompanyIdUseCase, OpenTelemetry openTelemetry) {
+    public OrderController(GetOrderByCompanyIdUseCase getOrderByCompanyIdUseCase, OpenTelemetry openTelemetry, Counterable counterable) {
         this.getOrderByCompanyIdUseCase = getOrderByCompanyIdUseCase;
+        this.counterable = counterable;
+
         this.openTelemetry = openTelemetry;
         this.meter = openTelemetry.getMeter("tmsOrder");
 
-        this.orderRequestCounter = meter
-                .counterBuilder("tms.order.order_id_requests")
-                .setDescription("Counts order id requests")
-                .build();
+        this.orderRequestCounter = counterable.createLongCounter("tms.order.order_id_requests", "Counts order id requests");
 
         this.ordersInProcessGauge = meter
                 .gaugeBuilder("tms.order.orders_in_process")
@@ -69,20 +71,17 @@ public class OrderController {
         log.info("Iai");
 
         String marketplace = new Random().nextBoolean() ? "shein" : "shopee";
-
-        orderRequestCounter.add(1, Attributes.of(
-                AttributeKey.stringKey("tms.order.order_id_requests_id"), id.toString(),
-                AttributeKey.stringKey("tms.order.order_id_requests_client"), marketplace));
+        orderRequestCounter.add(1, Map.of("tms.order.order_id_requests_id", id.toString(), "tms.order.order_id_requests_client", marketplace));
 
         ordersInProcessGauge.set(new Random().nextInt(10), Attributes.of(
                 AttributeKey.stringKey("tms.order.orders_in_process_id"), id.toString(),
                 AttributeKey.stringKey("tms.order.orders_in_process_client"), marketplace));
 
-        orderProcessingTimeHistogram.record(new Random().nextInt(100,1000), Attributes.of(
+        orderProcessingTimeHistogram.record(new Random().nextInt(100, 1000), Attributes.of(
                 AttributeKey.stringKey("tms.order.orders_in_process_id"), id.toString(),
                 AttributeKey.stringKey("tms.order.orders_in_process_client"), marketplace));
 
-        return new OrderDTO(1L, false,"12345678909", Instant.now(), Instant.now());
+        return new OrderDTO(1L, false, "12345678909", Instant.now(), Instant.now());
 
 
     }
@@ -90,9 +89,9 @@ public class OrderController {
     @GetMapping("/company/{id}")
     public Set<OrderDTO> getByCompany(@PathVariable String id) {
         return getOrderByCompanyIdUseCase.execute(new Input(id)).order()
-            .stream()
-            .map(order -> new OrderDTO(order.id(), order.archived(), order.externalId(), order.createdAt(), order.updatedAt()))
-            .collect(Collectors.toSet());
+                .stream()
+                .map(order -> new OrderDTO(order.id(), order.archived(), order.externalId(), order.createdAt(), order.updatedAt()))
+                .collect(Collectors.toSet());
     }
 
 }

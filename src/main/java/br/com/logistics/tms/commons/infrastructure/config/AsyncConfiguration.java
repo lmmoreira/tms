@@ -1,11 +1,7 @@
 package br.com.logistics.tms.commons.infrastructure.config;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
+import br.com.logistics.tms.commons.telemetry.TraceSpan;
+import br.com.logistics.tms.commons.telemetry.Traceable;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -22,13 +18,11 @@ public class AsyncConfiguration {
 
     public final static String DOMAIN_EVENT_QUEUE_GATEWAY_EXECUTOR = "domainEventQueueGatewayExecutor";
 
-    private OpenTelemetry openTelemetry;
-    private Tracer tracer;
+    private final Traceable tracer;
 
     @Autowired
-    public AsyncConfiguration(OpenTelemetry openTelemetry) {
-        this.openTelemetry = openTelemetry;
-        this.tracer = openTelemetry.getTracer("tmsTracer");
+    public AsyncConfiguration(Traceable tracer) {
+        this.tracer = tracer;
     }
 
     @Bean(name = DOMAIN_EVENT_QUEUE_GATEWAY_EXECUTOR)
@@ -36,24 +30,13 @@ public class AsyncConfiguration {
         return new VirtualThreadTaskExecutor(DOMAIN_EVENT_QUEUE_GATEWAY_EXECUTOR) {
             @Override
             public void execute(Runnable task) {
-                Context parentContext = Context.current();
                 final Map<String, String> mdcContext = MDC.getCopyOfContextMap();
+                final TraceSpan span = tracer.createSpan("GatewayExecutorTask", mdcContext);
 
-                super.execute(() -> {
-                    Span span = tracer.spanBuilder("GatewayExecutorTask").setParent(parentContext).startSpan();
-                    span.setAttribute("request_id", mdcContext.get("request_id"));
-                    span.setAttribute("correlation_id", mdcContext.get("correlation_id"));
-
-                    try (Scope scope = span.makeCurrent()) {
-                        if (mdcContext != null) {
-                            MDC.setContextMap(mdcContext);
-                        }
-                        task.run();
-                    } finally {
-                        span.end();
-                        MDC.clear();
-                    }
-                });
+                super.execute(() -> span.runWithinScope(() -> {
+                    MDC.setContextMap(mdcContext);
+                    task.run();
+                }, MDC::clear));
             }
         };
     }
