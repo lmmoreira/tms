@@ -1,6 +1,6 @@
-package br.com.logistics.tms.commons.infrastructure.telemetry;
+package br.com.logistics.tms.commons.infrastructure.telemetry.metric;
 
-import br.com.logistics.tms.commons.telemetry.MetricCounter;
+import br.com.logistics.tms.commons.infrastructure.telemetry.MetricCounter;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;

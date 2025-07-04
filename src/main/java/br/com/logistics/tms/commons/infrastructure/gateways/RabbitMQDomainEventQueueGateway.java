@@ -3,7 +3,7 @@ package br.com.logistics.tms.commons.infrastructure.gateways;
 import br.com.logistics.tms.commons.application.gateways.DomainEventQueueGateway;
 import br.com.logistics.tms.commons.domain.DomainEvent;
 import br.com.logistics.tms.commons.infrastructure.json.JsonSingleton;
-import br.com.logistics.tms.commons.telemetry.Logable;
+import br.com.logistics.tms.commons.infrastructure.telemetry.Logable;
 import lombok.AllArgsConstructor;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.scheduling.annotation.Async;

@@ -1,7 +1,11 @@
 package br.com.logistics.tms.commons.infrastructure.config;
 
-import br.com.logistics.tms.commons.telemetry.TraceSpan;
-import br.com.logistics.tms.commons.telemetry.Traceable;
+import br.com.logistics.tms.commons.infrastructure.security.Company;
+import br.com.logistics.tms.commons.infrastructure.security.CompanyContext;
+import br.com.logistics.tms.commons.infrastructure.security.User;
+import br.com.logistics.tms.commons.infrastructure.security.UserContext;
+import br.com.logistics.tms.commons.infrastructure.telemetry.TraceSpan;
+import br.com.logistics.tms.commons.infrastructure.telemetry.Traceable;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -31,12 +35,20 @@ public class AsyncConfiguration {
             @Override
             public void execute(Runnable task) {
                 final Map<String, String> mdcContext = MDC.getCopyOfContextMap();
+                final User userContext = UserContext.getCurrentUser();
+                final Company companyContext = CompanyContext.getCurrentCompany();
                 final TraceSpan span = tracer.createSpan("GatewayExecutorTask", mdcContext);
 
                 super.execute(() -> span.runWithinScope(() -> {
                     MDC.setContextMap(mdcContext);
+                    UserContext.setCurrentUser(userContext);
+                    CompanyContext.setCurrentCompany(companyContext);
                     task.run();
-                }, MDC::clear));
+                }, () -> {
+                    MDC.clear();
+                    UserContext.clear();
+                    CompanyContext.clear();
+                }));
             }
         };
     }

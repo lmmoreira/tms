@@ -1,4 +1,4 @@
-package br.com.logistics.tms.commons.telemetry;
+package br.com.logistics.tms.commons.infrastructure.telemetry;
 
 import java.util.Map;
 

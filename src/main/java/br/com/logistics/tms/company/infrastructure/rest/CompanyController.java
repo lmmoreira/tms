@@ -75,7 +75,7 @@ public class CompanyController {
                     .withInput(new CreateCompanyUseCase.Input(createCompanyDTO.name(),
                             createCompanyDTO.cnpj(), createCompanyDTO.types()))
                     .presentWith(defaultRestPresenter, output -> defaultRestPresenter.present(output,
-                            HttpStatus.CREATED))
+                            HttpStatus.CREATED.value()))
                     .execute();
         }
 

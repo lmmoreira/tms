@@ -13,7 +13,7 @@ public class GetCompanyByIdUseCaseMobilePresenter implements Presenter {
     }
 
     @Override
-    public Object present(Object input, HttpStatus successStatus) {
+    public Object present(Object input, Integer customSuccessStatusCode) {
         return null;
     }
 

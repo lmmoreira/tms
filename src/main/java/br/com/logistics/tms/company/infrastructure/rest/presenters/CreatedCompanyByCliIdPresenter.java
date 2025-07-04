@@ -14,7 +14,7 @@ public class CreatedCompanyByCliIdPresenter implements Presenter<CreateCompanyUs
     }
 
     @Override
-    public String present(CreateCompanyUseCase.Output input, HttpStatus successStatus) {
+    public String present(CreateCompanyUseCase.Output input, Integer customSuccessStatusCode) {
         return "From UseCase Directly - Company Name: " + input.name() + ", CNPJ: " + input.cnpj();
     }
 

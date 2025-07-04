@@ -1,7 +1,7 @@
 package br.com.logistics.tms.order.infrastructure.rest;
 
-import br.com.logistics.tms.commons.telemetry.Counterable;
-import br.com.logistics.tms.commons.telemetry.MetricCounter;
+import br.com.logistics.tms.commons.infrastructure.telemetry.Counterable;
+import br.com.logistics.tms.commons.infrastructure.telemetry.MetricCounter;
 import br.com.logistics.tms.order.application.GetOrderByCompanyIdUseCase;
 import br.com.logistics.tms.order.application.GetOrderByCompanyIdUseCase.Input;
 import br.com.logistics.tms.order.infrastructure.rest.dto.OrderDTO;

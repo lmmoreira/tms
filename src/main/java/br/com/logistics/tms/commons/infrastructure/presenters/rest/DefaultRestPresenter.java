@@ -13,7 +13,7 @@ import java.util.Map;
 @Component
 public class DefaultRestPresenter implements Presenter<Object, ResponseEntity<?>> {
 
-    private static Map<Class<?>, HttpStatus> errorStatusMap = Map.of(ValidationException.class, HttpStatus.BAD_REQUEST);
+    private static final Map<Class<?>, HttpStatus> errorStatusMap = Map.of(ValidationException.class, HttpStatus.BAD_REQUEST);
 
     private final HttpServletRequest request;
 
@@ -24,13 +24,13 @@ public class DefaultRestPresenter implements Presenter<Object, ResponseEntity<?>
 
     @Override
     public ResponseEntity<?> present(Object input) {
-        return present(input, HttpStatus.OK);
+        return present(input, HttpStatus.OK.value());
     }
 
     @Override
-    public ResponseEntity<?> present(Object input, HttpStatus successStatus) {
+    public ResponseEntity<?> present(Object input, Integer customSuccessStatusCode) {
         return ResponseEntity
-                .status(successStatus)
+                .status(HttpStatus.valueOf(customSuccessStatusCode))
                 .body(input);
     }
 

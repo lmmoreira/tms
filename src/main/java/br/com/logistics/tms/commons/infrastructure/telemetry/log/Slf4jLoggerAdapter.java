@@ -1,6 +1,6 @@
-package br.com.logistics.tms.commons.infrastructure.log;
+package br.com.logistics.tms.commons.infrastructure.telemetry.log;
 
-import br.com.logistics.tms.commons.telemetry.Logable;
+import br.com.logistics.tms.commons.infrastructure.telemetry.Logable;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 

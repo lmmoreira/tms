@@ -1,6 +1,6 @@
-package br.com.logistics.tms.commons.infrastructure.telemetry;
+package br.com.logistics.tms.commons.infrastructure.telemetry.trace;
 
-import br.com.logistics.tms.commons.telemetry.TraceSpan;
+import br.com.logistics.tms.commons.infrastructure.telemetry.TraceSpan;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
 
