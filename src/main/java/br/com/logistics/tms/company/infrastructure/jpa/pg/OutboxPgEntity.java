@@ -1,6 +1,6 @@
 package br.com.logistics.tms.company.infrastructure.jpa.pg;
 
-import br.com.logistics.tms.commons.domain.DomainEvent;
+import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 import br.com.logistics.tms.commons.infrastructure.json.JsonSingleton;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,8 +33,8 @@ public class OutboxPgEntity {
     @Column(nullable = false, length = 50)
     private String type;
 
-    public static OutboxPgEntity of(final DomainEvent event) {
-        return new OutboxPgEntity(UUID.randomUUID(), JsonSingleton.getInstance().toJson(event), false, event.type());
+    public static OutboxPgEntity of(final AbstractDomainEvent event) {
+        return new OutboxPgEntity(UUID.fromString(event.getDomainEventId()), JsonSingleton.getInstance().toJson(event), false, event.getType());
     }
 
 }

@@ -4,12 +4,16 @@ import br.com.logistics.tms.commons.application.mapper.Mapper;
 import br.com.logistics.tms.commons.application.presenters.Presenter;
 import br.com.logistics.tms.commons.application.usecases.exception.UseCaseException;
 
+import java.util.function.Consumer;
+
 public class NullaryUseCaseBuilder<OUTPUT> {
     private final NullaryUseCase<OUTPUT> nullaryUseCase;
     private final Mapper mapper;
 
     private Class<?> outputClass;
     private Presenter<?, ?> presenter;
+
+    private Consumer<Throwable> exceptionHandler = e -> {};
 
     public NullaryUseCaseBuilder(NullaryUseCase<OUTPUT> nullaryUseCase) {
         this.nullaryUseCase = nullaryUseCase;
@@ -23,6 +27,11 @@ public class NullaryUseCaseBuilder<OUTPUT> {
 
     public <IN, OUT> NullaryUseCaseBuilder<OUTPUT> presentWith(Presenter<IN, OUT> presenter) {
         this.presenter = presenter;
+        return this;
+    }
+
+    public NullaryUseCaseBuilder<OUTPUT> onException(Consumer<Throwable> handler) {
+        this.exceptionHandler = handler;
         return this;
     }
 
@@ -42,6 +51,8 @@ public class NullaryUseCaseBuilder<OUTPUT> {
 
             return (FINAL_OUTPUT) finalOutput;
         } catch (Exception t) {
+            exceptionHandler.accept(t);
+
             if (presenter != null) {
                 return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(t);
             }

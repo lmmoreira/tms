@@ -2,6 +2,7 @@ package br.com.logistics.tms.company.infrastructure.rest;
 
 import br.com.logistics.tms.commons.application.usecases.UseCaseExecutor;
 import br.com.logistics.tms.commons.infrastructure.presenters.rest.DefaultRestPresenter;
+import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
 import br.com.logistics.tms.company.application.usecases.AddConfigurationToCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;
@@ -25,16 +26,19 @@ public class CompanyController {
     private final CreateCompanyUseCase createCompanyUseCase;
     private final DefaultRestPresenter defaultRestPresenter;
     private final CreatedCompanyByCliIdPresenter createdCompanyByCliIdPresenter;
+    private final RestUseCaseExecutor restUseCaseExecutor;
 
     public CompanyController(AddConfigurationToCompanyUseCase addConfigurationToCompanyUseCase,
                              GetCompanyByIdUseCase getCompanyByIdUseCase,
                              CreateCompanyUseCase createCompanyUseCase,
                              DefaultRestPresenter defaultRestPresenter,
+                             RestUseCaseExecutor restUseCaseExecutor,
                              CreatedCompanyByCliIdPresenter createdCompanyByCliIdPresenter) {
         this.addConfigurationToCompanyUseCase = addConfigurationToCompanyUseCase;
         this.getCompanyByIdUseCase = getCompanyByIdUseCase;
         this.createCompanyUseCase = createCompanyUseCase;
         this.defaultRestPresenter = defaultRestPresenter;
+        this.restUseCaseExecutor = restUseCaseExecutor;
         this.createdCompanyByCliIdPresenter = createdCompanyByCliIdPresenter;
     }
 
@@ -79,11 +83,10 @@ public class CompanyController {
                     .execute();
         }
 
-        return UseCaseExecutor
+        return restUseCaseExecutor
                 .from(createCompanyUseCase)
                 .withInput(createCompanyDTO)
                 .mapOutputTo(CreateCompanyResponseDTO.class)
-                .presentWith(defaultRestPresenter)
                 .execute();
     }
 

@@ -1,9 +1,9 @@
 package br.com.logistics.tms.commons.application.gateways;
 
-import br.com.logistics.tms.commons.domain.DomainEvent;
+import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 
 @FunctionalInterface
 public interface DomainEventQueueGateway {
 
-    void publish(DomainEvent content);
+    void publish(AbstractDomainEvent content);
 }

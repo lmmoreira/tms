@@ -103,6 +103,23 @@ services:
       - tms-database:/var/lib/postgresql/data
     networks:
       - tms-network
+  tms-database-pool:
+    image: edoburu/pgbouncer:latest
+    container_name: tms-database-pool
+    ports:
+      - "6432:6432"
+    volumes:
+      - ./infra/pgbouncer:/etc/pgbouncer
+    depends_on:
+      - tms-database
+    networks:
+      - tms-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -h 127.0.0.1 -p 6432 -U tms -d tms || exit 1" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
   tms-neo4j:
     image: neo4j:latest
     container_name: tms-neo4j

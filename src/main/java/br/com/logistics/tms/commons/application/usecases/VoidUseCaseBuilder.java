@@ -6,6 +6,7 @@ import br.com.logistics.tms.commons.application.usecases.exception.UseCaseExcept
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.function.Consumer;
 
 public class VoidUseCaseBuilder<INPUT> {
     private final VoidUseCase<INPUT> voidUseCase;
@@ -14,6 +15,8 @@ public class VoidUseCaseBuilder<INPUT> {
 
     private Object externalInput;
     private Presenter<?, ?> presenter;
+
+    private Consumer<Throwable> exceptionHandler = e -> {};
 
     public VoidUseCaseBuilder(VoidUseCase<INPUT> voidUseCase) {
         this.voidUseCase = voidUseCase;
@@ -30,6 +33,11 @@ public class VoidUseCaseBuilder<INPUT> {
         return this;
     }
 
+    public VoidUseCaseBuilder<INPUT> onException(Consumer<Throwable> handler) {
+        this.exceptionHandler = handler;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     public void execute() {
         try {
@@ -40,6 +48,8 @@ public class VoidUseCaseBuilder<INPUT> {
             voidUseCase.execute(input);
 
         } catch (Exception t) {
+            exceptionHandler.accept(t);
+
             throw new UseCaseException("UseCase Error", t);
         }
     }

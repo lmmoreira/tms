@@ -6,6 +6,7 @@ import br.com.logistics.tms.commons.application.usecases.exception.UseCaseExcept
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class UseCaseBuilder<INPUT, OUTPUT> {
@@ -17,6 +18,7 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
     private Class<?> outputClass;
     private Presenter<?, ?> presenter;
     private Function<Object, ?> presenterFunction;
+    private Consumer<Throwable> exceptionHandler =  e -> {};
 
     public UseCaseBuilder(UseCase<INPUT, OUTPUT> useCase) {
         this.useCase = useCase;
@@ -49,6 +51,11 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
         return this;
     }
 
+    public UseCaseBuilder<INPUT, OUTPUT> onException(Consumer<Throwable> handler) {
+        this.exceptionHandler = handler;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     public <FINAL_OUTPUT> FINAL_OUTPUT execute() {
         try {
@@ -74,6 +81,8 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
 
             return (FINAL_OUTPUT) finalOutput;
         } catch (Exception t) {
+            exceptionHandler.accept(t);
+
             if (presenter != null) {
                 return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(t);
             }

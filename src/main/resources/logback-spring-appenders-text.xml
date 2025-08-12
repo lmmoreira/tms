@@ -1,5 +1,5 @@
 <included>
-    <property name="PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} | Application=${APP_NAME} | Module=%X{module} | %-5level | %thread | %logger{36} | User=%X{user_name} | UserEmail=%X{user_email} | TraceId=%X{trace_id} | SpanId=%X{span_id} | Message=%msg%n"/>
+    <property name="PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} | Application=${APP_NAME} | Module=%X{module} | %-5level | %thread | %logger{36} | User=%X{user_name} | UserEmail=%X{user_email} | TraceId=%X{trace_id} | SpanId=%X{span_id} | Message=%msg%n%ex"/>
 
     <appender name="STDOUT_TEXT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>

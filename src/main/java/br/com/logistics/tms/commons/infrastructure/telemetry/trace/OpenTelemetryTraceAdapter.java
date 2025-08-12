@@ -22,6 +22,10 @@ public class OpenTelemetryTraceAdapter implements Traceable {
 
     @Override
     public TraceSpan createSpan(String name, Map<String, String> context) {
+        if (context == null) {
+            return new OpenTelemetryTraceSpan(tracer.spanBuilder(name).startSpan());
+        }
+
         final Context parentContext = Context.current();
         final Span span = tracer.spanBuilder(name).setParent(parentContext).startSpan();
 

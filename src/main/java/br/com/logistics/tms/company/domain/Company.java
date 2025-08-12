@@ -1,6 +1,6 @@
 package br.com.logistics.tms.company.domain;
 
-import br.com.logistics.tms.commons.domain.DomainEvent;
+import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 
 import java.util.Set;
@@ -12,7 +12,7 @@ public record Company(CompanyId companyId,
                       Configuration configuration,
                       Set<Relationship> outgoingPaths,
                       Set<Relationship> incomingPaths,
-                      Set<DomainEvent> domainEvents) {
+                      Set<AbstractDomainEvent> domainEvents) {
 
     public Company {
         if (companyId == null) {

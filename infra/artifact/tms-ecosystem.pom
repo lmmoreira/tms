@@ -8,10 +8,12 @@
     <packaging>pom</packaging>
     <properties>
         <uuid.generator>5.1.0</uuid.generator>
-        <spring-modulith.version>1.4.1</spring-modulith.version>
+        <spring-modulith.version>1.4.2</spring-modulith.version>
         <codehaus.janino>3.1.12</codehaus.janino>
-        <logstash.encoder>8.0</logstash.encoder>
-        <opentelemetry.instrumentation>2.11.0</opentelemetry.instrumentation>
+        <logstash.encoder>8.1</logstash.encoder>
+        <opentelemetry.instrumentation>2.18.1</opentelemetry.instrumentation>
+        <com.fasterxml.jackson.module>2.19.2</com.fasterxml.jackson.module>
+        <jackson-datatype-jsr310>2.19.2</jackson-datatype-jsr310>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -44,6 +46,17 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.module</groupId>
+                <artifactId>jackson-module-blackbird</artifactId>
+                <version>${com.fasterxml.jackson.module}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>${jackson-datatype-jsr310}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 </project>

@@ -21,4 +21,10 @@ public class Slf4jLoggerAdapter implements Logable {
         loggerMap.putIfAbsent(clazz, org.slf4j.LoggerFactory.getLogger(clazz));
         loggerMap.get(clazz).info(var1, var2);
     }
+
+    @Override
+    public void error(Class<?> clazz, String var1, Object... var2) {
+        loggerMap.putIfAbsent(clazz, org.slf4j.LoggerFactory.getLogger(clazz));
+        loggerMap.get(clazz).error(var1, var2);
+    }
 }
