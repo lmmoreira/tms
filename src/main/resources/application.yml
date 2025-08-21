@@ -31,6 +31,13 @@ spring:
       password: ${DB_NEO4J_PASS}
 
 management:
+  endpoint:
+    health:
+      probes:
+        add-additional-paths: true
+        enabled: true
+  server:
+    port: 8081
   endpoints:
     web:
       exposure:
