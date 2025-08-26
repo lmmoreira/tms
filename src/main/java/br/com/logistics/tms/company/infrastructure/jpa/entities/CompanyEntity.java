@@ -8,10 +8,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "company", schema = "company")
@@ -48,8 +45,8 @@ public class CompanyEntity {
                 company.getCompanyId().value(),
                 company.getName(),
                 company.getCnpj().value(),
-                company.getCompanyTypes().value(),
-                company.getConfigurations().value()
+                new HashSet<>(company.getCompanyTypes().value()),
+                new HashMap<>(company.getConfigurations().value())
         );
     }
 

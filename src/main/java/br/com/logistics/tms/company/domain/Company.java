@@ -126,6 +126,10 @@ public class Company extends AbstractAggregateRoot {
         return updated;
     }
 
+    public void delete() {
+        placeDomainEvent(new CompanyDeleted(this.companyId.value().toString(), this.toString()));
+    }
+
     public Set<Agreement> getAgreements() {
         return Collections.unmodifiableSet(agreements);
     }

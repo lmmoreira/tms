@@ -41,3 +41,7 @@ Accept: application/json
     "webhook": "http://shein.com.br/logistics/callback"
   }
 }
+
+### Delete company
+DELETE {{server}}/companies/{{companyId}}
+Accept: application/json

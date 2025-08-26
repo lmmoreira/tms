@@ -6,7 +6,10 @@ import br.com.logistics.tms.commons.application.usecases.exception.UseCaseExcept
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class VoidUseCaseBuilder<INPUT> {
     private final VoidUseCase<INPUT> voidUseCase;
@@ -16,7 +19,10 @@ public class VoidUseCaseBuilder<INPUT> {
     private Object externalInput;
     private Presenter<?, ?> presenter;
 
-    private Consumer<Throwable> exceptionHandler = e -> {};
+    private Consumer<Throwable> exceptionHandler = e -> {
+    };
+
+    private final List<UseCaseInterceptor> actionInterceptors = new ArrayList<>();
 
     public VoidUseCaseBuilder(VoidUseCase<INPUT> voidUseCase) {
         this.voidUseCase = voidUseCase;
@@ -33,6 +39,11 @@ public class VoidUseCaseBuilder<INPUT> {
         return this;
     }
 
+    public VoidUseCaseBuilder<INPUT> addInterceptor(final UseCaseInterceptor interceptor) {
+        this.actionInterceptors.add(interceptor);
+        return this;
+    }
+
     public VoidUseCaseBuilder<INPUT> onException(Consumer<Throwable> handler) {
         this.exceptionHandler = handler;
         return this;
@@ -40,18 +51,30 @@ public class VoidUseCaseBuilder<INPUT> {
 
     @SuppressWarnings("unchecked")
     public void execute() {
-        try {
-            final INPUT input = !inputClass.isInstance(externalInput)
-                    ? mapper.map(externalInput, inputClass)
-                    : (INPUT) externalInput;
+        Supplier<Void> useCaseExecution = () -> {
+            try {
+                final INPUT input = !inputClass.isInstance(externalInput)
+                        ? mapper.map(externalInput, inputClass)
+                        : (INPUT) externalInput;
 
-            voidUseCase.execute(input);
+                voidUseCase.execute(input);
 
-        } catch (Exception t) {
-            exceptionHandler.accept(t);
+                return null;
 
-            throw new UseCaseException("UseCase Error", t);
+            } catch (Exception t) {
+                exceptionHandler.accept(t);
+
+                throw new UseCaseException("UseCase Error", t);
+            }
+        };
+
+        for (int i = actionInterceptors.size() - 1; i >= 0; i--) {
+            UseCaseInterceptor interceptor = actionInterceptors.get(i);
+            Supplier<Void> previous = useCaseExecution;
+            useCaseExecution = () -> interceptor.intercept(previous);
         }
+
+        useCaseExecution.get();
     }
 
     @SuppressWarnings("unchecked")

@@ -4,8 +4,11 @@ import br.com.logistics.tms.commons.application.mapper.Mapper;
 import br.com.logistics.tms.commons.application.presenters.Presenter;
 import br.com.logistics.tms.commons.application.usecases.exception.UseCaseException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class NullaryUseCaseBuilder<OUTPUT> {
     private final NullaryUseCase<OUTPUT> nullaryUseCase;
@@ -16,6 +19,8 @@ public class NullaryUseCaseBuilder<OUTPUT> {
     private Function<Object, ?> presenterFunction;
 
     private Consumer<Throwable> exceptionHandler = e -> {};
+
+    private final List<UseCaseInterceptor> actionInterceptors = new ArrayList<>();
 
     public NullaryUseCaseBuilder(NullaryUseCase<OUTPUT> nullaryUseCase) {
         this.nullaryUseCase = nullaryUseCase;
@@ -37,6 +42,11 @@ public class NullaryUseCaseBuilder<OUTPUT> {
         return this;
     }
 
+    public NullaryUseCaseBuilder<OUTPUT> addInterceptor(final UseCaseInterceptor interceptor) {
+        this.actionInterceptors.add(interceptor);
+        return this;
+    }
+
     public NullaryUseCaseBuilder<OUTPUT> onException(Consumer<Throwable> handler) {
         this.exceptionHandler = handler;
         return this;
@@ -44,32 +54,42 @@ public class NullaryUseCaseBuilder<OUTPUT> {
 
     @SuppressWarnings("unchecked")
     public <FINAL_OUTPUT> FINAL_OUTPUT execute() {
-        try {
+        Supplier<FINAL_OUTPUT> useCaseExecution = () -> {
+            try {
 
-            final OUTPUT output = nullaryUseCase.execute();
+                final OUTPUT output = nullaryUseCase.execute();
 
-            final Object finalOutput = outputClass != null
-                    ? mapper.map(output, outputClass)
-                    : output;
+                final Object finalOutput = outputClass != null
+                        ? mapper.map(output, outputClass)
+                        : output;
 
-            if (presenter != null) {
-                return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(finalOutput);
+                if (presenter != null) {
+                    return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(finalOutput);
+                }
+
+                if (presenterFunction != null) {
+                    return (FINAL_OUTPUT) presenterFunction.apply(finalOutput);
+                }
+
+                return (FINAL_OUTPUT) finalOutput;
+            } catch (Exception t) {
+                exceptionHandler.accept(t);
+
+                if (presenter != null) {
+                    return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(t);
+                }
+
+                throw new UseCaseException("UseCase Error", t);
             }
+        };
 
-            if (presenterFunction != null) {
-                return (FINAL_OUTPUT) presenterFunction.apply(finalOutput);
-            }
-
-            return (FINAL_OUTPUT) finalOutput;
-        } catch (Exception t) {
-            exceptionHandler.accept(t);
-
-            if (presenter != null) {
-                return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(t);
-            }
-
-            throw new UseCaseException("UseCase Error", t);
+        for (int i = actionInterceptors.size() - 1; i >= 0; i--) {
+            UseCaseInterceptor interceptor = actionInterceptors.get(i);
+            Supplier<FINAL_OUTPUT> previous = useCaseExecution;
+            useCaseExecution = () -> interceptor.intercept(previous);
         }
+
+        return useCaseExecution.get();
     }
 
 }

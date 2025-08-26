@@ -48,6 +48,12 @@ public class CompanyRepositoryImpl implements CompanyRepository {
         return company;
     }
 
+    @Override
+    public void delete(Company company) {
+        companyJpaRepository.deleteById(company.getCompanyId().value());
+        companyOutboxJpaRepository.saveAll(CompanyOutboxEntity.of(company.getDomainEvents()));
+    }
+
 }
 
 
