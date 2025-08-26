@@ -16,6 +16,6 @@ List of technical debt to be paid.
 - [x] **DEBT-005** - Enable RFC 9457 for error standardization on spring-boot.
   - Ref.: https://datatracker.ietf.org/doc/html/rfc9457
   - Ref.: https://dev.to/abdelrani/error-handling-in-spring-web-using-rfc-9457-specification-5dj1
-- [] **DEBT-006** - Metrics on ports and adapters - create a pattern
-- [] **DEBT-007** - Consistency on integration events inside usecases. Should be thrown by the aggregate
+- [x] **DEBT-006** - Metrics on ports and adapters - create a pattern
+- [x] **DEBT-007** - Consistency on integration events inside usecases. Should be thrown by the aggregate
 - [x] **DEBT-008** - Monorepo study. Modular monolith controlled by env and component scanning limitation.

@@ -1,17 +1,18 @@
 package br.com.logistics.tms.company.infrastructure.rest;
 
-import br.com.logistics.tms.commons.application.usecases.UseCaseExecutor;
+import br.com.logistics.tms.commons.application.presenters.Presenter;
 import br.com.logistics.tms.commons.infrastructure.presenters.rest.DefaultRestPresenter;
 import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
-import br.com.logistics.tms.company.application.usecases.AddConfigurationToCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;
+import br.com.logistics.tms.company.application.usecases.UpdateCompanyUseCase;
 import br.com.logistics.tms.company.infrastructure.rest.dto.CreateCompanyDTO;
 import br.com.logistics.tms.company.infrastructure.rest.dto.CreateCompanyResponseDTO;
-import br.com.logistics.tms.company.infrastructure.rest.presenters.CreatedCompanyByCliIdPresenter;
+import br.com.logistics.tms.company.infrastructure.rest.dto.UpdateCompanyDTO;
+import br.com.logistics.tms.company.infrastructure.rest.dto.UpdateCompanyResponseDTO;
+import br.com.logistics.tms.company.infrastructure.rest.presenters.CompanyByIdCliPresenter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -21,73 +22,61 @@ import java.util.Map;
 @Slf4j
 public class CompanyController {
 
-    private final AddConfigurationToCompanyUseCase addConfigurationToCompanyUseCase;
     private final GetCompanyByIdUseCase getCompanyByIdUseCase;
     private final CreateCompanyUseCase createCompanyUseCase;
+    private final UpdateCompanyUseCase updateCompanyUseCase;
     private final DefaultRestPresenter defaultRestPresenter;
-    private final CreatedCompanyByCliIdPresenter createdCompanyByCliIdPresenter;
+    private final CompanyByIdCliPresenter companyByIdCliPresenter;
     private final RestUseCaseExecutor restUseCaseExecutor;
 
-    public CompanyController(AddConfigurationToCompanyUseCase addConfigurationToCompanyUseCase,
-                             GetCompanyByIdUseCase getCompanyByIdUseCase,
+    public CompanyController(GetCompanyByIdUseCase getCompanyByIdUseCase,
                              CreateCompanyUseCase createCompanyUseCase,
+                             UpdateCompanyUseCase updateCompanyUseCase,
                              DefaultRestPresenter defaultRestPresenter,
                              RestUseCaseExecutor restUseCaseExecutor,
-                             CreatedCompanyByCliIdPresenter createdCompanyByCliIdPresenter) {
-        this.addConfigurationToCompanyUseCase = addConfigurationToCompanyUseCase;
+                             CompanyByIdCliPresenter companyByIdCliPresenter) {
         this.getCompanyByIdUseCase = getCompanyByIdUseCase;
         this.createCompanyUseCase = createCompanyUseCase;
+        this.updateCompanyUseCase = updateCompanyUseCase;
         this.defaultRestPresenter = defaultRestPresenter;
         this.restUseCaseExecutor = restUseCaseExecutor;
-        this.createdCompanyByCliIdPresenter = createdCompanyByCliIdPresenter;
+        this.companyByIdCliPresenter = companyByIdCliPresenter;
     }
 
-    @GetMapping("/{id}")
-    public Object get(@PathVariable String id) {
-        return getCompanyByIdUseCase.execute(new GetCompanyByIdUseCase.Input(id));
-    }
-
-    @GetMapping("/leo")
-    public Object getLeo(@RequestHeader Map<String, String> headers) {
-        log.info("Leonardo Machado Moreira");
-        return "leo";
-    }
-
-    @PostMapping(path = "/{id}/config/{configurationId}")
-    public ResponseEntity<Void> addConfigurationToCompany(@PathVariable String id,
-                                                          @PathVariable String configurationId) {
-        addConfigurationToCompanyUseCase.execute(
-                new AddConfigurationToCompanyUseCase.Input(id, configurationId, "valor"));
-        return ResponseEntity.ok().build();
+    @GetMapping("/{companyId}")
+    public Object get(
+            @RequestHeader Map<String, String> headers,
+            @PathVariable String companyId) {
+        final Presenter<?, ?> presenter = Boolean.parseBoolean(headers.get("cli")) ? companyByIdCliPresenter : defaultRestPresenter;
+        return restUseCaseExecutor
+                .from(getCompanyByIdUseCase)
+                .withInput(new GetCompanyByIdUseCase.Input(companyId))
+                .presentWith(presenter)
+                .execute();
     }
 
     @PostMapping
-    public Object create(@RequestHeader Map<String, String> headers,
-                         @RequestBody CreateCompanyDTO createCompanyDTO) {
-
-        if ("1".equals(headers.get("cli"))) {
-            return UseCaseExecutor
-                    .from(createCompanyUseCase)
-                    .withInput(createCompanyDTO)
-                    .presentWith(createdCompanyByCliIdPresenter)
-                    .execute();
-        }
-
-        if ("1".equals(headers.get("fullentity"))) {
-            return UseCaseExecutor
-                    .from(createCompanyUseCase)
-                    .withInput(new CreateCompanyUseCase.Input(createCompanyDTO.name(),
-                            createCompanyDTO.cnpj(), createCompanyDTO.types()))
-                    .presentWith(defaultRestPresenter, output -> defaultRestPresenter.present(output,
-                            HttpStatus.CREATED.value()))
-                    .execute();
-        }
-
+    public Object create(@RequestBody CreateCompanyDTO createCompanyDTO) {
         return restUseCaseExecutor
                 .from(createCompanyUseCase)
                 .withInput(createCompanyDTO)
                 .mapOutputTo(CreateCompanyResponseDTO.class)
+                .presentWith(output -> defaultRestPresenter.present(output, HttpStatus.CREATED.value()))
                 .execute();
     }
+
+    @PutMapping("/{companyId}")
+    public Object update(@PathVariable String companyId, @RequestBody UpdateCompanyDTO updateCompanyDTO) {
+        return restUseCaseExecutor
+                .from(updateCompanyUseCase)
+                .withInput(new UpdateCompanyUseCase.Input(companyId,
+                        updateCompanyDTO.name(),
+                        updateCompanyDTO.cnpj(),
+                        updateCompanyDTO.types(),
+                        updateCompanyDTO.configuration()))
+                .mapOutputTo(UpdateCompanyResponseDTO.class)
+                .execute();
+    }
+
 
 }

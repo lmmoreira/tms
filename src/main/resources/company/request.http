@@ -1,0 +1,43 @@
+@server = http://localhost:8080
+
+### Create company
+POST {{server}}/companies
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Shein",
+  "cnpj": "50.617.696/0001-78",
+  "types": ["MARKETPLACE"],
+  "configuration": {
+    "notification": "true",
+    "webhook": "http://shein.com.br/logistics/callback"
+  }
+}
+
+> {% client.global.set("companyId", response.body.companyId) %}
+
+
+### Get company
+GET {{server}}/companies/{{companyId}}
+Accept: application/json
+
+### Get company - CLI Presenter
+GET {{server}}/companies/{{companyId}}
+Accept: application/json
+cli: true
+
+### Update company
+PUT {{server}}/companies/{{companyId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Shein - Faz o L Talkey",
+  "cnpj": "50.617.696/0001-79",
+  "types": ["MARKETPLACE"],
+  "configuration": {
+    "notification": "false",
+    "webhook": "http://shein.com.br/logistics/callback"
+  }
+}

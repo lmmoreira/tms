@@ -19,7 +19,9 @@ public class JsonSingleton {
 
     public static synchronized JsonAdapter getInstance() {
         if (INSTANCE == null) {
-            mapper = new ObjectMapper().registerModule(new BlackbirdModule());//.registerModule(new JavaTimeModule());
+            mapper = new ObjectMapper()
+                    .registerModule(new BlackbirdModule())
+                    .registerModule(new JavaTimeModule());
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
             mapper.configure(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN, true);

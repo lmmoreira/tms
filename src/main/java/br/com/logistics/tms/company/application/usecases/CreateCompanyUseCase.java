@@ -6,21 +6,18 @@ import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import br.com.logistics.tms.company.application.repositories.CompanyRepository;
 import br.com.logistics.tms.company.domain.Cnpj;
 import br.com.logistics.tms.company.domain.Company;
-import br.com.logistics.tms.company.domain.Type;
-import br.com.logistics.tms.order.infrastructure.spi.OrderSpi;
+import br.com.logistics.tms.company.domain.CompanyType;
 
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @DomainService
 public class CreateCompanyUseCase implements UseCase<CreateCompanyUseCase.Input, CreateCompanyUseCase.Output> {
 
     private final CompanyRepository companyRepository;
-    private final OrderSpi orderSpi;
 
-    public CreateCompanyUseCase(CompanyRepository companyRepository, OrderSpi orderSpi) {
+    public CreateCompanyUseCase(CompanyRepository companyRepository) {
         this.companyRepository = companyRepository;
-        this.orderSpi = orderSpi;
     }
 
     public Output execute(final Input input) {
@@ -28,24 +25,25 @@ public class CreateCompanyUseCase implements UseCase<CreateCompanyUseCase.Input,
             throw new ValidationException("Company already exists");
         }
 
-        orderSpi.getOrderByCompanyId("1");
-
-        final Company company = companyRepository.create(
-                Company.createCompany(input.name, input.cnpj,
-                        input.types.stream().map(Type::with).collect(
-                                Collectors.toSet())));
-
-        return new Output(company.companyId().value().toString(), company.name(),
-                company.cnpj().value(),
-                company.types().stream().map(Type::toString).collect(Collectors.toSet()));
+        final Company company = companyRepository.create(Company.createCompany(input.name, input.cnpj, input.types, input.configuration));
+        return Output.ofCompany(company);
     }
 
-    public record Input(String name, String cnpj, Set<String> types) {
+    public record Input(String name, String cnpj, Set<CompanyType> types, Map<String, Object> configuration) {
 
     }
 
-    public record Output(String companyId, String name, String cnpj, Set<String> types) {
+    public record Output(String companyId,
+                         String name, String cnpj,
+                         Set<CompanyType> types,
+                         Map<String, Object> configuration) {
 
+        public static CreateCompanyUseCase.Output ofCompany(Company company) {
+            return new CreateCompanyUseCase.Output(company.getCompanyId().value().toString(),
+                    company.getName(),
+                    company.getCnpj().value(),
+                    company.getCompanyTypes().value(),
+                    company.getConfigurations().value());
+        }
     }
-
 }

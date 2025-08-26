@@ -5,18 +5,24 @@ import java.time.Instant;
 import java.util.UUID;
 
 public abstract class AbstractDomainEvent implements Serializable {
+    private final String aggregateId;
     private final String type;
     private final String module;
     private final String domainEventId;
     private final Instant occurredOn;
 
-    protected AbstractDomainEvent() {
+    protected AbstractDomainEvent(final String aggregateId) {
         final String[] ar = getClass().getPackage().getName().split("\\.");
         this.module = ar.length >= 2 ? ar[ar.length - 2] : "";
 
         this.type = getClass().getSimpleName();
         this.domainEventId = UUID.randomUUID().toString();
         this.occurredOn = Instant.now();
+        this.aggregateId = aggregateId;
+    }
+
+    public String getAggregateId() {
+        return aggregateId;
     }
 
     public String getType() {

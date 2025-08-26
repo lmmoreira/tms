@@ -6,8 +6,11 @@ import br.com.logistics.tms.commons.application.usecases.exception.UseCaseExcept
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class UseCaseBuilder<INPUT, OUTPUT> {
     private final UseCase<INPUT, OUTPUT> useCase;
@@ -19,6 +22,8 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
     private Presenter<?, ?> presenter;
     private Function<Object, ?> presenterFunction;
     private Consumer<Throwable> exceptionHandler =  e -> {};
+
+    private final List<UseCaseInterceptor> actionInterceptors = new ArrayList<>();
 
     public UseCaseBuilder(UseCase<INPUT, OUTPUT> useCase) {
         this.useCase = useCase;
@@ -45,9 +50,13 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
         return this;
     }
 
-    public <IN, OUT> UseCaseBuilder<INPUT, OUTPUT> presentWith(Presenter<IN, OUT> presenter, Function<Object, OUT> presenterFunction) {
-        this.presenter = presenter;
+    public <IN, OUT> UseCaseBuilder<INPUT, OUTPUT> presentWith(Function<Object, OUT> presenterFunction) {
         this.presenterFunction = presenterFunction;
+        return this;
+    }
+
+    public UseCaseBuilder<INPUT, OUTPUT> addInterceptor(final UseCaseInterceptor interceptor) {
+        this.actionInterceptors.add(interceptor);
         return this;
     }
 
@@ -58,37 +67,45 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
 
     @SuppressWarnings("unchecked")
     public <FINAL_OUTPUT> FINAL_OUTPUT execute() {
-        try {
-            final INPUT input = !inputClass.isInstance(externalInput)
-                    ? mapper.map(externalInput, inputClass)
-                    : (INPUT) externalInput;
+        Supplier<FINAL_OUTPUT> useCaseExecution = () -> {
+            try {
+                final INPUT input = !inputClass.isInstance(externalInput)
+                        ? mapper.map(externalInput, inputClass)
+                        : (INPUT) externalInput;
 
-            final OUTPUT output = useCase.execute(input);
+                final OUTPUT output = useCase.execute(input);
 
-            final Object finalOutput = outputClass != null
-                    ? mapper.map(output, outputClass)
-                    : output;
+                final Object finalOutput = outputClass != null
+                        ? mapper.map(output, outputClass)
+                        : output;
 
-            if (presenter != null) {
-
-                if (presenterFunction != null) {
-                    return (FINAL_OUTPUT) presenterFunction.apply(finalOutput);
-                } else {
+                if (presenter != null) {
                     return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(finalOutput);
                 }
 
+                if (presenterFunction != null) {
+                    return (FINAL_OUTPUT) presenterFunction.apply(finalOutput);
+                }
+
+                return (FINAL_OUTPUT) finalOutput;
+            } catch (Exception t) {
+                exceptionHandler.accept(t);
+
+                if (presenter != null) {
+                    return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(t);
+                }
+
+                throw new UseCaseException("UseCase Error", t);
             }
+        };
 
-            return (FINAL_OUTPUT) finalOutput;
-        } catch (Exception t) {
-            exceptionHandler.accept(t);
-
-            if (presenter != null) {
-                return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(t);
-            }
-
-            throw new UseCaseException("UseCase Error", t);
+        for (int i = actionInterceptors.size() - 1; i >= 0; i--) {
+            UseCaseInterceptor interceptor = actionInterceptors.get(i);
+            Supplier<FINAL_OUTPUT> previous = useCaseExecution;
+            useCaseExecution = () -> interceptor.intercept(previous);
         }
+
+        return useCaseExecution.get();
     }
 
     @SuppressWarnings("unchecked")

@@ -16,7 +16,7 @@ public class CompanySpiImpl implements CompanySpi {
 
     @Override
     public CompanyDTO getCompanyById(String companyId) {
-        return CompanyDTO.of(
-            getCompanyByIdUseCase.execute(new GetCompanyByIdUseCase.Input(companyId)).company());
+        GetCompanyByIdUseCase.Output output = getCompanyByIdUseCase.execute(new GetCompanyByIdUseCase.Input(companyId));
+        return new CompanyDTO(output.companyId(), output.name(), output.cnpj());
     }
 }

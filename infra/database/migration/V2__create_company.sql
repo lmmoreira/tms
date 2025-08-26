@@ -1,20 +1,12 @@
 CREATE TABLE company.company (
      id UUID PRIMARY KEY,
      name VARCHAR(255) NOT NULL,
-     cnpj VARCHAR(255) NOT NULL
+     cnpj VARCHAR(255) NOT NULL,
+     configuration JSONB
 );
 
-CREATE TABLE company.relationship_configuration (
-    id UUID PRIMARY KEY,
-    parent_id UUID NOT NULL REFERENCES company.company(id),
-    child_id UUID REFERENCES company.company(id),
-    configuration_type VARCHAR(255) NOT NULL,
-    configuration_value JSONB NOT NULL,
-    relationship_configuration_parent_id UUID REFERENCES company.relationship_configuration(id),
-    UNIQUE (parent_id, child_id, configuration_type, relationship_configuration_parent_id)
+CREATE TABLE company.company_type (
+      company_id UUID REFERENCES company.company(id),
+      type VARCHAR(50) NOT NULL,
+      PRIMARY KEY (company_id, type)
 );
-
-CREATE INDEX idx_relationship_configuration_parent_id ON company.relationship_configuration(parent_id);
-CREATE INDEX idx_relationship_configuration_child_id ON company.relationship_configuration(child_id);
-CREATE INDEX idx_relationship_configuration_configuration_parent_id ON company.relationship_configuration(relationship_configuration_parent_id);
-

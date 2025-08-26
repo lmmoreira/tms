@@ -5,14 +5,20 @@ import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 public class CompanyCreated extends AbstractDomainEvent {
 
     private final String companyId;
+    private final String company;
 
-    public CompanyCreated(final String companyId) {
-        super();
+    public CompanyCreated(final String companyId, final String company) {
+        super(companyId);
         this.companyId = companyId;
+        this.company = company;
     }
 
     public String getCompanyId() {
         return companyId;
+    }
+
+    public String getCompany() {
+        return company;
     }
 }
 
