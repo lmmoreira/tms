@@ -26,7 +26,12 @@ public class CreateCompanyUseCase implements UseCase<CreateCompanyUseCase.Input,
         }
 
         final Company company = companyRepository.create(Company.createCompany(input.name, input.cnpj, input.types, input.configuration));
-        return Output.ofCompany(company);
+
+        return new Output(company.getCompanyId().value().toString(),
+                company.getName(),
+                company.getCnpj().value(),
+                company.getCompanyTypes().value(),
+                company.getConfigurations().value());
     }
 
     public record Input(String name, String cnpj, Set<CompanyType> types, Map<String, Object> configuration) {
@@ -38,12 +43,5 @@ public class CreateCompanyUseCase implements UseCase<CreateCompanyUseCase.Input,
                          Set<CompanyType> types,
                          Map<String, Object> configuration) {
 
-        public static CreateCompanyUseCase.Output ofCompany(Company company) {
-            return new CreateCompanyUseCase.Output(company.getCompanyId().value().toString(),
-                    company.getName(),
-                    company.getCnpj().value(),
-                    company.getCompanyTypes().value(),
-                    company.getConfigurations().value());
-        }
     }
 }

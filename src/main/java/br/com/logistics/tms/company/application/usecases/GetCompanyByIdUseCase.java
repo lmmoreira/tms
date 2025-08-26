@@ -21,8 +21,14 @@ public class GetCompanyByIdUseCase implements UseCase<GetCompanyByIdUseCase.Inpu
     }
 
     public Output execute(final Input input) {
-        return Output.ofCompany(companyRepository.getCompanyById(CompanyId.with(input.companyId()))
-                .orElseThrow(() -> new CompanyNotFoundException(String.format("Company not found for id: %s", input.companyId()))));
+        final Company company = companyRepository.getCompanyById(CompanyId.with(input.companyId()))
+                .orElseThrow(() -> new CompanyNotFoundException(String.format("Company not found for id: %s", input.companyId())));
+
+        return new Output(company.getCompanyId().value().toString(),
+                company.getName(),
+                company.getCnpj().value(),
+                company.getCompanyTypes().value(),
+                company.getConfigurations().value());
     }
 
     public record Input(String companyId) {
@@ -34,13 +40,5 @@ public class GetCompanyByIdUseCase implements UseCase<GetCompanyByIdUseCase.Inpu
                          String cnpj,
                          Set<CompanyType> types,
                          Map<String, Object> configuration) {
-
-        public static Output ofCompany(Company company) {
-            return new Output(company.getCompanyId().value().toString(),
-                    company.getName(),
-                    company.getCnpj().value(),
-                    company.getCompanyTypes().value(),
-                    company.getConfigurations().value());
-        }
     }
 }

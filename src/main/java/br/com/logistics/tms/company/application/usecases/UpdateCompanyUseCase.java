@@ -40,7 +40,11 @@ public class UpdateCompanyUseCase implements UseCase<UpdateCompanyUseCase.Input,
                 .updateConfigurations(input.configuration);
 
         final Company company = companyRepository.update(updatedCompany);
-        return Output.ofCompany(company);
+        return new Output(company.getCompanyId().value().toString(),
+                company.getName(),
+                company.getCnpj().value(),
+                company.getCompanyTypes().value(),
+                company.getConfigurations().value());
     }
 
     public record Input(String companyId,
@@ -55,13 +59,5 @@ public class UpdateCompanyUseCase implements UseCase<UpdateCompanyUseCase.Input,
                          String cnpj,
                          Set<CompanyType> types,
                          Map<String, Object> configuration) {
-
-        public static UpdateCompanyUseCase.Output ofCompany(Company company) {
-            return new UpdateCompanyUseCase.Output(company.getCompanyId().value().toString(),
-                    company.getName(),
-                    company.getCnpj().value(),
-                    company.getCompanyTypes().value(),
-                    company.getConfigurations().value());
-        }
     }
 }

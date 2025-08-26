@@ -37,7 +37,7 @@ public class JsonSingleton {
             getInstance();
         }
 
-        return mapper;
+        return mapper.copy();
     }
 
 }

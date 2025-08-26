@@ -10,4 +10,3 @@ public interface CustomJpaRepository<T, ID extends Serializable> extends JpaRepo
 
     <P> Optional<P> findById(ID id, Class<P> projection);
 }
-
