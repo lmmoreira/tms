@@ -1,13 +1,11 @@
 package br.com.logistics.tms.company.infrastructure.rest.presenters;
 
 import br.com.logistics.tms.commons.application.presenters.Presenter;
-import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CompanyByIdCliPresenter implements Presenter<GetCompanyByIdUseCase.Output, String> {
+public class GetCompanyByIdCliPresenter implements Presenter<GetCompanyByIdUseCase.Output, String> {
 
     @Override
     public String present(GetCompanyByIdUseCase.Output input) {

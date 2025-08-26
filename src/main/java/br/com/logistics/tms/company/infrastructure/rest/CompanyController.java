@@ -7,11 +7,8 @@ import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
 import br.com.logistics.tms.company.application.usecases.DeleteCompanyByIdUseCase;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;
 import br.com.logistics.tms.company.application.usecases.UpdateCompanyUseCase;
-import br.com.logistics.tms.company.infrastructure.rest.dto.CreateCompanyDTO;
-import br.com.logistics.tms.company.infrastructure.rest.dto.CreateCompanyResponseDTO;
-import br.com.logistics.tms.company.infrastructure.rest.dto.UpdateCompanyDTO;
-import br.com.logistics.tms.company.infrastructure.rest.dto.UpdateCompanyResponseDTO;
-import br.com.logistics.tms.company.infrastructure.rest.presenters.CompanyByIdCliPresenter;
+import br.com.logistics.tms.company.infrastructure.rest.dto.*;
+import br.com.logistics.tms.company.infrastructure.rest.presenters.GetCompanyByIdCliPresenter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +26,7 @@ public class CompanyController {
     private final UpdateCompanyUseCase updateCompanyUseCase;
     private final DeleteCompanyByIdUseCase deleteCompanyByIdUseCase;
     private final DefaultRestPresenter defaultRestPresenter;
-    private final CompanyByIdCliPresenter companyByIdCliPresenter;
+    private final GetCompanyByIdCliPresenter getCompanyByIdCliPresenter;
     private final RestUseCaseExecutor restUseCaseExecutor;
 
     public CompanyController(GetCompanyByIdUseCase getCompanyByIdUseCase,
@@ -38,24 +35,25 @@ public class CompanyController {
                              DefaultRestPresenter defaultRestPresenter,
                              DeleteCompanyByIdUseCase deleteCompanyByIdUseCase,
                              RestUseCaseExecutor restUseCaseExecutor,
-                             CompanyByIdCliPresenter companyByIdCliPresenter) {
+                             GetCompanyByIdCliPresenter getCompanyByIdCliPresenter) {
         this.getCompanyByIdUseCase = getCompanyByIdUseCase;
         this.createCompanyUseCase = createCompanyUseCase;
         this.updateCompanyUseCase = updateCompanyUseCase;
         this.defaultRestPresenter = defaultRestPresenter;
         this.deleteCompanyByIdUseCase = deleteCompanyByIdUseCase;
         this.restUseCaseExecutor = restUseCaseExecutor;
-        this.companyByIdCliPresenter = companyByIdCliPresenter;
+        this.getCompanyByIdCliPresenter = getCompanyByIdCliPresenter;
     }
 
     @GetMapping("/{companyId}")
     public Object get(
             @RequestHeader Map<String, String> headers,
             @PathVariable String companyId) {
-        final Presenter<?, ?> presenter = Boolean.parseBoolean(headers.get("cli")) ? companyByIdCliPresenter : defaultRestPresenter;
+        final Presenter<?, ?> presenter = Boolean.parseBoolean(headers.get("cli")) ? getCompanyByIdCliPresenter : defaultRestPresenter;
         return restUseCaseExecutor
                 .from(getCompanyByIdUseCase)
                 .withInput(new GetCompanyByIdUseCase.Input(companyId))
+                .mapOutputTo(Boolean.parseBoolean(headers.get("mobile")) ? GetCompanyByIdMobileResponseDTO.class : null)
                 .presentWith(presenter)
                 .execute();
     }

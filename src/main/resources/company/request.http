@@ -27,6 +27,11 @@ GET {{server}}/companies/{{companyId}}
 Accept: application/json
 cli: true
 
+### Get company - Mobile Presenter
+GET {{server}}/companies/{{companyId}}
+Accept: application/json
+mobile: true
+
 ### Update company
 PUT {{server}}/companies/{{companyId}}
 Content-Type: application/json
