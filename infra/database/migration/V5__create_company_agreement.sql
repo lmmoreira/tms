@@ -1,7 +1,7 @@
 CREATE TABLE company.agreement (
     id UUID PRIMARY KEY,
-    from UUID NOT NULL REFERENCES company.company(id),
-    to UUID NOT NULL REFERENCES company.company(id),
+    source UUID NOT NULL REFERENCES company.company(id),
+    destination UUID NOT NULL REFERENCES company.company(id),
     relation_type TEXT NOT NULL,
     configuration JSONB,
     valid_from TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),

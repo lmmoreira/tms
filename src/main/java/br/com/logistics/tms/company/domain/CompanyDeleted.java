@@ -2,11 +2,14 @@ package br.com.logistics.tms.company.domain;
 
 import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 
+import java.beans.ConstructorProperties;
+
 public class CompanyDeleted extends AbstractDomainEvent {
 
     private final String companyId;
     private final String company;
 
+    @ConstructorProperties({"companyId", "company"})
     public CompanyDeleted(final String companyId, final String company) {
         super(companyId);
         this.companyId = companyId;

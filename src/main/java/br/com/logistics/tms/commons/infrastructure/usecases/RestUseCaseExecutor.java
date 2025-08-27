@@ -26,13 +26,7 @@ public class RestUseCaseExecutor {
     public <INPUT, OUTPUT> UseCaseBuilder<INPUT, OUTPUT> from(UseCase<INPUT, OUTPUT> useCase) {
         return UseCaseExecutor.from(useCase)
                 .presentWith(defaultRestPresenter)
-                .addInterceptor(new UseCaseInterceptor() {
-                    @Override
-                    public <T> T intercept(Supplier<T> next) {
-                        logger.info(useCase.getClass(), "Executing use case: " + useCase.getClass().getSimpleName());
-                        return next.get();
-                    }
-                })
+                .addInterceptor(startLoggingInterceptor(useCase.getClass()))
                 .addInterceptor(((UseCaseInterceptor) logger))
                 .addInterceptor(((UseCaseInterceptor) transactional))
                 .onException(e -> logger.error(getClass(), "UseCase failed", e));
@@ -40,15 +34,19 @@ public class RestUseCaseExecutor {
 
     public <INPUT> VoidUseCaseBuilder<INPUT> from(VoidUseCase<INPUT> useCase) {
         return UseCaseExecutor.from(useCase)
-                .addInterceptor(new UseCaseInterceptor() {
-                    @Override
-                    public <T> T intercept(Supplier<T> next) {
-                        logger.info(useCase.getClass(), "Executing use case: " + useCase.getClass().getSimpleName());
-                        return next.get();
-                    }
-                })
+                .addInterceptor(startLoggingInterceptor(useCase.getClass()))
                 .addInterceptor(((UseCaseInterceptor) logger))
                 .addInterceptor(((UseCaseInterceptor) transactional))
                 .onException(e -> logger.error(getClass(), "UseCase failed", e));
+    }
+
+    private UseCaseInterceptor startLoggingInterceptor(Class<?> clazz) {
+        return new UseCaseInterceptor() {
+            @Override
+            public <T> T intercept(Supplier<T> next) {
+                logger.info(clazz, "Executing use case: " + clazz.getSimpleName());
+                return next.get();
+            }
+        };
     }
 }

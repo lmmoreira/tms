@@ -11,7 +11,6 @@ import br.com.logistics.tms.company.infrastructure.rest.dto.*;
 import br.com.logistics.tms.company.infrastructure.rest.presenters.GetCompanyByIdCliPresenter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -83,12 +82,11 @@ public class CompanyController {
 
     @DeleteMapping("/{companyId}")
     public Object delete(@PathVariable String companyId) {
-        restUseCaseExecutor
+        return restUseCaseExecutor
                 .from(deleteCompanyByIdUseCase)
                 .withInput(new DeleteCompanyByIdUseCase.Input(companyId))
+                .presentWith(output -> defaultRestPresenter.present(HttpStatus.NO_CONTENT.value()))
                 .execute();
-
-        return ResponseEntity.noContent().build();
     }
 
 }

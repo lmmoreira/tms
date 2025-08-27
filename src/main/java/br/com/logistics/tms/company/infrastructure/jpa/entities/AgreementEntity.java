@@ -17,11 +17,11 @@ public class AgreementEntity {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "from", nullable = false)
+    @JoinColumn(name = "source", nullable = false)
     private CompanyEntity from;
 
     @ManyToOne
-    @JoinColumn(name = "to", nullable = false)
+    @JoinColumn(name = "destination", nullable = false)
     private CompanyEntity to;
 
     @Column(name = "relation_type", nullable = false)

@@ -2,6 +2,8 @@ package br.com.logistics.tms.company.domain;
 
 import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 
+import java.beans.ConstructorProperties;
+
 public class CompanyUpdated extends AbstractDomainEvent {
 
     private final String companyId;
@@ -9,6 +11,7 @@ public class CompanyUpdated extends AbstractDomainEvent {
     private final String oldValue;
     private final String newValue;
 
+    @ConstructorProperties({"companyId", "property", "oldValue", "newValue"})
     public CompanyUpdated(final String companyId, final String property, final String oldValue, final String newValue) {
         super(companyId);
         this.companyId = companyId;

@@ -20,8 +20,10 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
     private Object externalInput;
     private Class<?> outputClass;
     private Presenter<?, ?> presenter;
-    private Function<Object, ?> presenterFunction;
-    private Consumer<Throwable> exceptionHandler =  e -> {};
+    private Function<Object, ?> presenterFunctionOnSuccess;
+    private Function<Throwable, ?> presenterFunctionOnError;
+    private Consumer<Throwable> exceptionHandler = e -> {
+    };
 
     private final List<UseCaseInterceptor> actionInterceptors = new ArrayList<>();
 
@@ -50,8 +52,14 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
         return this;
     }
 
-    public <IN, OUT> UseCaseBuilder<INPUT, OUTPUT> presentWith(Function<Object, OUT> presenterFunction) {
-        this.presenterFunction = presenterFunction;
+    public <IN, OUT> UseCaseBuilder<INPUT, OUTPUT> presentWith(Function<Object, OUT> presenterFunctionOnSuccess) {
+        this.presenterFunctionOnSuccess = presenterFunctionOnSuccess;
+        return this;
+    }
+
+    public <IN, OUT> UseCaseBuilder<INPUT, OUTPUT> presentWith(Function<Object, OUT> presenterFunctionOnSuccess, Function<Throwable, OUT> presenterFunctionOnError) {
+        this.presenterFunctionOnSuccess = presenterFunctionOnSuccess;
+        this.presenterFunctionOnError = presenterFunctionOnError;
         return this;
     }
 
@@ -68,35 +76,25 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
     @SuppressWarnings("unchecked")
     public <FINAL_OUTPUT> FINAL_OUTPUT execute() {
         Supplier<FINAL_OUTPUT> useCaseExecution = () -> {
-            try {
-                final INPUT input = !inputClass.isInstance(externalInput)
-                        ? mapper.map(externalInput, inputClass)
-                        : (INPUT) externalInput;
+            final INPUT input = !inputClass.isInstance(externalInput)
+                    ? mapper.map(externalInput, inputClass)
+                    : (INPUT) externalInput;
 
-                final OUTPUT output = useCase.execute(input);
+            final OUTPUT output = useCase.execute(input);
 
-                final Object finalOutput = outputClass != null
-                        ? mapper.map(output, outputClass)
-                        : output;
+            final Object finalOutput = outputClass != null
+                    ? mapper.map(output, outputClass)
+                    : output;
 
-                if (presenter != null) {
-                    return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(finalOutput);
-                }
-
-                if (presenterFunction != null) {
-                    return (FINAL_OUTPUT) presenterFunction.apply(finalOutput);
-                }
-
-                return (FINAL_OUTPUT) finalOutput;
-            } catch (Exception t) {
-                exceptionHandler.accept(t);
-
-                if (presenter != null) {
-                    return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(t);
-                }
-
-                throw new UseCaseException("UseCase Error", t);
+            if (presenterFunctionOnSuccess != null) {
+                return (FINAL_OUTPUT) presenterFunctionOnSuccess.apply(finalOutput);
             }
+
+            if (presenter != null) {
+                return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(finalOutput);
+            }
+
+            return (FINAL_OUTPUT) finalOutput;
         };
 
         for (int i = actionInterceptors.size() - 1; i >= 0; i--) {
@@ -105,7 +103,21 @@ public class UseCaseBuilder<INPUT, OUTPUT> {
             useCaseExecution = () -> interceptor.intercept(previous);
         }
 
-        return useCaseExecution.get();
+        try {
+            return useCaseExecution.get();
+        } catch (Exception t) {
+            exceptionHandler.accept(t);
+
+            if (presenterFunctionOnError != null) {
+                return (FINAL_OUTPUT) presenterFunctionOnError.apply(t);
+            }
+
+            if (presenter != null) {
+                return ((Presenter<Object, FINAL_OUTPUT>) presenter).present(t);
+            }
+
+            throw new UseCaseException("UseCase Error", t);
+        }
     }
 
     @SuppressWarnings("unchecked")

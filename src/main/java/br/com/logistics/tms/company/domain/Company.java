@@ -177,13 +177,13 @@ public class Company extends AbstractAggregateRoot {
 
     @Override
     public String toString() {
-        return "Company{" +
-                "companyId=" + companyId +
-                ", name='" + name + '\'' +
-                ", cnpj=" + cnpj +
-                ", companyTypes=" + companyTypes +
-                ", configurations=" + configurations +
-                ", agreements=" + agreements +
-                '}';
+        return Map.of(
+                "companyId", companyId,
+                "name", name,
+                "cnpj", cnpj,
+                "companyTypes", companyTypes,
+                "configurations", configurations,
+                "agreements", agreements
+        ).toString();
     }
 }

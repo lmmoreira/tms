@@ -24,11 +24,10 @@ spring:
     port: ${RABBITMQ_PORT}
     username: ${RABBITMQ_USER}
     password: ${RABBITMQ_PASS}
-  neo4j:
-    uri: bolt://${DB_NEO4J_HOST}:${DB_NEO4J_PORT}
-    authentication:
-      username: ${DB_NEO4J_USER}
-      password: ${DB_NEO4J_PASS}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
 
 management:
   endpoint:

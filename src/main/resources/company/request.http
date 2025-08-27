@@ -38,7 +38,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "name": "Shein - Faz o L Talkey",
+  "name": "Shein - GRU",
   "cnpj": "50.617.696/0001-79",
   "types": ["MARKETPLACE"],
   "configuration": {

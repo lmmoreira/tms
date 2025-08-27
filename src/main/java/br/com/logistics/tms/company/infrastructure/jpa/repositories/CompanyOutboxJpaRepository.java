@@ -10,5 +10,4 @@ import java.util.UUID;
 @Repository
 public interface CompanyOutboxJpaRepository extends CustomJpaRepository<CompanyOutboxEntity, UUID> {
 
-
 }

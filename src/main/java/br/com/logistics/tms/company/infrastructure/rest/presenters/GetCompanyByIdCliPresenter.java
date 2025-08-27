@@ -8,8 +8,18 @@ import org.springframework.stereotype.Component;
 public class GetCompanyByIdCliPresenter implements Presenter<GetCompanyByIdUseCase.Output, String> {
 
     @Override
+    public String present() {
+        return "";
+    }
+
+    @Override
     public String present(GetCompanyByIdUseCase.Output input) {
         return present(input, null);
+    }
+
+    @Override
+    public String present(Integer customSuccessStatusCode) {
+        return "";
     }
 
     @Override

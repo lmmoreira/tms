@@ -23,8 +23,18 @@ public class DefaultRestPresenter implements Presenter<Object, ResponseEntity<?>
     }
 
     @Override
+    public ResponseEntity<?> present() {
+        return present(HttpStatus.OK.value());
+    }
+
+    @Override
     public ResponseEntity<?> present(Object input) {
         return present(input, HttpStatus.OK.value());
+    }
+
+    @Override
+    public ResponseEntity<?> present(Integer customSuccessStatusCode) {
+        return present(null, customSuccessStatusCode);
     }
 
     @Override

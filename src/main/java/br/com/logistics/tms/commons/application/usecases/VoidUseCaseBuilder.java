@@ -17,7 +17,6 @@ public class VoidUseCaseBuilder<INPUT> {
     private final Class<INPUT> inputClass;
 
     private Object externalInput;
-    private Presenter<?, ?> presenter;
 
     private Consumer<Throwable> exceptionHandler = e -> {
     };
@@ -52,20 +51,13 @@ public class VoidUseCaseBuilder<INPUT> {
     @SuppressWarnings("unchecked")
     public void execute() {
         Supplier<Void> useCaseExecution = () -> {
-            try {
-                final INPUT input = !inputClass.isInstance(externalInput)
-                        ? mapper.map(externalInput, inputClass)
-                        : (INPUT) externalInput;
+            final INPUT input = !inputClass.isInstance(externalInput)
+                    ? mapper.map(externalInput, inputClass)
+                    : (INPUT) externalInput;
 
-                voidUseCase.execute(input);
+            voidUseCase.execute(input);
 
-                return null;
-
-            } catch (Exception t) {
-                exceptionHandler.accept(t);
-
-                throw new UseCaseException("UseCase Error", t);
-            }
+            return null;
         };
 
         for (int i = actionInterceptors.size() - 1; i >= 0; i--) {
@@ -74,7 +66,13 @@ public class VoidUseCaseBuilder<INPUT> {
             useCaseExecution = () -> interceptor.intercept(previous);
         }
 
-        useCaseExecution.get();
+        try {
+            useCaseExecution.get();
+        } catch (Exception t) {
+            exceptionHandler.accept(t);
+
+            throw new UseCaseException("UseCase Error", t);
+        }
     }
 
     @SuppressWarnings("unchecked")
