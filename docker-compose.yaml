@@ -101,6 +101,8 @@ services:
       - "5432:5432"
     volumes:
       - tms-database:/var/lib/postgresql/data
+      - ./infra/postgresql/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./infra/init_pg_stat_statements.sql:/docker-entrypoint-initdb.d/init_pg_stat_statements.sql
     networks:
       - tms-network
   tms-database-pool:

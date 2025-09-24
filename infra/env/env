@@ -1,6 +1,6 @@
 DB_HOST=localhost
 DB_PORT=6432
-DB_NAME=tms-database-with-pool-for-dbeaver
+DB_NAME=tms-database-with-pool-for-spring
 DB_USER=tms
 DB_PASS=tms
 RABBITMQ_HOST=localhost

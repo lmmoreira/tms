@@ -5,6 +5,13 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+  postgresql:
+    endpoint: "tms-database:5432"
+    username: tms
+    password: tms
+    databases:
+      - tms
+    collection_interval: 10s
   rabbitmq:
     endpoint: http://tms-broker:15672
     username: tms-otel
@@ -61,6 +68,11 @@ processors:
       - key: application
         value: "RabbitMQ"
         action: upsert
+  attributes/postgresql:
+    actions:
+      - key: application
+        value: "PostgreSQL"
+        action: upsert
   attributes/nginx:
     actions:
       - key: application
@@ -103,6 +115,10 @@ service:
       processors: [batch, attributes, attributes/namespace, attributes/app]
       exporters: [prometheus]
       #exporters: [prometheusremotewrite]
+    metrics/postgresql:
+      receivers: [postgresql]
+      processors: [ batch, attributes, attributes/namespace, attributes/postgresql]
+      exporters: [ prometheus ]
     metrics/rabbitmq:
       receivers: [ rabbitmq, prometheus/rabbitmq ]
       processors: [ batch, attributes, attributes/namespace, attributes/rabbit ]
