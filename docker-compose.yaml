@@ -97,12 +97,13 @@ services:
       POSTGRES_USER: tms
       POSTGRES_PASSWORD: tms
       POSTGRES_DB: tms
+    command: [ "postgres", "-c", "config_file=/etc/postgresql/postgresql.conf" ]
     ports:
       - "5432:5432"
     volumes:
       - tms-database:/var/lib/postgresql/data
       - ./infra/postgresql/postgresql.conf:/etc/postgresql/postgresql.conf
-      - ./infra/init_pg_stat_statements.sql:/docker-entrypoint-initdb.d/init_pg_stat_statements.sql
+      - ./infra/postgresql/init_pg_stat_statements.sql:/docker-entrypoint-initdb.d/init_pg_stat_statements.sql
     networks:
       - tms-network
   tms-database-pool:
@@ -122,6 +123,30 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
+  tms-database-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: tms-database-exporter
+    depends_on:
+      - tms-database
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9187/metrics" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - ./infra/database-exporter:/queries
+    environment:
+      DATA_SOURCE_URI: "tms-database:5432/tms?sslmode=disable"
+      DATA_SOURCE_USER: tms
+      DATA_SOURCE_PASS: tms
+      PG_EXPORTER_EXTEND_QUERY_PATH: /queries/queries_pg_stat_statements.yaml
+    command:
+      - "--collector.stat_statements"
+    ports:
+      - "9187:9187"
+    networks:
+      - tms-network
   tms-broker:
     image: bitnami/rabbitmq:latest
     container_name: tms-broker

@@ -9,9 +9,18 @@ receivers:
     endpoint: "tms-database:5432"
     username: tms
     password: tms
+    transport: tcp
+    tls:
+      insecure: true
     databases:
       - tms
     collection_interval: 10s
+  prometheus/postgres:
+    config:
+      scrape_configs:
+        - job_name: 'postgresql'
+          static_configs:
+            - targets: [ 'tms-database-exporter:9187' ]
   rabbitmq:
     endpoint: http://tms-broker:15672
     username: tms-otel
@@ -116,7 +125,7 @@ service:
       exporters: [prometheus]
       #exporters: [prometheusremotewrite]
     metrics/postgresql:
-      receivers: [postgresql]
+      receivers: [postgresql, prometheus/postgres ]
       processors: [ batch, attributes, attributes/namespace, attributes/postgresql]
       exporters: [ prometheus ]
     metrics/rabbitmq:

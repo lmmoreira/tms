@@ -15,6 +15,13 @@ providers:
     updateIntervalSeconds: 10
     options:
       path: /etc/grafana/provisioning/dashboards/rabbit
+  - name: 'postgresql-dashboards'
+    folder: 'postgresql'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    options:
+      path: /etc/grafana/provisioning/dashboards/postgresql
 
 # JVM (Micrometer)          - https://grafana.com/grafana/dashboards/4701-jvm-micrometer/
 # Spring Boot Observability - https://grafana.com/grafana/dashboards/17175-spring-boot-observability/
