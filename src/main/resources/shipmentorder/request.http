@@ -1,0 +1,7 @@
+@server = http://localhost:8080
+
+### Get By company
+GET {{server}}/orders/company/1
+Accept: application/json
+
+

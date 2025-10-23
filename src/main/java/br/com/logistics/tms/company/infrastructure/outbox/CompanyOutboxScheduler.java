@@ -7,11 +7,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
-public class OutboxScheduler {
+public class CompanyOutboxScheduler {
 
     private final OutboxGateway outboxGateway;
 
-    public OutboxScheduler(OutboxGateway outboxGateway) {
+    public CompanyOutboxScheduler(OutboxGateway outboxGateway) {
         this.outboxGateway = outboxGateway;
     }
 

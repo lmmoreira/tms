@@ -8,7 +8,7 @@ public class DomainEventRegistry {
     private static final Map<String, Class<?>> eventRegistryMap = new ConcurrentHashMap<>();
 
     public static Class<?> getClass(final String module, final String type) {
-        final String className = "br.com.logistics.tms." + module + ".domain." + type;
+        final String className = "br.com.logistics.tms." + module.replaceAll("_", "") + ".domain." + type;
         eventRegistryMap.putIfAbsent(className, parseClass(className));
         return eventRegistryMap.get(className);
     }

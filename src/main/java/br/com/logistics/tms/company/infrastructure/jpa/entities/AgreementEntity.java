@@ -1,5 +1,6 @@
 package br.com.logistics.tms.company.infrastructure.jpa.entities;
 
+import br.com.logistics.tms.company.infrastructure.config.CompanySchema;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -10,7 +11,7 @@ import java.time.Instant;
 import java.util.Set;
 
 @Entity
-@Table(name = "agreement", schema = "company")
+@Table(name = "agreement", schema = CompanySchema.COMPANY_SCHEMA)
 public class AgreementEntity {
 
     @Id

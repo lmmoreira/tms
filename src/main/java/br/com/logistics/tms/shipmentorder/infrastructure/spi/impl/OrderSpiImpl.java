@@ -1,8 +1,8 @@
-package br.com.logistics.tms.order.infrastructure.spi.impl;
+package br.com.logistics.tms.shipmentorder.infrastructure.spi.impl;
 
-import br.com.logistics.tms.order.application.GetOrderByCompanyIdUseCase;
-import br.com.logistics.tms.order.infrastructure.spi.OrderSpi;
-import br.com.logistics.tms.order.infrastructure.spi.dto.OrderDTO;
+import br.com.logistics.tms.shipmentorder.application.GetOrderByCompanyIdUseCase;
+import br.com.logistics.tms.shipmentorder.infrastructure.spi.OrderSpi;
+import br.com.logistics.tms.shipmentorder.infrastructure.spi.dto.OrderDTO;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;

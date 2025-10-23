@@ -1,6 +1,7 @@
 package br.com.logistics.tms.company.infrastructure.jpa.entities;
 
 import br.com.logistics.tms.company.domain.*;
+import br.com.logistics.tms.company.infrastructure.config.CompanySchema;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +12,7 @@ import org.hibernate.type.SqlTypes;
 import java.util.*;
 
 @Entity
-@Table(name = "company", schema = "company")
+@Table(name = "company", schema = CompanySchema.COMPANY_SCHEMA)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

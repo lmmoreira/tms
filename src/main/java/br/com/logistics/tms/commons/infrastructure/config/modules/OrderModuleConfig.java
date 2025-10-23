@@ -5,7 +5,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ComponentScan("br.com.logistics.tms.order.infrastructure")
+@ComponentScan("br.com.logistics.tms.shipmentorder.infrastructure")
 @ConditionalOnProperty(name = "modules.order.enabled", havingValue = "true")
 public class OrderModuleConfig {
 }

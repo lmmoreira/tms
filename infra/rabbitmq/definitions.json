@@ -52,6 +52,24 @@
       "arguments": {
         "x-message-ttl": 86400000
       }
+    },
+    {
+      "name": "integration.shipmentorder.retrieved",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 86400000
+      }
+    },
+    {
+      "name": "integration.shipmentorder.all",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 86400000
+      }
     }
   ],
   "exchanges": [
@@ -80,6 +98,22 @@
       "destination": "integration.company.all",
       "destination_type": "queue",
       "routing_key": "integration.company.*",
+      "arguments": {}
+    },
+    {
+      "source": "tms.events",
+      "vhost": "/",
+      "destination": "integration.shipmentorder.retrieved",
+      "destination_type": "queue",
+      "routing_key": "integration.shipmentorder.OrderRetrieved",
+      "arguments": {}
+    },
+    {
+      "source": "tms.events",
+      "vhost": "/",
+      "destination": "integration.shipmentorder.all",
+      "destination_type": "queue",
+      "routing_key": "integration.shipmentorder.*",
       "arguments": {}
     }
   ]

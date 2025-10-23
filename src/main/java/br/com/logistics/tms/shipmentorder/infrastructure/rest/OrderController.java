@@ -1,10 +1,11 @@
-package br.com.logistics.tms.order.infrastructure.rest;
+package br.com.logistics.tms.shipmentorder.infrastructure.rest;
 
+import br.com.logistics.tms.commons.domain.Id;
 import br.com.logistics.tms.commons.infrastructure.telemetry.Counterable;
 import br.com.logistics.tms.commons.infrastructure.telemetry.MetricCounter;
-import br.com.logistics.tms.order.application.GetOrderByCompanyIdUseCase;
-import br.com.logistics.tms.order.application.GetOrderByCompanyIdUseCase.Input;
-import br.com.logistics.tms.order.infrastructure.rest.dto.OrderDTO;
+import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
+import br.com.logistics.tms.shipmentorder.application.GetOrderByCompanyIdUseCase;
+import br.com.logistics.tms.shipmentorder.infrastructure.rest.dto.OrderDTO;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -19,14 +20,13 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "orders")
 @Slf4j
 public class OrderController {
 
+    private final RestUseCaseExecutor restUseCaseExecutor;
     private final GetOrderByCompanyIdUseCase getOrderByCompanyIdUseCase;
     private final OpenTelemetry openTelemetry;
     private final Meter meter;
@@ -37,9 +37,10 @@ public class OrderController {
     private final MetricCounter orderRequestCounter;
 
     @Autowired
-    public OrderController(GetOrderByCompanyIdUseCase getOrderByCompanyIdUseCase, OpenTelemetry openTelemetry, Counterable counterable) {
+    public OrderController(RestUseCaseExecutor restUseCaseExecutor, GetOrderByCompanyIdUseCase getOrderByCompanyIdUseCase, OpenTelemetry openTelemetry, Counterable counterable) {
         this.getOrderByCompanyIdUseCase = getOrderByCompanyIdUseCase;
         this.counterable = counterable;
+        this.restUseCaseExecutor = restUseCaseExecutor;
 
         this.openTelemetry = openTelemetry;
         this.meter = openTelemetry.getMeter("tmsOrder");
@@ -81,17 +82,17 @@ public class OrderController {
                 AttributeKey.stringKey("tms.order.orders_in_process_id"), id.toString(),
                 AttributeKey.stringKey("tms.order.orders_in_process_client"), marketplace));
 
-        return new OrderDTO(1L, false, "12345678909", Instant.now(), Instant.now());
+        return new OrderDTO(Id.unique(), false, "12345678909", Instant.now(), Instant.now());
 
 
     }
 
     @GetMapping("/company/{id}")
-    public Set<OrderDTO> getByCompany(@PathVariable String id) {
-        return getOrderByCompanyIdUseCase.execute(new Input(id)).order()
-                .stream()
-                .map(order -> new OrderDTO(order.id(), order.archived(), order.externalId(), order.createdAt(), order.updatedAt()))
-                .collect(Collectors.toSet());
+    public Object getByCompany(@PathVariable String id) {
+        return restUseCaseExecutor
+                .from(getOrderByCompanyIdUseCase)
+                .withInput(new GetOrderByCompanyIdUseCase.Input(id))
+                .execute();
     }
 
 }
