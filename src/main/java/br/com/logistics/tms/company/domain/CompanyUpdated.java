@@ -3,16 +3,17 @@ package br.com.logistics.tms.company.domain;
 import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 
 import java.beans.ConstructorProperties;
+import java.util.UUID;
 
 public class CompanyUpdated extends AbstractDomainEvent {
 
-    private final String companyId;
+    private final UUID companyId;
     private final String property;
     private final String oldValue;
     private final String newValue;
 
     @ConstructorProperties({"companyId", "property", "oldValue", "newValue"})
-    public CompanyUpdated(final String companyId, final String property, final String oldValue, final String newValue) {
+    public CompanyUpdated(final UUID companyId, final String property, final String oldValue, final String newValue) {
         super(companyId);
         this.companyId = companyId;
         this.property = property;
@@ -20,7 +21,7 @@ public class CompanyUpdated extends AbstractDomainEvent {
         this.newValue = newValue;
     }
 
-    public String getCompanyId() {
+    public UUID getCompanyId() {
         return companyId;
     }
 

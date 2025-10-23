@@ -24,7 +24,7 @@ public abstract class AbstractOutboxEntity {
     private String content;
 
     @Column(name = "aggregate_id", nullable = false)
-    private String aggregateId;
+    private UUID aggregateId;
 
     @Column(nullable = false, length = 20)
     @Enumerated(EnumType.STRING)

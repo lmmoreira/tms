@@ -5,23 +5,31 @@ pg_stat_statements_custom:
       query,
       calls,
       total_exec_time,
-      mean_exec_time
+      mean_exec_time,
+      total_plan_time,
+      mean_plan_time
     FROM pg_stat_statements
     ORDER BY total_exec_time DESC
     LIMIT 5;
   metrics:
     - queryid:
         usage: "LABEL"
-        description: "ID da query"
+        description: "Query ID"
     - query:
         usage: "LABEL"
-        description: "Texto da query (até 100 chars)"
+        description: "Query"
     - calls:
         usage: "COUNTER"
-        description: "Número de execuções"
+        description: "Executions"
     - total_exec_time:
         usage: "GAUGE"
-        description: "Tempo total de execução (ms)"
+        description: "Total Execution time (ms)"
     - mean_exec_time:
         usage: "GAUGE"
-        description: "Tempo médio de execução (ms)"
+        description: "Average Execution time (ms)"
+    - total_plan_time:
+        usage: "GAUGE"
+        description: "Total plan time (ms)"
+    - mean_plan_time:
+        usage: "GAUGE"
+        description: "Average plan time (ms)"

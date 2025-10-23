@@ -4,7 +4,7 @@ CREATE TABLE company.outbox (
      status TEXT NOT NULL,
      content JSONB NOT NULL,
      type VARCHAR(50) NOT NULL,
-     aggregate_id TEXT NOT NULL,
+     aggregate_id UUID NOT NULL,
      PRIMARY KEY (id, status)
 ) PARTITION BY LIST (status);
 

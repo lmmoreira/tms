@@ -53,7 +53,7 @@ public class Company extends AbstractAggregateRoot {
                 Configurations.with(configuration),
                 new HashSet<>(),
                 new HashSet<>());
-        company.placeDomainEvent(new CompanyCreated(company.companyId.value().toString(), company.toString()));
+        company.placeDomainEvent(new CompanyCreated(company.companyId.value(), company.toString()));
         return company;
     }
 
@@ -70,7 +70,7 @@ public class Company extends AbstractAggregateRoot {
                 this.agreements,
                 this.getDomainEvents()
         );
-        updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value().toString(), "name", this.name, name));
+        updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value(), "name", this.name, name));
         return updated;
     }
 
@@ -87,7 +87,7 @@ public class Company extends AbstractAggregateRoot {
                 this.agreements,
                 this.getDomainEvents()
         );
-        updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value().toString(), "cnpj", this.cnpj.value(), cnpj));
+        updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value(), "cnpj", this.cnpj.value(), cnpj));
         return updated;
     }
 
@@ -104,7 +104,7 @@ public class Company extends AbstractAggregateRoot {
                 this.agreements,
                 this.getDomainEvents()
         );
-        updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value().toString(), "types", this.companyTypes.value().toString(), types.toString()));
+        updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value(), "types", this.companyTypes.value().toString(), types.toString()));
         return updated;
     }
 
@@ -122,12 +122,12 @@ public class Company extends AbstractAggregateRoot {
                 this.getDomainEvents()
         );
 
-        updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value().toString(), "configurations", this.configurations.value().toString(), configurations.toString()));
+        updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value(), "configurations", this.configurations.value().toString(), configurations.toString()));
         return updated;
     }
 
     public void delete() {
-        placeDomainEvent(new CompanyDeleted(this.companyId.value().toString(), this.toString()));
+        placeDomainEvent(new CompanyDeleted(this.companyId.value(), this.toString()));
     }
 
     public Set<Agreement> getAgreements() {

@@ -26,3 +26,4 @@ providers:
 # JVM (Micrometer)          - https://grafana.com/grafana/dashboards/4701-jvm-micrometer/
 # Spring Boot Observability - https://grafana.com/grafana/dashboards/17175-spring-boot-observability/
 # RabbitMQ-Overview         - https://grafana.com/grafana/dashboards/10991-rabbitmq-overview/
+# PostgreSQL Overview       - https://grafana.com/grafana/dashboards/9628-postgresql-database/
