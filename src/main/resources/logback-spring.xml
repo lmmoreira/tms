@@ -5,75 +5,78 @@
     <include resource="logback-spring-appenders-json.xml"/>
     <include resource="logback-spring-appenders-otel.xml"/>
 
-    <if condition='property("LOG_FORMAT").contains("json")'>
+    <root level="info">
+        <appender-ref ref="OpenTelemetry"/>
+    </root>
+
+    <logger level="debug" name="com.zaxxer.hikari">
+        <appender-ref ref="OpenTelemetry"/>
+    </logger>
+
+    <condition class="ch.qos.logback.core.boolex.PropertyEqualityCondition">
+        <key>LOG_FORMAT</key>
+        <value>json</value>
+    </condition>
+    <if>
         <then>
-            <root level="info">
-                <appender-ref ref="OpenTelemetry"/>
-                <if condition='property("LOG_FILE_ENABLED").contains("true")'>
-                    <then>
+            <condition class="ch.qos.logback.core.boolex.PropertyEqualityCondition">
+                <key>LOG_FILE_ENABLED</key>
+                <value>true</value>
+            </condition>
+            <if>
+                <then>
+                    <root level="info">
                         <appender-ref ref="ASYNC_FILE_JSON"/>
-                    </then>
-                </if>
-                <if condition='property("LOG_CONSOLE_ENABLED").contains("true")'>
-                    <then>
-                        <appender-ref ref="ASYNC_STDOUT_JSON"/>
-                    </then>
-                </if>
-            </root>
-            <logger level="info" name="com.zaxxer.hikari">
-                <appender-ref ref="OpenTelemetry"/>
-                <if condition='property("LOG_FILE_ENABLED").contains("true")'>
-                    <then>
+                    </root>
+                    <logger level="debug" name="com.zaxxer.hikari">
                         <appender-ref ref="ASYNC_FILE_JSON"/>
-                    </then>
-                </if>
-                <if condition='property("LOG_CONSOLE_ENABLED").contains("true")'>
-                    <then>
+                    </logger>
+                </then>
+            </if>
+            <condition class="ch.qos.logback.core.boolex.PropertyEqualityCondition">
+                <key>LOG_CONSOLE_ENABLED</key>
+                <value>true</value>
+            </condition>
+            <if>
+                <then>
+                    <root level="info">
                         <appender-ref ref="ASYNC_STDOUT_JSON"/>
-                    </then>
-                </if>
-            </logger>
-            <logger level="info" name="io.opentelemetry">
-                <appender-ref ref="OpenTelemetry"/>
-                <if condition='property("LOG_FILE_ENABLED").contains("true")'>
-                    <then>
-                        <appender-ref ref="ASYNC_FILE_JSON"/>
-                    </then>
-                </if>
-                <if condition='property("LOG_CONSOLE_ENABLED").contains("true")'>
-                    <then>
+                    </root>
+                    <logger level="debug" name="com.zaxxer.hikari">
                         <appender-ref ref="ASYNC_STDOUT_JSON"/>
-                    </then>
-                </if>
-            </logger>
+                    </logger>
+                </then>
+            </if>
         </then>
         <else>
-            <root level="info">
-                <appender-ref ref="OpenTelemetry"/>
-                <if condition='property("LOG_FILE_ENABLED").contains("true")'>
-                    <then>
+            <condition class="ch.qos.logback.core.boolex.PropertyEqualityCondition">
+                <key>LOG_FILE_ENABLED</key>
+                <value>true</value>
+            </condition>
+            <if>
+                <then>
+                    <root level="info">
                         <appender-ref ref="ASYNC_FILE_TEXT"/>
-                    </then>
-                </if>
-                <if condition='property("LOG_CONSOLE_ENABLED").contains("true")'>
-                    <then>
-                        <appender-ref ref="ASYNC_STDOUT_TEXT"/>
-                    </then>
-                </if>
-            </root>
-            <logger level="info" name="com.zaxxer.hikari">
-                <appender-ref ref="OpenTelemetry"/>
-                <if condition='property("LOG_FILE_ENABLED").contains("true")'>
-                    <then>
+                    </root>
+                    <logger level="debug" name="com.zaxxer.hikari">
                         <appender-ref ref="ASYNC_FILE_TEXT"/>
-                    </then>
-                </if>
-                <if condition='property("LOG_CONSOLE_ENABLED").contains("true")'>
-                    <then>
+                    </logger>
+                </then>
+            </if>
+            <condition class="ch.qos.logback.core.boolex.PropertyEqualityCondition">
+                <key>LOG_CONSOLE_ENABLED</key>
+                <value>true</value>
+            </condition>
+            <if>
+                <then>
+                    <root level="info">
                         <appender-ref ref="ASYNC_STDOUT_TEXT"/>
-                    </then>
-                </if>
-            </logger>
+                    </root>
+                    <logger level="debug" name="com.zaxxer.hikari">
+                        <appender-ref ref="ASYNC_STDOUT_TEXT"/>
+                    </logger>
+                </then>
+            </if>
         </else>
     </if>
 </configuration>

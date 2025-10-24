@@ -7,8 +7,8 @@
     <version>1.0.0</version>
     <packaging>pom</packaging>
     <properties>
-        <uuid.generator>5.1.0</uuid.generator>
-        <spring-modulith.version>1.4.2</spring-modulith.version>
+        <uuid.generator>5.1.1</uuid.generator>
+        <spring-modulith.version>1.4.3</spring-modulith.version>
         <codehaus.janino>3.1.12</codehaus.janino>
         <logstash.encoder>8.1</logstash.encoder>
         <opentelemetry.instrumentation>2.18.1</opentelemetry.instrumentation>
