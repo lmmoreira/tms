@@ -6,12 +6,6 @@ import br.com.logistics.tms.commons.infrastructure.telemetry.MetricCounter;
 import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
 import br.com.logistics.tms.shipmentorder.application.GetOrderByCompanyIdUseCase;
 import br.com.logistics.tms.shipmentorder.infrastructure.rest.dto.OrderDTO;
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.LongGauge;
-import io.opentelemetry.api.metrics.Meter;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,26 +22,19 @@ public class OrderController {
 
     private final RestUseCaseExecutor restUseCaseExecutor;
     private final GetOrderByCompanyIdUseCase getOrderByCompanyIdUseCase;
-    private final OpenTelemetry openTelemetry;
-    private final Meter meter;
-    private final LongGauge ordersInProcessGauge;
-    private final DoubleHistogram orderProcessingTimeHistogram;
 
     private final Counterable counterable;
     private final MetricCounter orderRequestCounter;
 
     @Autowired
-    public OrderController(RestUseCaseExecutor restUseCaseExecutor, GetOrderByCompanyIdUseCase getOrderByCompanyIdUseCase, OpenTelemetry openTelemetry, Counterable counterable) {
+    public OrderController(RestUseCaseExecutor restUseCaseExecutor, GetOrderByCompanyIdUseCase getOrderByCompanyIdUseCase, Counterable counterable) {
         this.getOrderByCompanyIdUseCase = getOrderByCompanyIdUseCase;
         this.counterable = counterable;
         this.restUseCaseExecutor = restUseCaseExecutor;
 
-        this.openTelemetry = openTelemetry;
-        this.meter = openTelemetry.getMeter("tmsOrder");
-
         this.orderRequestCounter = counterable.createLongCounter("tms.order.order_id_requests", "Counts order id requests");
 
-        this.ordersInProcessGauge = meter
+        /*this.ordersInProcessGauge = meter
                 .gaugeBuilder("tms.order.orders_in_process")
                 .setDescription("Current number of orders being processed this moment")
                 .setUnit("orders")
@@ -58,7 +45,7 @@ public class OrderController {
                 .histogramBuilder("tms.order.processing_time")
                 .setDescription("Distribution of order processing times")
                 .setUnit("milliseconds")
-                .build();
+                .build();*/
 
     }
 
@@ -74,13 +61,14 @@ public class OrderController {
         String marketplace = new Random().nextBoolean() ? "shein" : "shopee";
         orderRequestCounter.add(1, Map.of("tms.order.order_id_requests_id", id.toString(), "tms.order.order_id_requests_client", marketplace));
 
+        /*
         ordersInProcessGauge.set(new Random().nextInt(10), Attributes.of(
                 AttributeKey.stringKey("tms.order.orders_in_process_id"), id.toString(),
                 AttributeKey.stringKey("tms.order.orders_in_process_client"), marketplace));
 
         orderProcessingTimeHistogram.record(new Random().nextInt(100, 1000), Attributes.of(
                 AttributeKey.stringKey("tms.order.orders_in_process_id"), id.toString(),
-                AttributeKey.stringKey("tms.order.orders_in_process_client"), marketplace));
+                AttributeKey.stringKey("tms.order.orders_in_process_client"), marketplace));*/
 
         return new OrderDTO(Id.unique(), false, "12345678909", Instant.now(), Instant.now());
 

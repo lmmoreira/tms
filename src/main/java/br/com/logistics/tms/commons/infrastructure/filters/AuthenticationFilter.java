@@ -1,9 +1,9 @@
 package br.com.logistics.tms.commons.infrastructure.filters;
 
-import br.com.logistics.tms.commons.infrastructure.security.Company;
-import br.com.logistics.tms.commons.infrastructure.security.CompanyContext;
-import br.com.logistics.tms.commons.infrastructure.security.User;
-import br.com.logistics.tms.commons.infrastructure.security.UserContext;
+import br.com.logistics.tms.commons.infrastructure.context.Company;
+import br.com.logistics.tms.commons.infrastructure.context.CompanyContext;
+import br.com.logistics.tms.commons.infrastructure.context.User;
+import br.com.logistics.tms.commons.infrastructure.context.UserContext;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;

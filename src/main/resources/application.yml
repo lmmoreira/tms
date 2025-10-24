@@ -1,4 +1,8 @@
 spring:
+  config:
+    import: optional:file:infra/env/env.properties
+  jmx:
+    enabled: false
   application:
     name: TMS
   threads:
@@ -6,12 +10,17 @@ spring:
       enabled: true
   main:
     lazy-initialization: true
+  sql:
+    init:
+      mode: never
   jpa:
     open-in-view: false
     show-sql: false
     properties:
       hibernate:
         format_sql: true
+    hibernate:
+      ddl-auto: none
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USER}
@@ -37,10 +46,17 @@ management:
         enabled: true
   server:
     port: 8081
+  metrics:
+    enable:
+      jvm:
+        gc: false
   endpoints:
     web:
       exposure:
         include: ${MANAGEMENT_ENDPOINTS}
+  health:
+    diskspace:
+      enabled: false
 
 server:
   http2:

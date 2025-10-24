@@ -8,7 +8,6 @@
     <root level="info">
         <appender-ref ref="OpenTelemetry"/>
     </root>
-
     <logger level="debug" name="com.zaxxer.hikari">
         <appender-ref ref="OpenTelemetry"/>
     </logger>
@@ -72,7 +71,13 @@
                     <root level="info">
                         <appender-ref ref="ASYNC_STDOUT_TEXT"/>
                     </root>
-                    <logger level="debug" name="com.zaxxer.hikari">
+                    <logger level="info" name="com.zaxxer.hikari">
+                        <appender-ref ref="ASYNC_STDOUT_TEXT"/>
+                    </logger>
+                    <logger level="info" name="org.springframework.boot.autoconfigure">
+                        <appender-ref ref="ASYNC_STDOUT_TEXT"/>
+                    </logger>
+                    <logger level="error" name="br.com.logistics.tms.commons.infrastructure.gateways.outbox">
                         <appender-ref ref="ASYNC_STDOUT_TEXT"/>
                     </logger>
                 </then>

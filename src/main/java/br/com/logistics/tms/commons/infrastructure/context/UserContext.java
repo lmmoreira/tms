@@ -1,4 +1,4 @@
-package br.com.logistics.tms.commons.infrastructure.security;
+package br.com.logistics.tms.commons.infrastructure.context;
 
 public class UserContext {
 

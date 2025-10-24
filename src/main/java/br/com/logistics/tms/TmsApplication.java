@@ -13,9 +13,9 @@ import org.springframework.modulith.Modulithic;
 @Configuration
 @EnableAutoConfiguration
 @Import({
-    CommonsModuleConfig.class,
-    OrderModuleConfig.class,
-    CompanyModuleConfig.class
+        CommonsModuleConfig.class,
+        OrderModuleConfig.class,
+        CompanyModuleConfig.class
 })
 public class TmsApplication {
 
