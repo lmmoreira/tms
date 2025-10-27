@@ -1,5 +1,7 @@
 package br.com.logistics.tms.company.infrastructure.rest;
 
+import br.com.logistics.tms.commons.application.annotation.Cqrs;
+import br.com.logistics.tms.commons.application.annotation.Role;
 import br.com.logistics.tms.commons.infrastructure.presenters.rest.DefaultRestPresenter;
 import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
 import br.com.logistics.tms.company.application.usecases.DeleteCompanyByIdUseCase;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "companies")
 @Slf4j
+@Cqrs(Role.WRITE)
 public class DeleteController {
 
     private final DeleteCompanyByIdUseCase deleteCompanyByIdUseCase;

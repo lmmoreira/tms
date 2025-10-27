@@ -109,3 +109,8 @@ otel:
       enabled: false
     micrometer:
       enabled: true
+
+
+app:
+  cqrs:
+    mode: ${APP_CQRS_MODE}
