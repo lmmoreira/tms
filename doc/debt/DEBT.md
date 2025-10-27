@@ -19,3 +19,4 @@ List of technical debt to be paid.
 - [x] **DEBT-006** - Metrics on ports and adapters - create a pattern
 - [x] **DEBT-007** - Consistency on integration events inside usecases. Should be thrown by the aggregate
 - [x] **DEBT-008** - Monorepo study. Modular monolith controlled by env and component scanning limitation.
+- [x] **DEBT-009** - Add Sbom support.

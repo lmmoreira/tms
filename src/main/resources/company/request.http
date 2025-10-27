@@ -7,7 +7,7 @@ Accept: application/json
 
 {
   "name": "Shein",
-  "cnpj": "50.617.696/0001-93",
+  "cnpj": "50.617.696/0001-95",
   "types": ["MARKETPLACE"],
   "configuration": {
     "notification": "true",

@@ -1,4 +1,4 @@
-package br.com.logistics.tms.company.infrastructure.rest.presenters;
+package br.com.logistics.tms.company.infrastructure.presenters;
 
 import br.com.logistics.tms.commons.application.presenters.Presenter;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;

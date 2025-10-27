@@ -1,4 +1,4 @@
-package br.com.logistics.tms.company.infrastructure.rest.dto;
+package br.com.logistics.tms.company.infrastructure.presenters.rest.dto;
 
 import br.com.logistics.tms.company.domain.CompanyType;
 
