@@ -3,8 +3,8 @@ package br.com.logistics.tms.shipmentorder.infrastructure.outbox;
 import br.com.logistics.tms.commons.application.annotation.Cqrs;
 import br.com.logistics.tms.commons.application.annotation.Role;
 import br.com.logistics.tms.commons.infrastructure.gateways.outbox.OutboxGateway;
-import br.com.logistics.tms.shipmentorder.infrastructure.config.OrderSchema;
-import br.com.logistics.tms.shipmentorder.infrastructure.jpa.entities.OrderOutboxEntity;
+import br.com.logistics.tms.shipmentorder.infrastructure.config.ShipmentOrderSchema;
+import br.com.logistics.tms.shipmentorder.infrastructure.jpa.entities.ShipmentOrderOutboxEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +20,7 @@ public class OrderOutboxScheduler {
 
     @Scheduled(fixedDelay = 5000)
     public void runOutbox() {
-        outboxGateway.process(OrderSchema.ORDER_SCHEMA, 1, OrderOutboxEntity.class);
+        outboxGateway.process(ShipmentOrderSchema.SHIPMENT_ORDER_SCHEMA, 1, ShipmentOrderOutboxEntity.class);
     }
 
 }

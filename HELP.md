@@ -11,7 +11,6 @@
 
 #### IntelliJ Plugins
 * [Mermaid](https://plugins.jetbrains.com/plugin/20146-mermaid)
-* [EnvFile](https://plugins.jetbrains.com/plugin/7861-envfile)
 * [Copilot](https://plugins.jetbrains.com/plugin/17718-github-copilot)
 
 ### Development

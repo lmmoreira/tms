@@ -10,7 +10,7 @@ import org.springframework.core.type.filter.TypeFilter;
 import java.util.Locale;
 import java.util.Map;
 
-public class CqrsTypeFilter implements TypeFilter, EnvironmentAware {
+public class CqrsTypeScanFilter implements TypeFilter, EnvironmentAware {
 
     private Environment env;
 

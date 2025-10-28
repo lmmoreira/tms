@@ -9,6 +9,8 @@ import br.com.logistics.tms.company.infrastructure.presenters.rest.dto.UpdateCom
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping(value = "companies")
 @Slf4j
@@ -26,7 +28,7 @@ public class UpdateController {
     }
 
     @PutMapping("/{companyId}")
-    public Object update(@PathVariable String companyId, @RequestBody UpdateCompanyDTO updateCompanyDTO) {
+    public Object update(@PathVariable UUID companyId, @RequestBody UpdateCompanyDTO updateCompanyDTO) {
         return restUseCaseExecutor
                 .from(updateCompanyUseCase)
                 .withInput(new UpdateCompanyUseCase.Input(companyId,

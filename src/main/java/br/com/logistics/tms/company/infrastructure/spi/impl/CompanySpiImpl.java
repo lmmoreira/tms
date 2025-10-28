@@ -5,6 +5,8 @@ import br.com.logistics.tms.company.infrastructure.spi.CompanySpi;
 import br.com.logistics.tms.company.infrastructure.spi.dto.CompanyDTO;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class CompanySpiImpl implements CompanySpi {
 
@@ -15,7 +17,7 @@ public class CompanySpiImpl implements CompanySpi {
     }
 
     @Override
-    public CompanyDTO getCompanyById(String companyId) {
+    public CompanyDTO getCompanyById(UUID companyId) {
         GetCompanyByIdUseCase.Output output = getCompanyByIdUseCase.execute(new GetCompanyByIdUseCase.Input(companyId));
         return new CompanyDTO(output.companyId(), output.name(), output.cnpj());
     }

@@ -1,6 +1,8 @@
 package br.com.logistics.tms.company.application.usecases;
 
+import br.com.logistics.tms.commons.application.annotation.Cqrs;
 import br.com.logistics.tms.commons.application.annotation.DomainService;
+import br.com.logistics.tms.commons.application.annotation.Role;
 import br.com.logistics.tms.commons.application.usecases.UseCase;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import br.com.logistics.tms.company.application.repositories.CompanyRepository;
@@ -10,8 +12,10 @@ import br.com.logistics.tms.company.domain.CompanyType;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 @DomainService
+@Cqrs(Role.WRITE)
 public class CreateCompanyUseCase implements UseCase<CreateCompanyUseCase.Input, CreateCompanyUseCase.Output> {
 
     private final CompanyRepository companyRepository;
@@ -27,21 +31,23 @@ public class CreateCompanyUseCase implements UseCase<CreateCompanyUseCase.Input,
 
         final Company company = companyRepository.create(Company.createCompany(input.name, input.cnpj, input.types, input.configuration));
 
-        return new Output(company.getCompanyId().value().toString(),
+        return new Output(company.getCompanyId().value(),
                 company.getName(),
                 company.getCnpj().value(),
                 company.getCompanyTypes().value(),
                 company.getConfigurations().value());
     }
 
-    public record Input(String name, String cnpj, Set<CompanyType> types, Map<String, Object> configuration) {
-
+    public record Input(String name,
+                        String cnpj,
+                        Set<CompanyType> types,
+                        Map<String, Object> configuration) {
     }
 
-    public record Output(String companyId,
-                         String name, String cnpj,
+    public record Output(UUID companyId,
+                         String name,
+                         String cnpj,
                          Set<CompanyType> types,
                          Map<String, Object> configuration) {
-
     }
 }

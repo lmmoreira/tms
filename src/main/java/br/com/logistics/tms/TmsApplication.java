@@ -2,7 +2,7 @@ package br.com.logistics.tms;
 
 import br.com.logistics.tms.commons.infrastructure.config.modules.CommonsModuleConfig;
 import br.com.logistics.tms.commons.infrastructure.config.modules.CompanyModuleConfig;
-import br.com.logistics.tms.commons.infrastructure.config.modules.OrderModuleConfig;
+import br.com.logistics.tms.commons.infrastructure.config.modules.ShipmentOrderModuleConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +14,7 @@ import org.springframework.modulith.Modulithic;
 @EnableAutoConfiguration
 @Import({
         CommonsModuleConfig.class,
-        OrderModuleConfig.class,
+        ShipmentOrderModuleConfig.class,
         CompanyModuleConfig.class
 })
 public class TmsApplication {

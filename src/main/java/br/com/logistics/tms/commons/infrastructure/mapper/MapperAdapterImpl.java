@@ -4,6 +4,7 @@ import br.com.logistics.tms.commons.application.mapper.Mapper;
 import br.com.logistics.tms.commons.application.usecases.UseCaseMapperProvider;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.blackbird.BlackbirdModule;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,9 @@ public class MapperAdapterImpl implements Mapper {
     private final ObjectMapper objectMapper;
 
     public MapperAdapterImpl() {
-        this.objectMapper = new ObjectMapper().registerModule(new BlackbirdModule());
+        this.objectMapper = new ObjectMapper()
+                .registerModule(new BlackbirdModule())
+                .registerModule(new JavaTimeModule());
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         this.objectMapper.setSerializationInclusion(NON_NULL);
         UseCaseMapperProvider.setMapper(this);

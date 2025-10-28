@@ -7,7 +7,6 @@ import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
 import br.com.logistics.tms.company.application.usecases.CreateCompanyUseCase;
 import br.com.logistics.tms.company.infrastructure.presenters.rest.dto.CreateCompanyDTO;
 import br.com.logistics.tms.company.infrastructure.presenters.rest.dto.CreateCompanyResponseDTO;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(value = "companies")
-@Slf4j
 @Cqrs(Role.WRITE)
 public class CreateController {
 

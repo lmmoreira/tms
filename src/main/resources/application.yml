@@ -22,9 +22,14 @@ spring:
     hibernate:
       ddl-auto: none
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USER}
-    password: ${DB_PASS}
+    write:
+      url: jdbc:postgresql://${DB_WRITE_HOST}:${DB_WRITE_PORT}/${DB_WRITE_NAME}
+      username: ${DB_WRITE_USER}
+      password: ${DB_WRITE_PASS}
+    read:
+      url: jdbc:postgresql://${DB_READ_HOST}:${DB_READ_PORT}/${DB_READ_NAME}
+      username: ${DB_READ_USER}
+      password: ${DB_READ_PASS}
     hikari:
       minimum-idle: 1
       maximum-pool-size: 3

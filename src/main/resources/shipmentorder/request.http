@@ -1,7 +1,19 @@
 @server = http://localhost:8080
+@now = {{ $timestamp }}
 
-### Get By company
-GET {{server}}/orders/company/1
+### Create company
+POST {{server}}/orders
+Content-Type: application/json
 Accept: application/json
 
+{
+  "companyId": "{{companyId}}",
+  "externalId": "externalId_1",
+  "createdAt": "{{now}}"
+}
 
+> {% client.global.set("shipmentOrderId", response.body.shipmentOrderId) %}
+
+### Get By company
+GET {{server}}/orders/company/{{companyId}}
+Accept: application/json

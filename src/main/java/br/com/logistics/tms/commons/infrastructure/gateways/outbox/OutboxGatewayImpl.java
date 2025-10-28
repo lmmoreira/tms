@@ -3,7 +3,7 @@ package br.com.logistics.tms.commons.infrastructure.gateways.outbox;
 import br.com.logistics.tms.commons.application.gateways.DomainEventQueueGateway;
 import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 import br.com.logistics.tms.commons.domain.DomainEventRegistry;
-import br.com.logistics.tms.commons.infrastructure.jpa.transaction.Transactional;
+import br.com.logistics.tms.commons.infrastructure.database.transaction.Transactional;
 import br.com.logistics.tms.commons.infrastructure.json.JsonSingleton;
 import br.com.logistics.tms.commons.infrastructure.telemetry.Logable;
 import jakarta.persistence.EntityManager;

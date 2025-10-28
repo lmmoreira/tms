@@ -1,4 +1,4 @@
-package br.com.logistics.tms.shipmentorder.infrastructure.rest.dto;
+package br.com.logistics.tms.shipmentorder.infrastructure.presenters.rest.dto;
 
 import java.time.Instant;
 import java.util.UUID;

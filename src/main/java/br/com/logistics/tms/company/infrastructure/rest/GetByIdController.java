@@ -1,21 +1,20 @@
 package br.com.logistics.tms.company.infrastructure.rest;
 
-import br.com.logistics.tms.commons.application.presenters.Presenter;
 import br.com.logistics.tms.commons.application.annotation.Cqrs;
 import br.com.logistics.tms.commons.application.annotation.Role;
+import br.com.logistics.tms.commons.application.presenters.Presenter;
 import br.com.logistics.tms.commons.infrastructure.presenters.rest.DefaultRestPresenter;
 import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;
 import br.com.logistics.tms.company.infrastructure.presenters.GetCompanyByIdCliPresenter;
 import br.com.logistics.tms.company.infrastructure.presenters.rest.dto.GetCompanyByIdMobileResponseDTO;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "companies")
-@Slf4j
 @Cqrs(Role.READ)
 public class GetByIdController {
 
@@ -37,7 +36,7 @@ public class GetByIdController {
     @GetMapping("/{companyId}")
     public Object get(
             @RequestHeader Map<String, String> headers,
-            @PathVariable String companyId) {
+            @PathVariable UUID companyId) {
         final Presenter<?, ?> presenter = Boolean.parseBoolean(headers.get("cli")) ? getCompanyByIdCliPresenter : defaultRestPresenter;
         return restUseCaseExecutor
                 .from(getCompanyByIdUseCase)
