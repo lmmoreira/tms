@@ -1,7 +1,7 @@
 package br.com.logistics.tms.company.infrastructure.rest;
 
 import br.com.logistics.tms.commons.application.annotation.Cqrs;
-import br.com.logistics.tms.commons.application.annotation.Role;
+import br.com.logistics.tms.commons.application.annotation.DatabaseRole;
 import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
 import br.com.logistics.tms.company.application.usecases.UpdateCompanyUseCase;
 import br.com.logistics.tms.company.infrastructure.presenters.rest.dto.UpdateCompanyDTO;
@@ -14,7 +14,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping(value = "companies")
 @Slf4j
-@Cqrs(Role.WRITE)
+@Cqrs(DatabaseRole.WRITE)
 public class UpdateController {
 
     private final UpdateCompanyUseCase updateCompanyUseCase;

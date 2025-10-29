@@ -39,7 +39,7 @@ public abstract class AbstractOutboxEntity {
     public static <T extends AbstractOutboxEntity> T of(AbstractDomainEvent event, Class<T> entityClass) {
         try {
             T entity = entityClass.getDeclaredConstructor().newInstance();
-            entity.setId(UUID.fromString(event.getDomainEventId()));
+            entity.setId(event.getDomainEventId());
             entity.setContent(JsonSingleton.getInstance().toJson(event));
             entity.setAggregateId(event.getAggregateId());
             entity.setStatus(OutboxStatus.NEW);

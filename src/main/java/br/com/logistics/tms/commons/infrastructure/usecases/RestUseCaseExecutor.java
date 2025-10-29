@@ -1,7 +1,7 @@
 package br.com.logistics.tms.commons.infrastructure.usecases;
 
+import br.com.logistics.tms.commons.application.annotation.DatabaseRole;
 import br.com.logistics.tms.commons.application.usecases.*;
-import br.com.logistics.tms.commons.infrastructure.cqrs.CqrsAnnotationUtils;
 import br.com.logistics.tms.commons.infrastructure.database.routing.DataSourceContextHolder;
 import br.com.logistics.tms.commons.infrastructure.database.transaction.TransactionContextHolder;
 import br.com.logistics.tms.commons.infrastructure.database.transaction.Transactional;
@@ -60,7 +60,7 @@ public class RestUseCaseExecutor {
             @Override
             public <T> T intercept(Supplier<T> next) {
 
-                if (CqrsAnnotationUtils.determineReadOnlyFromCqrsAnnotation(useCase)) {
+                if (DatabaseRole.isReadOnly(useCase.getClass())) {
                     DataSourceContextHolder.markAsReadOnly();
                     TransactionContextHolder.markAsReadOnly();
                 } else {

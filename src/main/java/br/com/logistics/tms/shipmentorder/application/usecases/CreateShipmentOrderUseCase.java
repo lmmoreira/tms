@@ -2,7 +2,7 @@ package br.com.logistics.tms.shipmentorder.application.usecases;
 
 import br.com.logistics.tms.commons.application.annotation.Cqrs;
 import br.com.logistics.tms.commons.application.annotation.DomainService;
-import br.com.logistics.tms.commons.application.annotation.Role;
+import br.com.logistics.tms.commons.application.annotation.DatabaseRole;
 import br.com.logistics.tms.commons.application.usecases.UseCase;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import br.com.logistics.tms.shipmentorder.application.repositories.ShipmentOrderRepository;
@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @DomainService
-@Cqrs(Role.WRITE)
+@Cqrs(DatabaseRole.WRITE)
 public class CreateShipmentOrderUseCase implements UseCase<CreateShipmentOrderUseCase.Input, CreateShipmentOrderUseCase.Output> {
 
     private final ShipmentOrderRepository shipmentOrderRepository;

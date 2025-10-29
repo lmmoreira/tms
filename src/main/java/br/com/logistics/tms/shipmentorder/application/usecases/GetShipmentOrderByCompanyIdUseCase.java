@@ -2,7 +2,7 @@ package br.com.logistics.tms.shipmentorder.application.usecases;
 
 import br.com.logistics.tms.commons.application.annotation.Cqrs;
 import br.com.logistics.tms.commons.application.annotation.DomainService;
-import br.com.logistics.tms.commons.application.annotation.Role;
+import br.com.logistics.tms.commons.application.annotation.DatabaseRole;
 import br.com.logistics.tms.commons.application.usecases.UseCase;
 import br.com.logistics.tms.commons.domain.pagination.Page;
 import br.com.logistics.tms.commons.domain.pagination.PageRequest;
@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @DomainService
-@Cqrs(Role.READ)
+@Cqrs(DatabaseRole.READ)
 public class GetShipmentOrderByCompanyIdUseCase implements UseCase<GetShipmentOrderByCompanyIdUseCase.Input, GetShipmentOrderByCompanyIdUseCase.Output> {
 
     private final ShipmentOrderRepository shipmentOrderRepository;

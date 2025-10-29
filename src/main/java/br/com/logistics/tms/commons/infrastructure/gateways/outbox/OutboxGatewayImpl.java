@@ -1,5 +1,7 @@
 package br.com.logistics.tms.commons.infrastructure.gateways.outbox;
 
+import br.com.logistics.tms.commons.application.annotation.Cqrs;
+import br.com.logistics.tms.commons.application.annotation.DatabaseRole;
 import br.com.logistics.tms.commons.application.gateways.DomainEventQueueGateway;
 import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 import br.com.logistics.tms.commons.domain.DomainEventRegistry;
@@ -18,6 +20,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Component
+@Cqrs(DatabaseRole.WRITE)
 public class OutboxGatewayImpl implements OutboxGateway {
 
     private final EntityManager entityManager;
@@ -84,7 +87,7 @@ public class OutboxGatewayImpl implements OutboxGateway {
                 domainEventQueueGateway.publish(
                         event,
                         correlationId,
-                        this::onSuccess,
+                        this::onSuccess,6
                         this::onFailure
                 );
             } catch (Exception e) {

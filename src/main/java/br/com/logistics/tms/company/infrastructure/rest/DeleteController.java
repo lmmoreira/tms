@@ -1,7 +1,7 @@
 package br.com.logistics.tms.company.infrastructure.rest;
 
 import br.com.logistics.tms.commons.application.annotation.Cqrs;
-import br.com.logistics.tms.commons.application.annotation.Role;
+import br.com.logistics.tms.commons.application.annotation.DatabaseRole;
 import br.com.logistics.tms.commons.infrastructure.presenters.rest.DefaultRestPresenter;
 import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
 import br.com.logistics.tms.company.application.usecases.DeleteCompanyByIdUseCase;
@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "companies")
-@Cqrs(Role.WRITE)
+@Cqrs(DatabaseRole.WRITE)
 public class DeleteController {
 
     private final DeleteCompanyByIdUseCase deleteCompanyByIdUseCase;

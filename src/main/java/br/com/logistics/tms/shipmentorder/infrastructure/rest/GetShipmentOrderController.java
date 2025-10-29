@@ -1,7 +1,7 @@
 package br.com.logistics.tms.shipmentorder.infrastructure.rest;
 
 import br.com.logistics.tms.commons.application.annotation.Cqrs;
-import br.com.logistics.tms.commons.application.annotation.Role;
+import br.com.logistics.tms.commons.application.annotation.DatabaseRole;
 import br.com.logistics.tms.commons.infrastructure.presenters.rest.DefaultRestPresenter;
 import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
 import br.com.logistics.tms.shipmentorder.application.usecases.GetShipmentOrderByCompanyIdUseCase;
@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "orders")
-@Cqrs(Role.READ)
+@Cqrs(DatabaseRole.READ)
 public class GetShipmentOrderController {
 
     private final RestUseCaseExecutor restUseCaseExecutor;

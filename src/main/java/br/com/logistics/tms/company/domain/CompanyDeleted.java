@@ -3,6 +3,7 @@ package br.com.logistics.tms.company.domain;
 import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 
 import java.beans.ConstructorProperties;
+import java.time.Instant;
 import java.util.UUID;
 
 public class CompanyDeleted extends AbstractDomainEvent {
@@ -10,11 +11,15 @@ public class CompanyDeleted extends AbstractDomainEvent {
     private final UUID companyId;
     private final String company;
 
-    @ConstructorProperties({"companyId", "company"})
-    public CompanyDeleted(final UUID companyId, final String company) {
-        super(companyId);
+    @ConstructorProperties({"domainEventId", "companyId", "company", "occurredOn"})
+    public CompanyDeleted(final UUID domainEventId, final UUID companyId, final String company, final Instant occurredOn) {
+        super(domainEventId, companyId, occurredOn);
         this.companyId = companyId;
         this.company = company;
+    }
+
+    public CompanyDeleted(final UUID companyId, final String company) {
+        this(null, companyId, company, null);
     }
 
     public UUID getCompanyId() {

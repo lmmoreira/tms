@@ -2,7 +2,7 @@ package br.com.logistics.tms.company.application.usecases;
 
 import br.com.logistics.tms.commons.application.annotation.Cqrs;
 import br.com.logistics.tms.commons.application.annotation.DomainService;
-import br.com.logistics.tms.commons.application.annotation.Role;
+import br.com.logistics.tms.commons.application.annotation.DatabaseRole;
 import br.com.logistics.tms.commons.application.usecases.UseCase;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import br.com.logistics.tms.company.application.repositories.CompanyRepository;
@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @DomainService
-@Cqrs(Role.WRITE)
+@Cqrs(DatabaseRole.WRITE)
 public class UpdateCompanyUseCase implements UseCase<UpdateCompanyUseCase.Input, UpdateCompanyUseCase.Output> {
 
     private final CompanyRepository companyRepository;

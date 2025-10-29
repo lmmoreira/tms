@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 @Component
@@ -19,8 +20,7 @@ public class JpaTransactionalAdapter implements Transactional, UseCaseIntercepto
     }
 
     private TransactionTemplate getTemplateFromContext() {
-        assert transactionTemplate.getTransactionManager() != null;
-        final TransactionTemplate template = new TransactionTemplate(transactionTemplate.getTransactionManager());
+        final TransactionTemplate template = new TransactionTemplate(Objects.requireNonNull(transactionTemplate.getTransactionManager()));
         template.setPropagationBehavior(transactionTemplate.getPropagationBehavior());
         template.setIsolationLevel(transactionTemplate.getIsolationLevel());
         template.setTimeout(transactionTemplate.getTimeout());

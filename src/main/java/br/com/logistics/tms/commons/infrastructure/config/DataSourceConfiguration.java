@@ -1,5 +1,6 @@
 package br.com.logistics.tms.commons.infrastructure.config;
 
+import br.com.logistics.tms.commons.application.annotation.DatabaseRole;
 import br.com.logistics.tms.commons.infrastructure.config.properties.DataSourceProperties;
 import br.com.logistics.tms.commons.infrastructure.database.routing.RoutingDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +39,12 @@ public class DataSourceConfiguration {
 
         if (ctx.containsBean("writeDataSource")) {
             write = ctx.getBean("writeDataSource", DataSource.class);
-            dataSources.put(DataSourceProperties.WRITE, write);
+            dataSources.put(DatabaseRole.WRITE, write);
         }
 
         if (ctx.containsBean("readOnlyDataSource")) {
             read = ctx.getBean("readOnlyDataSource", DataSource.class);
-            dataSources.put(DataSourceProperties.READ, read);
+            dataSources.put(DatabaseRole.READ, read);
         }
 
         if (write == null && read == null) {
@@ -58,7 +59,7 @@ public class DataSourceConfiguration {
     }
 
     @Bean
-    @ConditionalOnExpression("'${app.cqrs.mode:}' == 'write' or '${app.cqrs.mode:}' == 'both'")
+    @ConditionalOnExpression("'${app.cqrs.mode}' == 'write' or '${app.cqrs.mode}' == 'both'")
     public DataSource writeDataSource() {
         final DataSourceProperties.DbConfig cfg = dataSourceProperties.write();
         return DataSourceBuilder.create()
@@ -69,7 +70,7 @@ public class DataSourceConfiguration {
     }
 
     @Bean
-    @ConditionalOnExpression("'${app.cqrs.mode:}' == 'read' or '${app.cqrs.mode:}' == 'both'")
+    @ConditionalOnExpression("'${app.cqrs.mode}' == 'read' or '${app.cqrs.mode}' == 'both'")
     public DataSource readOnlyDataSource() {
         final DataSourceProperties.DbConfig cfg = dataSourceProperties.read();
         return DataSourceBuilder.create()

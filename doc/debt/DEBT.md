@@ -9,6 +9,7 @@ List of technical debt to be paid.
 -[x] **DEBT-001** - Add TTL by default on domain events in the event store.
 -[x] **DEBT-002** - Add Logback async appender for logs in order to improve performance and do not unmount and mount virtual threads.
 -[x] **DEBT-004** - For log centralization, we are currently using Promtail and Loki. However, since Promtail is a vendor lock-in, evaluates OpenTelemetry (OTel) collectors for log management to unify logs, metrics and traces on collector and facilitate switching from Loki to another solution if needed.
+-[ ] **DEBT-010** - On management of ReadOnly Transaction and Read Replicas now we are on the premise that is the same database, or a replica of a relational, so all the writes go for the same transaction and all read for read only database, but must be possible in the future a scenario where read transactions goes to write replica in an easy way.
 
 ## NOT URGENT
 

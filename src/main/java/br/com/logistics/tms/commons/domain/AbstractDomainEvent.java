@@ -8,16 +8,16 @@ public abstract class AbstractDomainEvent implements Serializable {
     private final UUID aggregateId;
     private final String type;
     private final String module;
-    private final String domainEventId;
+    private final UUID domainEventId;
     private final Instant occurredOn;
 
-    protected AbstractDomainEvent(final UUID aggregateId) {
+    protected AbstractDomainEvent(final UUID domainEventId, final UUID aggregateId, Instant occurredOn) {
         final String[] ar = getClass().getPackage().getName().split("\\.");
         this.module = ar.length >= 2 ? ar[ar.length - 2] : "";
-
         this.type = getClass().getSimpleName();
-        this.domainEventId = UUID.randomUUID().toString();
-        this.occurredOn = Instant.now();
+
+        this.domainEventId = domainEventId == null ? Id.unique() : domainEventId;
+        this.occurredOn = occurredOn == null ? Instant.now() : occurredOn;
         this.aggregateId = aggregateId;
     }
 
@@ -33,7 +33,7 @@ public abstract class AbstractDomainEvent implements Serializable {
         return module;
     }
 
-    public String getDomainEventId() {
+    public UUID getDomainEventId() {
         return domainEventId;
     }
 
