@@ -87,7 +87,7 @@ public class OutboxGatewayImpl implements OutboxGateway {
                 domainEventQueueGateway.publish(
                         event,
                         correlationId,
-                        this::onSuccess,6
+                        this::onSuccess,
                         this::onFailure
                 );
             } catch (Exception e) {
