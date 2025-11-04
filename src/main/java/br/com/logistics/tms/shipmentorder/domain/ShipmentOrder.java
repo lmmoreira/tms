@@ -5,6 +5,7 @@ import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -25,7 +26,7 @@ public class ShipmentOrder extends AbstractAggregateRoot {
                          Instant createdAt,
                          Instant updatedAt,
                          final Set<AbstractDomainEvent> domainEvents) {
-        super(new HashSet<>(domainEvents));
+        super(new HashSet<>(domainEvents), new HashMap<>());
 
         if (shipmentOrderId == null) throw new ValidationException("Invalid shipmentOrderId for ShipmentOrder");
         if (company == null) throw new ValidationException("Invalid companyId for ShipmentOrder");

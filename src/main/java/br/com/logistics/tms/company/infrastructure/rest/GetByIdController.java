@@ -7,7 +7,7 @@ import br.com.logistics.tms.commons.infrastructure.presenters.rest.DefaultRestPr
 import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
 import br.com.logistics.tms.company.application.usecases.GetCompanyByIdUseCase;
 import br.com.logistics.tms.company.infrastructure.presenters.GetCompanyByIdCliPresenter;
-import br.com.logistics.tms.company.infrastructure.presenters.rest.dto.GetCompanyByIdMobileResponseDTO;
+import br.com.logistics.tms.company.infrastructure.dto.GetCompanyByIdMobileResponseDTO;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;

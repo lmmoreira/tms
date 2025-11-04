@@ -4,6 +4,7 @@ import br.com.logistics.tms.company.domain.*;
 import br.com.logistics.tms.company.infrastructure.config.CompanySchema;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -17,6 +18,7 @@ import java.util.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class CompanyEntity implements Serializable {
 
     @Id
@@ -27,6 +29,9 @@ public class CompanyEntity implements Serializable {
 
     @Column(name = "cnpj", nullable = false)
     private String cnpj;
+
+    @Version
+    private Integer version;
 
     @ElementCollection(targetClass = CompanyType.class)
     @CollectionTable(
@@ -43,13 +48,14 @@ public class CompanyEntity implements Serializable {
     private Map<String, Object> configuration;
 
     public static CompanyEntity of(final Company company) {
-        return new CompanyEntity(
-                company.getCompanyId().value(),
-                company.getName(),
-                company.getCnpj().value(),
-                new HashSet<>(company.getCompanyTypes().value()),
-                new HashMap<>(company.getConfigurations().value())
-        );
+        return CompanyEntity.builder()
+                .id(company.getCompanyId().value())
+                .name(company.getName())
+                .cnpj(company.getCnpj().value())
+                .companyTypes(new HashSet<>(company.getCompanyTypes().value()))
+                .configuration(new HashMap<>(company.getConfigurations().value()))
+                .version((Integer) company.getPersistentMetadata().getOrDefault("version", null))
+                .build();
     }
 
     public Company toCompany() {
@@ -60,7 +66,8 @@ public class CompanyEntity implements Serializable {
                 CompanyTypes.with(this.companyTypes),
                 Configurations.with(this.configuration),
                 Collections.emptySet(),
-                Collections.emptySet()
+                Collections.emptySet(),
+                Map.of("version", this.version)
         );
     }
 

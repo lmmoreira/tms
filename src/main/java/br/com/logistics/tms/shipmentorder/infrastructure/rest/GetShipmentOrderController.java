@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(value = "orders")
+@RequestMapping(value = "shipmentorders")
 @Cqrs(DatabaseRole.READ)
 public class GetShipmentOrderController {
 
@@ -32,7 +32,7 @@ public class GetShipmentOrderController {
         this.restUseCaseExecutor = restUseCaseExecutor;
     }
 
-    @GetMapping("/{companyId}")
+    @GetMapping("/company/{companyId}")
     public Object get(
             @RequestHeader Map<String, String> headers,
             @PathVariable UUID companyId,

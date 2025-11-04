@@ -13,7 +13,7 @@ public record Page<T>(
 
     public Page {
         if (content == null) throw new DomainException("content cannot be null");
-        if (page < 1) throw new DomainException("page must be >= 1");
+        if (page < 0) throw new DomainException("page must be >= 0");
         if (size < 1) throw new DomainException("size must be >= 1");
         if (totalElements < 0) throw new DomainException("totalElements cannot be negative");
     }

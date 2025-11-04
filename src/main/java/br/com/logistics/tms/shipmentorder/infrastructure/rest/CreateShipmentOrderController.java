@@ -5,8 +5,8 @@ import br.com.logistics.tms.commons.application.annotation.DatabaseRole;
 import br.com.logistics.tms.commons.infrastructure.presenters.rest.DefaultRestPresenter;
 import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
 import br.com.logistics.tms.shipmentorder.application.usecases.CreateShipmentOrderUseCase;
-import br.com.logistics.tms.shipmentorder.infrastructure.presenters.rest.dto.CreateShipmentOrderDTO;
-import br.com.logistics.tms.shipmentorder.infrastructure.presenters.rest.dto.CreateShipmentOrderResponseDTO;
+import br.com.logistics.tms.shipmentorder.infrastructure.dto.CreateShipmentOrderDTO;
+import br.com.logistics.tms.shipmentorder.infrastructure.dto.CreateShipmentOrderResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(value = "orders")
+@RequestMapping(value = "shipmentorders")
 @Cqrs(DatabaseRole.WRITE)
 public class CreateShipmentOrderController {
 

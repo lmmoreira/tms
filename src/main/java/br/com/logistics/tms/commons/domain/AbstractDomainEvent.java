@@ -21,6 +21,10 @@ public abstract class AbstractDomainEvent implements Serializable {
         this.aggregateId = aggregateId;
     }
 
+    public String getVersion() {
+        return "1.0.0";
+    }
+
     public UUID getAggregateId() {
         return aggregateId;
     }

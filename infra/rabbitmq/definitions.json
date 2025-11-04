@@ -54,7 +54,16 @@
       }
     },
     {
-      "name": "integration.shipmentorder.retrieved",
+      "name": "integration.company.shipmentorder.created",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 86400000
+      }
+    },
+    {
+      "name": "integration.shipmentorder.created",
       "vhost": "/",
       "durable": true,
       "auto_delete": false,
@@ -103,9 +112,9 @@
     {
       "source": "tms.events",
       "vhost": "/",
-      "destination": "integration.shipmentorder.retrieved",
+      "destination": "integration.shipmentorder.created",
       "destination_type": "queue",
-      "routing_key": "integration.shipmentorder.OrderRetrieved",
+      "routing_key": "integration.shipmentorder.ShipmentOrderCreated",
       "arguments": {}
     },
     {
@@ -114,6 +123,14 @@
       "destination": "integration.shipmentorder.all",
       "destination_type": "queue",
       "routing_key": "integration.shipmentorder.*",
+      "arguments": {}
+    },
+    {
+      "source": "tms.events",
+      "vhost": "/",
+      "destination": "integration.company.shipmentorder.created",
+      "destination_type": "queue",
+      "routing_key": "integration.shipmentorder.ShipmentOrderCreated",
       "arguments": {}
     }
   ]

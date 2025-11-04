@@ -11,6 +11,7 @@ import br.com.logistics.tms.commons.infrastructure.telemetry.Logable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import org.hibernate.Session;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.sql.Statement;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @Cqrs(DatabaseRole.WRITE)
@@ -51,34 +53,41 @@ public class OutboxGatewayImpl implements OutboxGateway {
     }
 
     @Override
+    @Async
     public void process(String schemaName, int batchSize, Class<? extends AbstractOutboxEntity> entityClass) {
         this.logable.info(getClass(), "Processing outbox batch of {} messages from schema '{}'", batchSize, schemaName);
 
-        setSchema(schemaName);
+        final List<AbstractOutboxEntity> result = transactional.runWithinTransactionAndReturn(() -> {
 
-        final String sql = """
-                WITH cte AS (
-                    SELECT id
-                    FROM outbox
-                    WHERE status = 'NEW'
-                    ORDER BY created_at
-                    FOR UPDATE SKIP LOCKED
-                    LIMIT ?
-                )
-                UPDATE outbox o
-                SET status = 'PROCESSING'
-                FROM cte
-                WHERE o.id = cte.id
-                RETURNING o.id, o.content, o.aggregate_id, o.created_at, o.type, o.status
-                """;
+            setSchema(schemaName);
 
-        final Query query = entityManager.createNativeQuery(sql, entityClass);
-        query.setParameter(1, batchSize);
+            final String sql = """
+                    WITH cte AS (
+                        SELECT id
+                        FROM outbox
+                        WHERE status = 'NEW'
+                        ORDER BY created_at
+                        FOR UPDATE SKIP LOCKED
+                        LIMIT ?
+                    )
+                    UPDATE outbox o
+                    SET status = 'PROCESSING'
+                    FROM cte
+                    WHERE o.id = cte.id
+                    RETURNING o.id, o.content, o.aggregate_id, o.created_at, o.type, o.status
+                    """;
 
-        final List<AbstractOutboxEntity> result = query.getResultList();
+            final Query query = entityManager.createNativeQuery(sql, entityClass);
+            query.setParameter(1, batchSize);
+            final List<?> raw = query.getResultList();
+            return raw.stream()
+                    .map(entityClass::cast)
+                    .collect(Collectors.toList());
+        });
+
         logable.info(getClass(), "Fetched {} outbox messages for processing", result.size());
 
-        for (AbstractOutboxEntity outbox : result) {
+        result.parallelStream().forEach(outbox -> {
             try {
                 final Class<?> eventClass = DomainEventRegistry.getClass(schemaName, outbox.getType());
 
@@ -93,7 +102,7 @@ public class OutboxGatewayImpl implements OutboxGateway {
             } catch (Exception e) {
                 logable.error(getClass(), "Failed to process outbox message with ID {}: {}", outbox.getId(), e.getMessage());
             }
-        }
+        });
     }
 
     @Override

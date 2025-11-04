@@ -36,9 +36,9 @@ public class CompanyRepositoryImpl implements CompanyRepository {
     @Override
     public Company create(final Company company) {
         final CompanyEntity companyEntity = CompanyEntity.of(company);
-        companyJpaRepository.save(companyEntity);
+        final CompanyEntity persisted = companyJpaRepository.save(companyEntity);
         outboxGateway.save(CompanySchema.COMPANY_SCHEMA, company.getDomainEvents(), CompanyOutboxEntity.class);
-        return company;
+        return persisted.toCompany();
     }
 
     @Override

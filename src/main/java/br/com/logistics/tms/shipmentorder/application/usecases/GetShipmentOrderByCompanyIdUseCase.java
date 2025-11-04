@@ -33,7 +33,7 @@ public class GetShipmentOrderByCompanyIdUseCase implements UseCase<GetShipmentOr
                         so.getCreatedAt()))
                 .collect(java.util.stream.Collectors.toSet());
 
-        return new Output(shipmentOrderOutputs, shipmentOrders.page(), shipmentOrders.size(), shipmentOrders.totalElements());
+        return new Output(shipmentOrderOutputs, shipmentOrders.page(), shipmentOrders.size(), shipmentOrders.totalElements(), shipmentOrders.totalPages());
     }
 
     public record Input(UUID companyId, int page, int size) {
@@ -43,7 +43,7 @@ public class GetShipmentOrderByCompanyIdUseCase implements UseCase<GetShipmentOr
     public record Output(Set<ShipmentOrder> shipmentOrders,
                          int page,
                          int size,
-                         long totalElements) {
+                         long totalElements, long totalPages) {
         public record ShipmentOrder(UUID shipmentOrderId, UUID companyId, String externalId, Instant createdAt) {
         }
     }

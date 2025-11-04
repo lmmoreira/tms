@@ -4,10 +4,7 @@ import br.com.logistics.tms.commons.domain.AbstractAggregateRoot;
 import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Company extends AbstractAggregateRoot {
 
@@ -24,8 +21,9 @@ public class Company extends AbstractAggregateRoot {
                    final CompanyTypes companyTypes,
                    final Configurations configurations,
                    final Set<Agreement> agreements,
-                   final Set<AbstractDomainEvent> domainEvents) {
-        super(new HashSet<>(domainEvents));
+                   final Set<AbstractDomainEvent> domainEvents,
+                   final Map<String, Object> persistentMetadata) {
+        super(new HashSet<>(domainEvents), new HashMap<>(persistentMetadata));
 
         if (companyId == null) throw new ValidationException("Invalid companyId for Company");
         if (name == null || name.isBlank()) throw new ValidationException("Invalid name for Company");
@@ -52,7 +50,8 @@ public class Company extends AbstractAggregateRoot {
                 CompanyTypes.with(types),
                 Configurations.with(configuration),
                 new HashSet<>(),
-                new HashSet<>());
+                new HashSet<>(),
+                new HashMap<>());
         company.placeDomainEvent(new CompanyCreated(company.companyId.value(), company.toString()));
         return company;
     }
@@ -68,8 +67,10 @@ public class Company extends AbstractAggregateRoot {
                 this.companyTypes,
                 this.configurations,
                 this.agreements,
-                this.getDomainEvents()
+                this.getDomainEvents(),
+                this.getPersistentMetadata()
         );
+
         updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value(), "name", this.name, name));
         return updated;
     }
@@ -85,8 +86,10 @@ public class Company extends AbstractAggregateRoot {
                 this.companyTypes,
                 this.configurations,
                 this.agreements,
-                this.getDomainEvents()
+                this.getDomainEvents(),
+                this.getPersistentMetadata()
         );
+
         updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value(), "cnpj", this.cnpj.value(), cnpj));
         return updated;
     }
@@ -102,8 +105,10 @@ public class Company extends AbstractAggregateRoot {
                 CompanyTypes.with(types),
                 this.configurations,
                 this.agreements,
-                this.getDomainEvents()
+                this.getDomainEvents(),
+                this.getPersistentMetadata()
         );
+
         updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value(), "types", this.companyTypes.value().toString(), types.toString()));
         return updated;
     }
@@ -119,11 +124,19 @@ public class Company extends AbstractAggregateRoot {
                 this.companyTypes,
                 Configurations.with(configurations),
                 this.agreements,
-                this.getDomainEvents()
+                this.getDomainEvents(),
+                this.getPersistentMetadata()
         );
 
         updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value(), "configurations", this.configurations.value().toString(), configurations.toString()));
         return updated;
+    }
+
+    public Company incrementOrderNumber() {
+        final Map<String, Object> configuration = new HashMap<>(this.configurations.value());
+        configuration.putIfAbsent("shipmentOrderNumber", 0);
+        configuration.put("shipmentOrderNumber", (Integer) configuration.get("shipmentOrderNumber") + 1);
+        return this.updateConfigurations(configuration);
     }
 
     public void delete() {

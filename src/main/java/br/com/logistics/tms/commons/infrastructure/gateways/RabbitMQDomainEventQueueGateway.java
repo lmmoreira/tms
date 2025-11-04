@@ -14,8 +14,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import static br.com.logistics.tms.commons.infrastructure.config.AsyncConfiguration.DOMAIN_EVENT_QUEUE_GATEWAY_EXECUTOR;
-
 @Component
 @AllArgsConstructor
 public class RabbitMQDomainEventQueueGateway implements DomainEventQueueGateway {
@@ -26,7 +24,7 @@ public class RabbitMQDomainEventQueueGateway implements DomainEventQueueGateway 
     private final RabbitTemplate rabbitTemplate;
     private final Logable logable;
 
-    @Async(DOMAIN_EVENT_QUEUE_GATEWAY_EXECUTOR)
+    @Async
     @Override
     public void publish(AbstractDomainEvent content, UUID correlationId, Consumer<Map<String, Object>> onSuccess, Consumer<Map<String, Object>> onFailure) {
         final String routingKey = RABBIT_MQ_INTEGRATION_ROUTING_KEY_PREFIX.concat(content.getModule()).concat(".").concat(content.getType());

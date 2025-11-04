@@ -4,8 +4,8 @@ import br.com.logistics.tms.commons.application.annotation.Cqrs;
 import br.com.logistics.tms.commons.application.annotation.DatabaseRole;
 import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
 import br.com.logistics.tms.company.application.usecases.UpdateCompanyUseCase;
-import br.com.logistics.tms.company.infrastructure.presenters.rest.dto.UpdateCompanyDTO;
-import br.com.logistics.tms.company.infrastructure.presenters.rest.dto.UpdateCompanyResponseDTO;
+import br.com.logistics.tms.company.infrastructure.dto.UpdateCompanyDTO;
+import br.com.logistics.tms.company.infrastructure.dto.UpdateCompanyResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 

@@ -29,7 +29,9 @@ public class AsyncConfiguration {
         this.tracer = tracer;
     }
 
-    @Bean(name = DOMAIN_EVENT_QUEUE_GATEWAY_EXECUTOR)
+    // KEEP IN ORDER TO KEEP SCOPE BUT IT IS NOT BEING WORKING SINCE IT IS CALLED BY OUTBOX
+
+    //@Bean(name = DOMAIN_EVENT_QUEUE_GATEWAY_EXECUTOR)
     public AsyncTaskExecutor threadPoolTaskExecutor() {
         return new VirtualThreadTaskExecutor(DOMAIN_EVENT_QUEUE_GATEWAY_EXECUTOR) {
             @Override

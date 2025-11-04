@@ -1,4 +1,4 @@
-package br.com.logistics.tms.company.infrastructure.presenters.rest.dto;
+package br.com.logistics.tms.company.infrastructure.dto;
 
 import br.com.logistics.tms.company.domain.CompanyType;
 import java.util.Map;

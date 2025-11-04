@@ -10,17 +10,17 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Cqrs(DatabaseRole.WRITE)
-public class OrderOutboxScheduler {
+public class ShipmentOrderOutboxScheduler {
 
     private final OutboxGateway outboxGateway;
 
-    public OrderOutboxScheduler(OutboxGateway outboxGateway) {
+    public ShipmentOrderOutboxScheduler(OutboxGateway outboxGateway) {
         this.outboxGateway = outboxGateway;
     }
 
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelay = 1000)
     public void runOutbox() {
-        outboxGateway.process(ShipmentOrderSchema.SHIPMENT_ORDER_SCHEMA, 1, ShipmentOrderOutboxEntity.class);
+        outboxGateway.process(ShipmentOrderSchema.SHIPMENT_ORDER_SCHEMA, 10, ShipmentOrderOutboxEntity.class);
     }
 
 }
