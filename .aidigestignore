@@ -1,0 +1,108 @@
+# Build artifacts
+target/
+*.jar
+*.war
+*.ear
+*.class
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+pom.xml.versionsBackup
+
+# IDE files
+.idea/
+.vscode/
+.settings/
+.project
+.classpath
+*.iml
+*.iws
+
+# Logs and temporary files
+tmp/
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+
+# Generated code
+**/generated/
+**/*-generated.java
+**/target/generated-sources/
+**/target/generated-test-sources/
+
+# Test reports
+**/target/surefire-reports/
+**/target/failsafe-reports/
+**/target/site/
+
+# Database files
+*.db
+*.sqlite
+*.dump
+
+# Docker volumes data
+volumes/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Lock files
+package-lock.json
+yarn.lock
+
+# Documentation assets (keep .md files, exclude media)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.mp4
+*.avi
+*.mov
+
+# Large infrastructure files
+infra/artifact/
+infra/*/data/
+
+# Environment files (may contain secrets)
+.env
+.env.local
+*.properties
+!infra/env/env.properties.example
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Compiled documentation
+doc/**/*.pdf
+doc/**/*.docx
+
+# Node modules (if any frontend)
+node_modules/
+
+# Python (if any scripts)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+
+# Coverage reports (keep structure, exclude data)
+**/target/jacoco/
+**/target/coverage/
+
+# SonarQube
+.sonar/
+.scannerwork/
+
+# Kubernetes secrets
+infra/k8s/*secret*.yaml
+infra/k8s/*-sealed.yaml

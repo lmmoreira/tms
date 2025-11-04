@@ -31,9 +31,13 @@
 * [Loki](http://127.0.0.0:3100/ready)
 * [Grafana](http://127.0.0.0:3000/)
   * admin - admin
-* [Promtail](http://127.0.0.1:9080/targets)
-* [Neo4J](http://localhost:7474/browser/)
 
+    - .cursorrules (critical for Cursor users)
+    - .github/copilot-instructions.md (for GitHub Copilot)
+    - .aidigestignore (reduce token usage)
+    - .ai/prompts/ with templates
+    - .ai/code-examples/ with complete patterns
+    - docs/GLOSSARY.md (ubiquitous language)
 
 ## C4
 ### Context

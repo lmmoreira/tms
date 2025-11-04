@@ -1,0 +1,681 @@
+# Cursor AI Rules for TMS (Transportation Management System)
+
+## Project Context
+
+This is a modular monolith Transportation Management System using:
+- **Domain-Driven Design (DDD)** with aggregates and value objects
+- **Hexagonal Architecture** (Ports & Adapters) with strict layer separation
+- **CQRS** (Command Query Responsibility Segregation) with read/write database separation
+- **Event-Driven Architecture** with RabbitMQ and outbox pattern
+- **Spring Modulith** for module boundary enforcement
+
+**Tech Stack:** Java 21, Spring Boot 3.x, PostgreSQL, RabbitMQ, Maven
+
+---
+
+## Critical Architecture Rules
+
+### Layer Separation (STRICT ENFORCEMENT)
+
+#### Domain Layer (`domain/`)
+- ✅ **ONLY pure Java** - NO framework dependencies
+- ✅ Contains: Aggregates, Value Objects, Domain Events, Domain Exceptions
+- ✅ Business logic ONLY lives here
+- ❌ **NEVER** import Spring, JPA, Jackson, or any framework
+- ❌ **NEVER** import infrastructure or application packages
+
+**Example:**
+```java
+// ✅ CORRECT - Pure domain
+public class Company extends AbstractAggregateRoot {
+    private final CompanyId companyId;
+    private final Cnpj cnpj;
+    // ... pure business logic
+}
+
+// ❌ WRONG - Framework dependency
+@Entity
+public class Company extends AbstractAggregateRoot { ... }
+```
+
+#### Application Layer (`application/`)
+- ✅ Contains: Use Cases, Repository Interfaces, Presenters (interfaces only)
+- ✅ Depends ONLY on `domain` package
+- ✅ Orchestrates business operations
+- ❌ **NEVER** import infrastructure packages
+- ❌ **NEVER** contain HTTP, database, or messaging logic
+
+#### Infrastructure Layer (`infrastructure/`)
+- ✅ Contains: REST Controllers, JPA Entities, Repository Implementations, DTOs, Messaging
+- ✅ Implements interfaces from `application` layer
+- ✅ All Spring annotations live here
+- ✅ Can depend on `domain` and `application`
+
+---
+
+## Mandatory Patterns
+
+### 1. Use Case Pattern (ALWAYS FOLLOW)
+
+**Write Use Case:**
+```java
+@DomainService
+@Cqrs(DatabaseRole.WRITE)
+public class CreateCompanyUseCase implements UseCase<CreateCompanyUseCase.Input, CreateCompanyUseCase.Output> {
+
+    private final CompanyRepository companyRepository;
+
+    public CreateCompanyUseCase(CompanyRepository companyRepository) {
+        this.companyRepository = companyRepository;
+    }
+
+    @Override
+    public Output execute(Input input) {
+        // 1. Validation
+        if (companyRepository.getCompanyByCnpj(new Cnpj(input.cnpj())).isPresent()) {
+            throw new ValidationException("Company already exists");
+        }
+
+        // 2. Domain logic (aggregate creates itself)
+        Company company = Company.createCompany(input.name(), input.cnpj(), input.types(), input.configuration());
+
+        // 3. Persistence
+        company = companyRepository.create(company);
+
+        // 4. Return output
+        return new Output(company.getCompanyId().value(), company.getName());
+    }
+
+    public record Input(String name, String cnpj, Set<CompanyType> types, Map<String, Object> configuration) {}
+    public record Output(UUID companyId, String name) {}
+}
+```
+
+**Read Use Case:**
+```java
+@DomainService
+@Cqrs(DatabaseRole.READ)
+public class GetCompanyByIdUseCase implements UseCase<GetCompanyByIdUseCase.Input, GetCompanyByIdUseCase.Output> {
+
+    private final CompanyRepository companyRepository;
+
+    public GetCompanyByIdUseCase(CompanyRepository companyRepository) {
+        this.companyRepository = companyRepository;
+    }
+
+    @Override
+    public Output execute(Input input) {
+        Company company = companyRepository.getCompanyById(new CompanyId(input.companyId()))
+                .orElseThrow(() -> new NotFoundException("Company not found"));
+
+        return new Output(company.getCompanyId().value(), company.getName(), company.getCnpj().value());
+    }
+
+    public record Input(UUID companyId) {}
+    public record Output(UUID companyId, String name, String cnpj) {}
+}
+```
+
+**Key Rules:**
+- ✅ One use case per operation (Single Responsibility)
+- ✅ Always annotate with `@DomainService` and `@Cqrs(DatabaseRole.WRITE or READ)`
+- ✅ Input/Output as nested records
+- ✅ Constructor injection only
+- ✅ Business validation in use case, domain invariants in aggregate
+
+---
+
+### 2. REST Controller Pattern
+
+```java
+@RestController
+@RequestMapping("companies")
+@Cqrs(DatabaseRole.WRITE)
+public class CreateController {
+
+    private final CreateCompanyUseCase createCompanyUseCase;
+    private final DefaultRestPresenter defaultRestPresenter;
+    private final RestUseCaseExecutor restUseCaseExecutor;
+
+    public CreateController(CreateCompanyUseCase createCompanyUseCase,
+                           DefaultRestPresenter defaultRestPresenter,
+                           RestUseCaseExecutor restUseCaseExecutor) {
+        this.createCompanyUseCase = createCompanyUseCase;
+        this.defaultRestPresenter = defaultRestPresenter;
+        this.restUseCaseExecutor = restUseCaseExecutor;
+    }
+
+    @PostMapping
+    public Object create(@RequestBody CreateCompanyDTO createCompanyDTO) {
+        return restUseCaseExecutor
+                .from(createCompanyUseCase)
+                .withInput(createCompanyDTO)
+                .mapOutputTo(CreateCompanyResponseDTO.class)
+                .presentWith(output -> defaultRestPresenter.present(output, HttpStatus.CREATED.value()))
+                .execute();
+    }
+}
+```
+
+**Key Rules:**
+- ✅ Controller does **ZERO business logic** - only delegation
+- ✅ Use `RestUseCaseExecutor` for execution flow
+- ✅ Always annotate with `@Cqrs(DatabaseRole.WRITE or READ)`
+- ✅ DTOs for request/response (never expose domain objects)
+- ❌ **NEVER** put validation or business logic in controllers
+
+---
+
+### 3. Aggregate Pattern (Immutable)
+
+```java
+public class Company extends AbstractAggregateRoot {
+
+    private final CompanyId companyId;
+    private final String name;
+    private final Cnpj cnpj;
+
+    // Private constructor - forces use of factory methods
+    private Company(CompanyId companyId, String name, Cnpj cnpj, 
+                   Set<AbstractDomainEvent> domainEvents, Map<String, Object> persistentMetadata) {
+        super(new HashSet<>(domainEvents), new HashMap<>(persistentMetadata));
+        
+        // Invariant validation
+        if (companyId == null) throw new ValidationException("Invalid companyId");
+        if (name == null || name.isBlank()) throw new ValidationException("Invalid name");
+        
+        this.companyId = companyId;
+        this.name = name;
+        this.cnpj = cnpj;
+    }
+
+    // Factory method for creation
+    public static Company createCompany(String name, String cnpj, Set<CompanyType> types, Map<String, Object> config) {
+        Company company = new Company(
+            CompanyId.unique(),
+            name,
+            new Cnpj(cnpj),
+            new HashSet<>(),
+            new HashMap<>()
+        );
+        
+        // Raise domain event
+        company.placeDomainEvent(new CompanyCreated(company.getCompanyId().value(), company.toString()));
+        
+        return company;
+    }
+
+    // Update method - returns NEW instance (immutable)
+    public Company updateName(String name) {
+        if (this.name.equals(name)) return this;
+        
+        Company updated = new Company(
+            this.companyId,
+            name,  // New value
+            this.cnpj,
+            this.getDomainEvents(),
+            this.getPersistentMetadata()
+        );
+        
+        updated.placeDomainEvent(new CompanyUpdated(updated.getCompanyId().value(), "name", this.name, name));
+        
+        return updated;
+    }
+
+    // Getters only (no setters)
+    public CompanyId getCompanyId() { return companyId; }
+    public String getName() { return name; }
+    public Cnpj getCnpj() { return cnpj; }
+}
+```
+
+**Key Rules:**
+- ✅ **ALWAYS immutable** - update methods return NEW instances
+- ✅ Private constructors, public factory methods
+- ✅ Domain events placed in aggregate methods
+- ✅ Invariant validation in constructor
+- ✅ Getters only, NO setters
+- ❌ **NEVER** mutate state directly
+
+---
+
+### 4. Value Object Pattern
+
+```java
+public record Cnpj(String value) {
+    
+    public Cnpj {
+        if (value == null || !isValid(value)) {
+            throw new ValidationException("Invalid CNPJ format");
+        }
+    }
+    
+    private static boolean isValid(String cnpj) {
+        // Validation logic
+        return cnpj != null && cnpj.matches("\\d{14}");
+    }
+}
+```
+
+**Key Rules:**
+- ✅ Use Java `record` for value objects
+- ✅ Validation in compact constructor
+- ✅ Immutable by nature
+- ❌ No setters, no mutable fields
+
+---
+
+### 5. Domain Event Pattern
+
+```java
+public class CompanyCreated extends AbstractDomainEvent {
+    
+    private final UUID aggregateId;
+    private final String payload;
+
+    public CompanyCreated(UUID aggregateId, String payload) {
+        super(Id.unique(), aggregateId, Instant.now());
+        this.aggregateId = aggregateId;
+        this.payload = payload;
+    }
+
+    public UUID getAggregateId() { return aggregateId; }
+    public String getPayload() { return payload; }
+}
+```
+
+**Key Rules:**
+- ✅ Extend `AbstractDomainEvent`
+- ✅ Past tense naming (CompanyCreated, not CompanyCreate)
+- ✅ Always include aggregateId
+- ✅ Events are placed in aggregate methods using `placeDomainEvent()`
+- ❌ **NEVER** throw events directly from use cases
+
+---
+
+### 6. Repository Pattern
+
+**Interface (in `application/`):**
+```java
+public interface CompanyRepository {
+    Company create(Company company);
+    Optional<Company> getCompanyById(CompanyId companyId);
+    Optional<Company> getCompanyByCnpj(Cnpj cnpj);
+    Company update(Company company);
+    void deleteById(CompanyId companyId);
+}
+```
+
+**Implementation (in `infrastructure/`):**
+```java
+@Component
+@AllArgsConstructor
+public class CompanyRepositoryImpl implements CompanyRepository {
+
+    private final CompanyJpaRepository companyJpaRepository;
+    private final OutboxGateway outboxGateway;
+
+    @Override
+    public Company create(Company company) {
+        // 1. Persist aggregate
+        CompanyEntity entity = CompanyEntity.of(company);
+        companyJpaRepository.save(entity);
+        
+        // 2. Persist domain events to outbox (SAME transaction)
+        outboxGateway.save(COMPANY_SCHEMA, company.getDomainEvents(), CompanyOutboxEntity.class);
+        
+        return company;
+    }
+}
+```
+
+**Key Rules:**
+- ✅ Interface in `application/`, implementation in `infrastructure/`
+- ✅ Work with domain objects, not JPA entities
+- ✅ Always persist domain events to outbox in same transaction
+- ✅ Transactions are managed by usecase, specifically JpaTransactionalAdapter configured on RestUseCaseExecutor
+
+---
+
+### 7. Event Listener Pattern (Inter-Module Communication)
+
+```java
+@Component
+@Cqrs(DatabaseRole.WRITE)
+@Lazy(false)
+public class IncrementShipmentOrderListener {
+
+    private final VoidUseCaseExecutor voidUseCaseExecutor;
+    private final IncrementShipmentOrderUseCase incrementShipmentOrderUseCase;
+
+    public IncrementShipmentOrderListener(VoidUseCaseExecutor voidUseCaseExecutor,
+                                         IncrementShipmentOrderUseCase incrementShipmentOrderUseCase) {
+        this.voidUseCaseExecutor = voidUseCaseExecutor;
+        this.incrementShipmentOrderUseCase = incrementShipmentOrderUseCase;
+    }
+
+    @RabbitListener(queues = "integration.company.shipmentorder.created")
+    public void handle(ShipmentOrderCreatedDTO dto, Message message, Channel channel) {
+        voidUseCaseExecutor
+                .from(incrementShipmentOrderUseCase)
+                .withInput(new IncrementShipmentOrderUseCase.Input(dto.companyId()))
+                .execute();
+    }
+}
+```
+
+**Key Rules:**
+- ✅ Modules communicate **ONLY** through domain events
+- ✅ Listen to RabbitMQ queues from other modules
+- ✅ Use `VoidUseCaseExecutor` or `RestUseCaseExecutor` to invoke use cases
+- ✅ Always annotate with `@Cqrs(DatabaseRole.WRITE or READ)`
+- ❌ **NEVER** call repositories from other modules directly
+
+---
+
+## ID Generation
+
+**ALWAYS use UUID v7 (time-based, sequential):**
+
+```java
+import br.com.logistics.tms.commons.domain.Id;
+
+// Generate new ID
+UUID newId = Id.unique();
+
+// In aggregates
+CompanyId companyId = CompanyId.unique();
+```
+
+**Key Rules:**
+- ✅ Use `Id.unique()` for all new entities
+- ✅ Never use auto-increment IDs
+- ✅ IDs are generated in domain, not database
+- ✅ Time-ordered for better database performance
+
+**Reference:** See `/doc/adr/ADR-001-ID-Format.md`
+
+---
+
+## CQRS Annotations (MANDATORY)
+
+**Every use case and controller MUST specify database role:**
+
+```java
+@Cqrs(DatabaseRole.WRITE)  // For create, update, delete
+@Cqrs(DatabaseRole.READ)   // For queries
+```
+
+**Rules:**
+- ✅ Write operations: `@Cqrs(DatabaseRole.WRITE)`
+- ✅ Read operations: `@Cqrs(DatabaseRole.READ)`
+- ✅ Controllers inherit from their use case's role typically
+- ❌ Never omit this annotation
+
+---
+
+## Module Communication Rules
+
+### ✅ DO: Event-Driven Communication
+```java
+// Company module listens to ShipmentOrder events
+@RabbitListener(queues = "integration.company.shipmentorder.created")
+public void handle(ShipmentOrderCreatedDTO event) { ... }
+```
+
+### ❌ DON'T: Direct Repository Calls
+```java
+// WRONG - Cross-module repository call
+public class ShipmentOrderUseCase {
+    private final CompanyRepository companyRepository; // ❌ FORBIDDEN
+}
+```
+
+---
+
+## Testing Guidelines
+
+### Domain Tests (Pure Unit Tests)
+```java
+class CompanyTest {
+    @Test
+    void shouldCreateCompanyWithValidData() {
+        // No Spring context, pure Java
+        Company company = Company.createCompany("Test Corp", "12345678901234", 
+                                               Set.of(CompanyType.SHIPPER), Map.of());
+        
+        assertNotNull(company.getCompanyId());
+        assertEquals("Test Corp", company.getName());
+    }
+}
+```
+
+### Integration Tests (Testcontainers)
+```java
+@SpringBootTest
+@Testcontainers
+class CreateCompanyIntegrationTest {
+    
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest");
+    
+    @Container
+    static RabbitMQContainer rabbitmq = new RabbitMQContainer("rabbitmq:latest");
+    
+    @Test
+    void shouldCreateCompanyEndToEnd() {
+        // Full flow: REST → Use Case → Repository → Database
+    }
+}
+```
+
+**Key Rules:**
+- ✅ Domain tests: NO Spring, NO mocks, pure logic
+- ✅ Integration tests: Use Testcontainers for PostgreSQL + RabbitMQ
+- ✅ Test happy path + validation failures
+- ✅ Broad integration tests (full flows)
+- ✅ Many unit tests (domain logic)
+
+---
+
+## Naming Conventions
+
+### Use Cases
+- Pattern: `{Verb}{Entity}UseCase`
+- Examples: `CreateCompanyUseCase`, `GetCompanyByIdUseCase`, `UpdateCompanyUseCase`
+
+### Controllers
+- Pattern: `{Verb}Controller`
+- Examples: `CreateController`, `GetByIdController`, `UpdateController`
+- Location: `{module}/infrastructure/rest/`
+
+### Domain Events
+- Pattern: `{Entity}{PastTense}`
+- Examples: `CompanyCreated`, `CompanyUpdated`, `ShipmentOrderCreated`
+
+### Repository Interfaces
+- Pattern: `{Entity}Repository`
+- Examples: `CompanyRepository`, `ShipmentOrderRepository`
+- Location: `{module}/application/repositories/`
+
+### Repository Implementations
+- Pattern: `{Entity}RepositoryImpl`
+- Examples: `CompanyRepositoryImpl`
+- Location: `{module}/infrastructure/repositories/`
+
+---
+
+## Forbidden Patterns (ANTI-PATTERNS)
+
+### ❌ Mutable Aggregates
+```java
+// WRONG
+public void setName(String name) {
+    this.name = name;
+}
+```
+
+### ❌ Framework Dependencies in Domain
+```java
+// WRONG
+@Entity
+public class Company extends AbstractAggregateRoot { ... }
+```
+
+### ❌ Business Logic in Controllers
+```java
+// WRONG
+@PostMapping
+public ResponseEntity<?> create(@RequestBody CreateCompanyDTO dto) {
+    if (dto.getName().isBlank()) {
+        throw new ValidationException("Name is required");
+    }
+    // ... more logic
+}
+```
+
+### ❌ Cross-Module Direct Calls
+```java
+// WRONG - ShipmentOrder module calling Company repository
+public class CreateShipmentOrderUseCase {
+    private final CompanyRepository companyRepository; // ❌
+}
+```
+
+### ❌ Events Thrown from Use Cases
+```java
+// WRONG
+public Output execute(Input input) {
+    Company company = repository.create(company);
+    placeDomainEvent(new CompanyCreated(...)); // ❌ Events must be in aggregate
+}
+```
+
+---
+
+## Java 21 Features (ENCOURAGED)
+
+- ✅ Use **records** for value objects, DTOs, Input/Output
+- ✅ Use **pattern matching** where applicable
+- ✅ Use **virtual threads** (already configured)
+- ✅ Use **text blocks** for SQL, JSON templates
+- ✅ Use **sealed classes** for type hierarchies
+
+---
+
+## Commit Message Format (Conventional Commits)
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `refactor`: Code refactoring
+- `docs`: Documentation changes
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+
+**Scopes:** `company`, `shipmentorder`, `commons`, `infra`, `docs`
+
+**Examples:**
+```
+feat(company): add get company by CNPJ use case
+fix(shipmentorder): correct validation in create order
+refactor(commons): extract common repository pattern
+docs(ai): add use case creation guide
+test(company): add integration tests for company creation
+```
+
+---
+
+## File Organization
+
+```
+{module}/
+├── domain/
+│   ├── {Aggregate}.java           # e.g., Company.java
+│   ├── {ValueObject}.java         # e.g., Cnpj.java, CompanyId.java
+│   ├── {DomainEvent}.java         # e.g., CompanyCreated.java
+│   └── exception/
+│       └── {Exception}.java
+├── application/
+│   ├── usecases/
+│   │   └── {Verb}{Entity}UseCase.java
+│   └── repositories/
+│       └── {Entity}Repository.java
+└── infrastructure/
+    ├── rest/
+    │   └── {Verb}Controller.java
+    ├── dto/
+    │   ├── {Operation}DTO.java
+    │   └── {Operation}ResponseDTO.java
+    ├── jpa/
+    │   ├── entities/
+    │   │   └── {Entity}Entity.java
+    │   └── repositories/
+    │       └── {Entity}JpaRepository.java
+    ├── repositories/
+    │   └── {Entity}RepositoryImpl.java
+    ├── outbox/
+    │   └── {Entity}OutboxEntity.java
+    └── listener/
+        └── {Event}Listener.java
+```
+
+---
+
+## Common Development Tasks
+
+### Creating a New Use Case
+1. Identify if it's READ or WRITE operation
+2. Create use case in `{module}/application/usecases/`
+3. Add `@DomainService` and `@Cqrs(DatabaseRole.READ/WRITE)`
+4. Define nested Input/Output records
+5. Implement `execute()` method
+6. Create controller in `{module}/infrastructure/rest/`
+7. Create DTOs in `{module}/infrastructure/dto/`
+8. Add tests
+
+### Creating a New Module
+1. Create package structure: `domain/`, `application/`, `infrastructure/`
+2. Create module configuration class
+3. Add to `TmsApplication` imports
+4. Add module enable flag to `application.yml`
+5. Create Flyway migration for tables
+6. Create RabbitMQ queue bindings
+7. Add integration tests
+8. Document in ARCHITECTURE.md
+
+---
+
+## References
+
+- **Comprehensive Guide:** `/doc/ai/ARCHITECTURE.md`
+- **Architecture Decisions:** `/doc/adr/`
+- **Code Examples:** `/doc/ai/examples/`
+- **Glossary:** `/doc/ai/GLOSSARY.md`
+- **Codebase Context:** `/doc/ai/CODEBASE_CONTEXT.md`
+- **Quick Reference:** `/doc/ai/QUICK_REFERENCE.md`
+- **Readme:** `/doc/ai/README.md`
+
+---
+
+## For AI Assistants
+
+When generating code:
+
+1. **Always respect layer boundaries** - Domain has zero dependencies
+2. **Follow patterns exactly** - Use case, controller, aggregate patterns are mandatory
+3. **Never mutate** - Always return new instances
+4. **Events in aggregates** - Never place events in use cases
+5. **Module isolation** - Communicate only through events
+6. **CQRS annotations** - Never omit `@Cqrs` annotation
+7. **Test appropriately** - Domain tests without frameworks, integration with Testcontainers
+
+**Remember:** This is a junior-developer-friendly codebase. Consistency and pattern adherence are critical.
