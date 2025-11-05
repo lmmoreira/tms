@@ -79,6 +79,24 @@
       "arguments": {
         "x-message-ttl": 86400000
       }
+    },
+    {
+      "name": "integration.shipmentorder.company.created",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 86400000
+      }
+    },
+    {
+      "name": "integration.shipmentorder.company.updated",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 86400000
+      }
     }
   ],
   "exchanges": [
@@ -131,6 +149,22 @@
       "destination": "integration.company.shipmentorder.created",
       "destination_type": "queue",
       "routing_key": "integration.shipmentorder.ShipmentOrderCreated",
+      "arguments": {}
+    },
+    {
+      "source": "tms.events",
+      "vhost": "/",
+      "destination": "integration.shipmentorder.company.created",
+      "destination_type": "queue",
+      "routing_key": "integration.company.CompanyCreated",
+      "arguments": {}
+    },
+    {
+      "source": "tms.events",
+      "vhost": "/",
+      "destination": "integration.shipmentorder.company.updated",
+      "destination_type": "queue",
+      "routing_key": "integration.company.CompanyUpdated",
       "arguments": {}
     }
   ]

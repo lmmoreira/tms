@@ -52,7 +52,7 @@ public class Company extends AbstractAggregateRoot {
                 new HashSet<>(),
                 new HashSet<>(),
                 new HashMap<>());
-        company.placeDomainEvent(new CompanyCreated(company.companyId.value(), company.toString()));
+        company.placeDomainEvent(new CompanyCreated(company.companyId.value(), company.name, company.companyTypes.getTypeNames()));
         return company;
     }
 

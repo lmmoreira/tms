@@ -17,6 +17,46 @@
 
 ### Layer Boundaries (STRICT)
 
+```mermaid
+graph TB
+    subgraph "Infrastructure Layer"
+        REST[REST Controllers]
+        JPA[JPA Entities]
+        REPO_IMPL[Repository Impl]
+        LISTEN[Event Listeners]
+        DTO[DTOs]
+    end
+    
+    subgraph "Application Layer"
+        UC[Use Cases]
+        REPO_INT[Repository Interfaces]
+    end
+    
+    subgraph "Domain Layer - Pure Java"
+        AGG[Aggregates]
+        VO[Value Objects]
+        EVENT[Domain Events]
+    end
+    
+    REST -->|Uses| UC
+    JPA -->|Implements| REPO_INT
+    REPO_IMPL -->|Implements| REPO_INT
+    LISTEN -->|Uses| UC
+    UC -->|Uses| REPO_INT
+    UC -->|Uses| AGG
+    REPO_INT -->|Returns| AGG
+    AGG -->|Contains| VO
+    AGG -->|Emits| EVENT
+    
+    style REST fill:#ffc107
+    style UC fill:#28a745
+    style AGG fill:#007bff
+    style VO fill:#17a2b8
+    style EVENT fill:#6c757d
+```
+
+**Layer Rules:**
+
 ```
 Domain Layer (domain/)
 ├─ ✅ Pure Java only
@@ -38,6 +78,20 @@ Infrastructure Layer (infrastructure/)
 ---
 
 ## 🗄️ Database Migrations
+
+```mermaid
+flowchart LR
+    DEV[Developer] -->|Create| MIG[V{N}__description.sql]
+    MIG -->|Place in| DIR[/infra/database/migration/]
+    DIR -->|docker compose up| FLY[Flyway Container]
+    FLY -->|Read migrations| FLY
+    FLY -->|Apply in order| DB[(PostgreSQL)]
+    DB -->|Track in| META[flyway_schema_history]
+    
+    style MIG fill:#e1f5e1
+    style FLY fill:#fff3cd
+    style DB fill:#d1ecf1
+```
 
 **Location:** `/infra/database/migration/`
 
@@ -141,8 +195,9 @@ public class GetCompanyByIdUseCase implements UseCase<Input, Output> {
 - ✅ Input/Output as nested records
 - ✅ One operation per use case
 - ✅ Constructor injection only
+- ✅ All parameters `final`
 
-### Pattern 2: REST Controller (Infrastructure Layer)
+### Pattern 2: Value Objects (Domain Layer)
 
 ```java
 @RestController
@@ -225,8 +280,201 @@ public class Company extends AbstractAggregateRoot {
 - ✅ Private constructor + public factory methods
 - ✅ Domain events placed HERE, not in use cases
 - ✅ Getters only, NO setters
+- ✅ Use value objects for encapsulation
 
-### Pattern 4: Event Listener (Infrastructure Layer)
+```mermaid
+stateDiagram-v2
+    [*] --> Created: createCompany()
+    Created --> Updated1: updateName()
+    Updated1 --> Updated2: updateCnpj()
+    Updated2 --> Updated3: updateConfigurations()
+    
+    note right of Created
+        NEW instance created
+        Event: CompanyCreated
+    end note
+    
+    note right of Updated1
+        NEW instance returned
+        Old instance discarded
+        Event: CompanyUpdated
+    end note
+    
+    note right of Updated2
+        Always immutable
+        Never mutate fields
+    end note
+```
+
+### Pattern 4: Value Objects (Domain Layer)
+
+Value objects encapsulate domain primitives with validation.
+
+**ID Value Object:**
+```java
+public record CompanyId(UUID value) {
+    public CompanyId {
+        if (value == null) {
+            throw new ValidationException("Invalid value for CompanyId");
+        }
+    }
+
+    public static CompanyId unique() {
+        return new CompanyId(Id.unique());
+    }
+
+    public static CompanyId with(final UUID value) {
+        return new CompanyId(value);
+    }
+}
+```
+
+**Validated String:**
+```java
+public record Cnpj(String value) {
+    public Cnpj {
+        if (value == null || !isValid(value)) {
+            throw new ValidationException("Invalid CNPJ format");
+        }
+    }
+    
+    private static boolean isValid(String cnpj) {
+        return cnpj != null && cnpj.matches("\\d{14}");
+    }
+}
+```
+
+**Map Value Object:**
+```java
+public record Configurations(Map<String, Object> value) {
+    public Configurations {
+        if (value == null || value.isEmpty()) {
+            throw new ValidationException("Configuration cannot be null or empty");
+        }
+        value = Collections.unmodifiableMap(value);
+    }
+
+    public static Configurations with(final Map<String, Object> value) {
+        return new Configurations(value);
+    }
+}
+```
+
+**Key Points:**
+- ✅ Use Java records
+- ✅ Validate in compact constructor
+- ✅ Immutable (no setters)
+- ✅ Factory methods (`unique()`, `with()`)
+- ✅ Throw ValidationException for invalid values
+
+**See:** `/doc/ai/prompts/value-objects.md` for complete guide
+
+### Pattern 5: Eventual Consistency (Cross-Module)
+
+```mermaid
+sequenceDiagram
+    participant CompanyMod as Company Module
+    participant RabbitMQ
+    participant ShipmentMod as ShipmentOrder Module
+    participant LocalDB as shipmentorder.company
+
+    Note over CompanyMod: Company Created
+    CompanyMod->>CompanyMod: Save Company
+    CompanyMod->>CompanyMod: Save Event to Outbox
+    CompanyMod->>RabbitMQ: Publish CompanyCreated
+
+    Note over RabbitMQ: Event Routing
+    RabbitMQ->>ShipmentMod: Route to Listener Queue
+
+    Note over ShipmentMod: Synchronization
+    ShipmentMod->>ShipmentMod: CompanyCreatedListener
+    ShipmentMod->>ShipmentMod: Parse with JsonSingleton
+    ShipmentMod->>ShipmentMod: SynchronizeCompanyUseCase
+    ShipmentMod->>LocalDB: Save Local Copy
+
+    Note over LocalDB: Validation Ready
+    ShipmentMod->>LocalDB: existsById(companyId)
+    LocalDB-->>ShipmentMod: true ✓
+```
+
+When a module needs to validate references to another module's data.
+
+**Steps:**
+1. Create local table with JSONB
+2. Create simplified aggregate with value objects
+3. Create synchronize use case
+4. Create event listeners (Created/Updated)
+5. Add validation in existing use cases
+
+**Example - ShipmentOrder validates Company exists:**
+
+```java
+// 1. Migration
+CREATE TABLE shipmentorder.company (
+    company_id UUID PRIMARY KEY,
+    data JSONB NOT NULL
+);
+
+// 2. Domain Value Objects
+public record CompanyId(UUID value) { /* ... */ }
+public record CompanyData(Map<String, Object> value) { /* ... */ }
+
+// 3. Simplified Aggregate
+public class Company extends AbstractAggregateRoot {
+    private final CompanyId companyId;
+    private final CompanyData data;
+    
+    public static Company createCompany(UUID id, Map<String, Object> data) {
+        return new Company(CompanyId.with(id), CompanyData.with(data), new HashSet<>());
+    }
+    
+    public Company updateData(Map<String, Object> newData) {
+        Map<String, Object> merged = new HashMap<>(this.data.value());
+        merged.putAll(newData);
+        return new Company(this.companyId, CompanyData.with(merged), this.getDomainEvents());
+    }
+}
+
+// 4. Listener
+@Component
+@Cqrs(DatabaseRole.WRITE)
+@Lazy(false)
+public class CompanyCreatedListener {
+    
+    @RabbitListener(queues = "integration.shipmentorder.company.created")
+    public void handle(final CompanyCreatedDTO event, ...) {
+        // Parse using JsonSingleton
+        @SuppressWarnings("unchecked")
+        final Map<String, Object> data = JsonSingleton.getInstance()
+                .fromJson(event.company(), Map.class);
+        
+        voidUseCaseExecutor
+                .from(synchronizeCompanyUseCase)
+                .withInput(new Input(event.companyId(), data))
+                .execute();
+    }
+}
+
+// 5. Validation
+@Override
+public Output execute(final Input input) {
+    if (!companyRepository.existsById(input.companyId())) {
+        throw new ValidationException("Company not found: " + input.companyId());
+    }
+    // ... create aggregate
+}
+```
+
+**Key Points:**
+- ✅ JSONB stores flexible data
+- ✅ Value objects for type safety
+- ✅ Handles create AND update events
+- ✅ Validation before aggregate creation
+- ✅ NO direct repository calls between modules
+
+**See:** `/doc/ai/prompts/eventual-consistency.md` for complete guide
+
+### Pattern 6: Event Listener (Infrastructure Layer)
 
 ```java
 @Component

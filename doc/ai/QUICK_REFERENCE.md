@@ -34,13 +34,61 @@
 
 ## Code Snippets
 
+### Value Objects (Records)
+
+```java
+// ID Value Object
+public record {Entity}Id(UUID value) {
+    public {Entity}Id {
+        if (value == null) {
+            throw new ValidationException("Invalid value for {Entity}Id");
+        }
+    }
+
+    public static {Entity}Id unique() {
+        return new {Entity}Id(Id.unique());
+    }
+
+    public static {Entity}Id with(final UUID value) {
+        return new {Entity}Id(value);
+    }
+}
+
+// Validated String
+public record {ValueObject}(String value) {
+    public {ValueObject} {
+        if (value == null || !isValid(value)) {
+            throw new ValidationException("Invalid {ValueObject}");
+        }
+    }
+    
+    private static boolean isValid(String value) {
+        // validation logic
+    }
+}
+
+// Map Value Object
+public record {ValueObject}(Map<String, Object> value) {
+    public {ValueObject} {
+        if (value == null || value.isEmpty()) {
+            throw new ValidationException("{ValueObject} cannot be null or empty");
+        }
+        value = Collections.unmodifiableMap(value);
+    }
+
+    public static {ValueObject} with(final Map<String, Object> value) {
+        return new {ValueObject}(value);
+    }
+}
+```
+
 ### Create New Aggregate
 
 ```java
 public static {Aggregate} create{Aggregate}(params) {
-    {Aggregate} aggregate = new {Aggregate}(
+    final {Aggregate} aggregate = new {Aggregate}(
         {Aggregate}Id.unique(),
-        params,
+        {ValueObject}.with(param),
         new HashSet<>(),
         new HashMap<>()
     );
@@ -55,9 +103,9 @@ public static {Aggregate} create{Aggregate}(params) {
 public {Aggregate} updateField(NewValue newValue) {
     if (this.field.equals(newValue)) return this;
     
-    {Aggregate} updated = new {Aggregate}(
+    final {Aggregate} updated = new {Aggregate}(
         this.id,
-        newValue,
+        {ValueObject}.with(newValue),
         this.getDomainEvents(),
         this.getPersistentMetadata()
     );
@@ -75,8 +123,12 @@ public class {Operation}UseCase implements UseCase<Input, Output> {
     
     private final {Aggregate}Repository repository;
 
+    public {Operation}UseCase(final {Aggregate}Repository repository) {
+        this.repository = repository;
+    }
+
     @Override
-    public Output execute(Input input) {
+    public Output execute(final Input input) {
         // 1. Validate
         // 2. Load/Create aggregate
         // 3. Execute business logic
@@ -141,9 +193,18 @@ public class {Aggregate}RepositoryImpl implements {Aggregate}Repository {
 @Lazy(false)
 public class {Event}Listener {
     
+    private final VoidUseCaseExecutor voidUseCaseExecutor;
+    private final {Operation}UseCase useCase;
+
+    public {Event}Listener(final VoidUseCaseExecutor voidUseCaseExecutor,
+                           final {Operation}UseCase useCase) {
+        this.voidUseCaseExecutor = voidUseCaseExecutor;
+        this.useCase = useCase;
+    }
+
     @RabbitListener(queues = "integration.{module}.{event}")
-    public void handle({Event}DTO dto, Channel channel, 
-                      @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
+    public void handle(final {Event}DTO dto, final Channel channel, 
+                      @Header(AmqpHeaders.DELIVERY_TAG) final long deliveryTag) {
         try {
             voidUseCaseExecutor
                 .from(useCase)

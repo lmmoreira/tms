@@ -18,9 +18,11 @@ CREATE something new?
 ├─ Aggregate? → Use "Essential Patterns #1" below + /doc/ai/prompts/new-aggregate.md
 ├─ Use Case? → Use "Essential Patterns #2" below + /doc/ai/prompts/new-use-case.md
 ├─ Controller? → Use "Essential Patterns #3" below + /doc/ai/prompts/new-controller.md
+├─ Value Object? → See /doc/ai/prompts/value-objects.md
 ├─ Event Listener? → Use "Essential Patterns #6" below + /doc/ai/prompts/new-event-listener.md
 ├─ Database Migration? → See "Database Migrations" section + /doc/ai/prompts/new-migration.md
 ├─ HTTP Request File? → See /doc/ai/prompts/http-requests.md
+├─ Eventual Consistency? → See /doc/ai/prompts/eventual-consistency.md
 └─ Module? → See /doc/ai/prompts/new-module.md
 
 UNDERSTAND a pattern?
@@ -39,9 +41,97 @@ REVIEW code?
 
 ## Essential Patterns
 
-### 1. Use Case Pattern
+### 0. Coding Standards (CRITICAL)
 
-**WRITE Operation:**
+**All Variables MUST be Final:**
+```java
+// ✅ CORRECT
+private final CompanyRepository companyRepository;
+
+public UseCase(final CompanyRepository companyRepository) {
+    this.companyRepository = companyRepository;
+}
+
+public Output execute(final Input input) {
+    final Company company = repository.findById(input.id());
+    final Map<String, Object> data = new HashMap<>();
+    // ...
+}
+
+// ❌ WRONG
+private CompanyRepository companyRepository;  // Missing final
+
+public UseCase(CompanyRepository companyRepository) {  // Missing final
+    this.companyRepository = companyRepository;
+}
+
+public Output execute(Input input) {  // Missing final
+    Company company = repository.findById(input.id());  // Missing final
+    Map<String, Object> data = new HashMap<>();  // Missing final
+}
+```
+
+**Value Objects for Encapsulation:**
+```java
+// ✅ CORRECT - Use value objects
+private final CompanyId companyId;
+private final CompanyData data;
+
+public CompanyId getCompanyId() {
+    return companyId;
+}
+
+// ❌ WRONG - Raw primitives exposed
+private final UUID companyId;
+private final Map<String, Object> data;
+
+public UUID getCompanyId() {
+    return companyId;
+}
+```
+
+**JSON Mapping (Hibernate 6):**
+```java
+// ✅ CORRECT
+@JdbcTypeCode(SqlTypes.JSON)
+@Column(name = "data")
+private Map<String, Object> data;
+
+// ❌ WRONG (old Hibernate)
+@Type(JsonBinaryType.class)
+@Column(name = "data", columnDefinition = "jsonb")
+private Map<String, Object> data;
+```
+
+**Factory Method Naming:**
+```java
+// ✅ CORRECT
+public static Company createCompany(UUID id, Map<String, Object> data) {
+    return new Company(CompanyId.with(id), CompanyData.with(data), new HashSet<>());
+}
+
+// ❌ WRONG
+public static Company synchronizeCompany(...)  // Use "create" not "synchronize"
+```
+
+**JSON Serialization:**
+```java
+// ✅ CORRECT - Use JsonSingleton
+@SuppressWarnings("unchecked")
+final Map<String, Object> data = JsonSingleton.getInstance()
+        .fromJson(jsonString, Map.class);
+
+final String json = JsonSingleton.getInstance().toJson(object);
+
+// ❌ WRONG - Don't inject ObjectMapper
+private final ObjectMapper objectMapper;  // Never inject this
+
+public Listener(ObjectMapper objectMapper) {  // Don't do this
+    this.objectMapper = objectMapper;
+}
+```
+
+### 1. Use Case Pattern
 ```java
 @DomainService
 @Cqrs(DatabaseRole.WRITE)
@@ -358,6 +448,48 @@ CREATE INDEX idx_{table}_{field} ON {schema}.{table}({field});
 - ✅ Implements application interfaces
 
 ### Module Communication
+
+```mermaid
+graph TB
+    subgraph "Company Module"
+        CompAgg[Company Aggregate]
+        CompRepo[Company Repository]
+        CompDB[(company schema)]
+    end
+    
+    subgraph "Event Bus"
+        RMQ[RabbitMQ]
+        Q1[integration.shipmentorder<br/>company.created]
+        Q2[integration.company<br/>shipmentorder.created]
+    end
+    
+    subgraph "ShipmentOrder Module"
+        SOAgg[ShipmentOrder Aggregate]
+        SORepo[ShipmentOrder Repository]
+        SODB[(shipmentorder schema)]
+        CompListener[CompanyCreatedListener]
+        LocalComp[(Local Company Copy)]
+    end
+    
+    CompAgg -->|Domain Event| CompRepo
+    CompRepo -->|Publish| RMQ
+    RMQ -->|Route| Q1
+    Q1 -->|Consume| CompListener
+    CompListener -->|Synchronize| LocalComp
+    
+    SOAgg -->|Domain Event| SORepo
+    SORepo -->|Publish| RMQ
+    RMQ -->|Route| Q2
+    
+    CompAgg -.->|NO Direct Call| SOAgg
+    SOAgg -->|Validate| LocalComp
+    
+    style CompAgg fill:#e1f5e1
+    style SOAgg fill:#d1ecf1
+    style RMQ fill:#fff3cd
+    style LocalComp fill:#f8d7da
+```
+
 - ✅ Event-driven: Modules communicate via RabbitMQ events
 - ❌ NO direct repository calls between modules
 

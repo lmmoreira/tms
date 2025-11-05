@@ -20,4 +20,10 @@ public record CompanyTypes(Set<CompanyType> value) {
         return new CompanyTypes(types);
     }
 
+    public Set<String> getTypeNames() {
+        return value.stream()
+                .map(CompanyType::name)
+                .collect(Collectors.toSet());
+    }
+
 }

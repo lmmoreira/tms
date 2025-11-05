@@ -7,7 +7,7 @@ Accept: application/json
 
 {
   "name": "Shein",
-  "cnpj": "50.617.696/0002-11",
+  "cnpj": "50.617.696/0002-06",
   "types": ["MARKETPLACE"],
   "configuration": {
     "notification": "true",
@@ -25,7 +25,7 @@ Accept: application/json
 
 {
   "name": "Loggi",
-  "cnpj": "13.895.286/0001-93",
+  "cnpj": "13.895.286/0001-95",
   "types": ["LOGISTICS_PROVIDER"],
   "configuration": {
     "notification": "true",
@@ -56,9 +56,9 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "name": "Shein - GRU",
+  "name": "Shein - Brasil",
   "cnpj": "50.617.696/0001-79",
-  "types": ["MARKETPLACE"],
+  "types": ["MARKETPLACE", "SELLER"],
   "configuration": {
     "notification": "false",
     "webhook": "http://shein.com.br/logistics/callback"
