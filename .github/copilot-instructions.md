@@ -17,8 +17,8 @@
 CREATE something new?
 ├─ Aggregate? → Use "Essential Patterns #1" below + /doc/ai/prompts/new-aggregate.md
 ├─ Use Case? → Use "Essential Patterns #2" below + /doc/ai/prompts/new-use-case.md
-├─ Controller? → Use "Essential Patterns #3" below
-├─ Event Listener? → Use "Essential Patterns #6" below
+├─ Controller? → Use "Essential Patterns #3" below + /doc/ai/prompts/new-controller.md
+├─ Event Listener? → Use "Essential Patterns #6" below + /doc/ai/prompts/new-event-listener.md
 └─ Module? → See /doc/ai/prompts/new-module.md
 
 UNDERSTAND a pattern?
@@ -291,6 +291,7 @@ public class IncrementShipmentOrderListener {
 - ✅ Business logic lives here
 
 **Application Layer** (`application/`)
+- ❌ NO Spring, JPA, Jackson, or ANY framework
 - ✅ Use cases, repository interfaces
 - ✅ Depends ONLY on domain
 - ❌ NO HTTP, database, or messaging
