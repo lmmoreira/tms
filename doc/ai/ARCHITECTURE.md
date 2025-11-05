@@ -1,365 +1,403 @@
-# Architecture Documentation
+# TMS Architecture Guide
 
-## Purpose
-This document provides comprehensive architectural guidance for AI assistants working on the TMS codebase. It describes the patterns, principles, and structural decisions that govern the system.
+**For AI Assistants:** This document uses inverted pyramid structure - most critical information first.
 
 ---
 
-## System Overview
+## 🎯 TL;DR - Critical Rules (Read This First!)
 
-**TMS (Transportation Management System)** is a modular monolith built using:
-- **Domain-Driven Design (DDD)** principles
-- **Hexagonal Architecture** (Ports & Adapters)
-- **CQRS** (Command Query Responsibility Segregation)
-- **Event-Driven Architecture** with domain events
-- **Spring Modulith** for module boundaries
+### Absolute Requirements
 
-### High-Level Architecture
+1. **Domain objects are IMMUTABLE** - Update methods return NEW instances, never mutate
+2. **Events placed in AGGREGATES** - Use `placeDomainEvent()` in aggregate methods, NOT in use cases
+3. **CQRS annotations MANDATORY** - Every use case and controller must have `@Cqrs(DatabaseRole.WRITE or READ)`
+4. **Modules communicate via EVENTS only** - No direct repository calls between modules
+5. **One aggregate per transaction** - Maintain consistency within aggregate boundaries
+6. **Repository handles outbox** - Domain events saved transactionally with aggregate
+
+### Layer Boundaries (STRICT)
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        External Clients                      │
-│              (Marketplaces, Logistics Providers)             │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      NGINX Edge Gateway                      │
-│                  (API Key Validation)                        │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│             OAuth2-Proxy + Keycloak (Authentication)         │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     TMS Application                          │
-│                                                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │   Commons    │  │   Company    │  │ ShipmentOrder│     │
-│  │   Module     │  │   Module     │  │   Module     │     │
-│  └──────────────┘  └──────────────┘  └──────────────┘     │
-│                                                              │
-└─────────┬──────────────────────────────────────┬───────────┘
-          │                                       │
-          ▼                                       ▼
-┌──────────────────┐                    ┌─────────────────┐
-│   PostgreSQL     │                    │    RabbitMQ     │
-│  (Write / Read)  │                    │ (Domain Events) │
-└──────────────────┘                    └─────────────────┘
+Domain Layer (domain/)
+├─ ✅ Pure Java only
+├─ ✅ Business logic
+├─ ❌ NO Spring, JPA, Jackson, HTTP
+└─ ❌ NO framework dependencies
+
+Application Layer (application/)
+├─ ✅ Use cases, repository interfaces
+├─ ✅ Depends ONLY on domain
+└─ ❌ NO HTTP, database, messaging
+
+Infrastructure Layer (infrastructure/)
+├─ ✅ ALL framework code here
+├─ ✅ Controllers, JPA, DTOs, listeners
+└─ ✅ Implements application interfaces
 ```
 
 ---
 
-## Architectural Patterns
+## 📦 Essential Patterns (Most Used)
 
-### 1. Modular Monolith with Spring Modulith
+### Pattern 1: Use Case (Application Layer)
 
-**Concept**: The application is organized as a monolith with well-defined module boundaries enforced at runtime.
+**WRITE Operation:**
+```java
+@DomainService
+@Cqrs(DatabaseRole.WRITE)
+public class CreateCompanyUseCase implements UseCase<Input, Output> {
+    
+    private final CompanyRepository repository;
 
-**Module Structure**:
+    @Override
+    public Output execute(Input input) {
+        // 1. Validate
+        // 2. Create/load aggregate
+        Company company = Company.createCompany(...);
+        // 3. Persist (repository handles events)
+        company = repository.create(company);
+        // 4. Return output
+        return new Output(company.getId().value());
+    }
+
+    public record Input(...) {}
+    public record Output(...) {}
+}
 ```
-src/main/java/br/com/logistics/tms/
-├── commons/           # Shared domain primitives & infrastructure
-├── company/           # Company bounded context
-└── shipmentorder/     # ShipmentOrder bounded context
+
+**READ Operation:**
+```java
+@DomainService
+@Cqrs(DatabaseRole.READ)  // Different database!
+public class GetCompanyByIdUseCase implements UseCase<Input, Output> {
+    private final CompanyRepository repository;
+
+    @Override
+    public Output execute(Input input) {
+        Company company = repository.getById(new CompanyId(input.id()))
+                .orElseThrow(() -> new NotFoundException("Not found"));
+        return new Output(company.getId().value(), company.getName());
+    }
+
+    public record Input(UUID id) {}
+    public record Output(UUID id, String name) {}
+}
 ```
 
-**Module Activation**: Modules can be enabled/disabled via environment variables:
-```yaml
-modules:
-  commons:
-    enabled: ${MODULES_COMMONS_ENABLED}
-  company:
-    enabled: ${MODULES_COMPANY_ENABLED}
-  order:
-    enabled: ${MODULES_ORDER_ENABLED}
+**Key Points:**
+- ✅ `@DomainService` + `@Cqrs(DatabaseRole)` required
+- ✅ Input/Output as nested records
+- ✅ One operation per use case
+- ✅ Constructor injection only
+
+### Pattern 2: REST Controller (Infrastructure Layer)
+
+```java
+@RestController
+@RequestMapping("companies")
+@Cqrs(DatabaseRole.WRITE)
+public class CreateController {
+
+    private final CreateCompanyUseCase useCase;
+    private final DefaultRestPresenter presenter;
+    private final RestUseCaseExecutor executor;
+
+    @PostMapping
+    public Object create(@RequestBody CreateCompanyDTO dto) {
+        return executor
+                .from(useCase)
+                .withInput(dto)
+                .mapOutputTo(CreateCompanyResponseDTO.class)
+                .presentWith(output -> presenter.present(output, HttpStatus.CREATED.value()))
+                .execute();
+    }
+}
 ```
 
-**Why**: Allows for monorepo development with the flexibility to extract modules into microservices later without code changes.
+**Key Points:**
+- ✅ Zero business logic - only delegation
+- ✅ Use `RestUseCaseExecutor` for orchestration
+- ✅ Must have `@Cqrs` annotation matching use case
+
+### Pattern 3: Immutable Aggregate (Domain Layer)
+
+```java
+public class Company extends AbstractAggregateRoot {
+
+    private final CompanyId id;
+    private final String name;
+    private final Cnpj cnpj;
+
+    // Private constructor
+    private Company(CompanyId id, String name, Cnpj cnpj,
+                   Set<AbstractDomainEvent> events, 
+                   Map<String, Object> metadata) {
+        super(new HashSet<>(events), new HashMap<>(metadata));
+        // Validation
+        if (id == null) throw new ValidationException("Invalid id");
+        this.id = id;
+        this.name = name;
+        this.cnpj = cnpj;
+    }
+
+    // Factory method for creation
+    public static Company createCompany(String name, String cnpj, ...) {
+        Company company = new Company(
+            CompanyId.unique(), name, new Cnpj(cnpj), 
+            new HashSet<>(), new HashMap<>()
+        );
+        company.placeDomainEvent(new CompanyCreated(company.getId().value()));
+        return company;
+    }
+
+    // Update returns NEW instance
+    public Company updateName(String name) {
+        if (this.name.equals(name)) return this;
+        
+        Company updated = new Company(
+            this.id, name, this.cnpj,
+            this.getDomainEvents(), this.getPersistentMetadata()
+        );
+        updated.placeDomainEvent(new CompanyUpdated(updated.getId().value(), "name", this.name, name));
+        return updated;
+    }
+
+    // Getters only, NO setters
+    public CompanyId getId() { return id; }
+    public String getName() { return name; }
+}
+```
+
+**Key Points:**
+- ✅ ALWAYS immutable - updates return new instances
+- ✅ Private constructor + public factory methods
+- ✅ Domain events placed HERE, not in use cases
+- ✅ Getters only, NO setters
+
+### Pattern 4: Event Listener (Infrastructure Layer)
+
+```java
+@Component
+@Cqrs(DatabaseRole.WRITE)
+@Lazy(false)
+public class ShipmentOrderCreatedListener {
+    
+    private final VoidUseCaseExecutor executor;
+    private final IncrementCounterUseCase useCase;
+
+    @RabbitListener(queues = "integration.company.shipmentorder.created")
+    public void handle(ShipmentOrderCreatedDTO dto, Message message, Channel channel) {
+        executor
+                .from(useCase)
+                .withInput(new IncrementCounterUseCase.Input(dto.companyId()))
+                .execute();
+    }
+}
+```
+
+**Key Points:**
+- ✅ Modules communicate ONLY via events
+- ✅ Use `@RabbitListener` for inter-module events
+- ✅ Always `@Lazy(false)` to register at startup
 
 ---
 
-### 2. Hexagonal Architecture (Ports & Adapters)
+## 🏗️ Architecture Overview
 
-Each module follows a **3-layer structure**:
+**TMS** is a modular monolith built with:
+- **Domain-Driven Design (DDD)** - Aggregates, value objects, domain events
+- **Hexagonal Architecture** - Domain (core) → Application (ports) → Infrastructure (adapters)
+- **CQRS** - Separate read/write operations (different databases)
+- **Event-Driven** - Modules communicate asynchronously via RabbitMQ
+- **Spring Modulith** - Module boundary enforcement
+
+### High-Level Flow
+
+```
+Client Request
+    ↓
+NGINX (API key) → OAuth2-Proxy (JWT) → TMS Application
+    ↓
+Controller (@Cqrs) → Use Case (@Cqrs) → Aggregate
+    ↓
+Repository → Save Aggregate + Events (same transaction)
+    ↓
+Outbox Publisher → RabbitMQ → Other Modules
+```
+
+### Module Structure
 
 ```
 module/
-├── domain/              # CORE - Business logic, entities, value objects
-├── application/         # PORTS - Use cases, repository interfaces
-└── infrastructure/      # ADAPTERS - REST controllers, JPA, messaging
+├── domain/              # Pure Java, business logic
+│   ├── {Aggregate}.java
+│   ├── {ValueObject}.java
+│   └── {DomainEvent}.java
+│
+├── application/         # Use cases, repository interfaces
+│   ├── usecases/
+│   └── repositories/
+│
+└── infrastructure/      # Framework code
+    ├── rest/           # Controllers
+    ├── dto/            # Data transfer objects
+    ├── jpa/            # JPA entities
+    ├── repositories/   # Repository implementations
+    └── listener/       # Event listeners
 ```
 
-#### Layer Responsibilities
+---
 
-##### **Domain Layer** (Inner Circle)
+## 🔑 Key Concepts
+
+### Aggregates
+- Consistency boundaries (e.g., `Company`, `ShipmentOrder`)
+- All changes go through aggregate root
+- Enforce business invariants
+- Raise domain events
+- Reference other aggregates by ID only
+
+### Value Objects
+- Immutable objects (Java records)
+- Defined by attributes, not identity
+- Examples: `CompanyId`, `Cnpj`, `Agreement`
+- Contain validation logic
+
+### Domain Events
+- Past tense naming (e.g., `CompanyCreated`)
+- Raised by aggregates when state changes
+- Persisted to outbox table (transactional)
+- Enable module decoupling
+
+### CQRS Pattern
+- Write operations: `@Cqrs(DatabaseRole.WRITE)` → write database
+- Read operations: `@Cqrs(DatabaseRole.READ)` → read replica
+- Currently both point to same PostgreSQL (can split later)
+
+### Outbox Pattern
+- Guarantees event delivery
+- Flow: Aggregate → Repository saves entity + events → Outbox publisher → RabbitMQ
+- Transactional consistency (events saved with aggregate)
+
+---
+
+## 📋 Common Operations
+
+### Add New Operation to Existing Aggregate
+
+1. Create use case → See [prompts/new-use-case.md](prompts/new-use-case.md)
+2. Create controller → See [examples/complete-controller.md](examples/complete-controller.md)
+3. Create DTOs (request/response)
+4. Add tests
+
+### Add Communication Between Modules
+
+1. Define domain event in source module
+2. Place event in aggregate (use `placeDomainEvent()`)
+3. Create listener in target module → See [prompts/new-event-listener.md](prompts/new-event-listener.md)
+4. Configure queue/binding in RabbitMQ
+5. Test event flow
+
+### Update Aggregate Field
+
+1. Add update method that returns NEW instance
+2. Place domain event if significant
+3. Update JPA entity
+4. Update use cases
+5. Test immutability
+
+---
+
+## ⚠️ Anti-Patterns (DO NOT DO)
+
+❌ **Mutable aggregates with setters**
+```java
+// WRONG
+public void setName(String name) {
+    this.name = name;
+}
+```
+
+❌ **Framework dependencies in domain**
+```java
+// WRONG - domain layer
+@Entity  // JPA annotation
+public class Company { ... }
+```
+
+❌ **Business logic in controllers**
+```java
+// WRONG
+@PostMapping
+public Object create(@RequestBody DTO dto) {
+    if (dto.cnpj() == null) { ... }  // Validation belongs in use case/domain
+    Company company = new Company(...);  // Creation logic belongs in use case
+}
+```
+
+❌ **Cross-module repository calls**
+```java
+// WRONG - in ShipmentOrder module
+private final CompanyRepository companyRepository;  // Don't call other module's repositories
+```
+
+❌ **Domain events from use cases**
+```java
+// WRONG
+public Output execute(Input input) {
+    Company company = Company.createCompany(...);
+    company = repository.create(company);
+    eventPublisher.publish(new CompanyCreated(...));  // Event should be in aggregate
+}
+```
+
+❌ **Omitting @Cqrs annotation**
+```java
+// WRONG
+@DomainService  // Missing @Cqrs annotation
+public class CreateCompanyUseCase { ... }
+```
+
+---
+
+## 🔧 Technical Details
+
+### Layer Architecture Details
+
+#### Domain Layer (Inner Circle)
 - **Pure business logic** - No framework dependencies
-- Contains:
-  - **Aggregates**: Entities that are consistency boundaries (e.g., `Company`, `ShipmentOrder`)
-  - **Value Objects**: Immutable objects (e.g., `CompanyId`, `Cnpj`, `Agreement`)
-  - **Domain Events**: Events raised by aggregates (e.g., `CompanyCreated`, `CompanyUpdated`)
-  - **Domain Exceptions**: Business validation failures
+- Contains: Aggregates, Value Objects, Domain Events, Domain Exceptions
+- Rules: No Spring, JPA, Jackson, or ANY framework
 
-**Rules**:
-- No references to `application` or `infrastructure` layers
-- No Spring annotations
-- No database or external I/O
-- Immutable aggregates (updates return new instances)
-
-##### **Application Layer** (Middle Circle)
+#### Application Layer (Middle Circle)
 - **Orchestration** of business use cases
-- Contains:
-  - **Use Cases**: Single-responsibility operations (e.g., `CreateCompanyUseCase`)
-  - **Repository Interfaces**: Domain-defined contracts (e.g., `CompanyRepository`)
-  - **Presenters**: Output formatting contracts
+- Contains: Use Cases, Repository Interfaces, Presenters
+- Rules: Depends only on domain, no infrastructure knowledge
 
-**Rules**:
-- Depends only on `domain` layer
-- No knowledge of infrastructure details (HTTP, database, etc.)
-- Uses repository interfaces, not implementations
+#### Infrastructure Layer (Outer Circle)
+- **Technical implementation**
+- Contains: REST Controllers, JPA Entities, DTOs, Listeners, Repository Implementations
+- Rules: Implements application interfaces, contains all Spring annotations
 
-##### **Infrastructure Layer** (Outer Circle)
-- **Technical implementation** of ports
-- Contains:
-  - **REST Controllers**: HTTP endpoints
-  - **Repository Implementations**: JPA-based persistence
-  - **JPA Entities**: Database mapping
-  - **DTOs**: Data transfer objects for API contracts
-  - **Message Listeners**: RabbitMQ consumers
-  - **Outbox Pattern**: Event publishing
+### CQRS Implementation
 
-**Rules**:
-- Implements interfaces defined in `application` layer
-- Contains all Spring annotations
-- Handles infrastructure concerns (transactions, serialization, etc.)
-
----
-
-### 3. Domain-Driven Design (DDD)
-
-#### Aggregates
-
-**Definition**: Cluster of domain objects treated as a single unit for data changes.
-
-**Example - Company Aggregate**:
-```java
-public class Company extends AbstractAggregateRoot {
-    private final CompanyId companyId;      // Aggregate Root ID
-    private final String name;
-    private final Cnpj cnpj;                // Value Object
-    private final CompanyTypes companyTypes;
-    private final Configurations configurations;
-    private final Set<Agreement> agreements; // Entities within aggregate
-    
-    // Business methods that maintain invariants
-    public Company updateName(String name) { ... }
-    public void addAgreement(Agreement agreement) { ... }
-}
-```
-
-**Key Characteristics**:
-1. **Aggregate Root**: `Company` is the entry point - all operations go through it
-2. **Invariants**: Business rules are enforced within aggregate methods
-3. **Transactional Boundary**: Changes to aggregate are atomic
-4. **Domain Events**: Aggregates raise events when state changes
-
-#### Value Objects
-
-**Immutable objects** defined by their attributes, not identity.
-
-Examples:
-- `CompanyId` - Wraps UUID v7
-- `Cnpj` - Brazilian business identifier with validation
-- `Agreement` - Contract between companies
-- `Configurations` - Key-value settings
-
-**Pattern**:
-```java
-public record Cnpj(String value) {
-    public Cnpj {
-        // Validation in compact constructor
-        if (value == null || !isValid(value)) {
-            throw new ValidationException("Invalid CNPJ");
-        }
-    }
-}
-```
-
-#### Domain Events
-
-**Purpose**: Communicate that something meaningful happened in the domain.
-
-**Pattern**:
-```java
-public class CompanyCreated extends AbstractDomainEvent {
-    private final UUID aggregateId;
-    private final String payload;
-    
-    public CompanyCreated(UUID aggregateId, String payload) {
-        super(Id.unique(), aggregateId, Instant.now());
-        this.aggregateId = aggregateId;
-        this.payload = payload;
-    }
-}
-```
-
-**Event Flow**:
-1. Aggregate method places event: `placeDomainEvent(new CompanyCreated(...))`
-2. Repository persists aggregate + events to outbox table
-3. Outbox publisher sends events to RabbitMQ
-4. Other modules/services consume events
-
----
-
-### 4. CQRS (Command Query Responsibility Segregation)
-
-**Concept**: Separate read operations from write operations.
-
-**Implementation**:
-- **Write Operations**: Use write database (`@Cqrs(DatabaseRole.WRITE)`)
-- **Read Operations**: Use read replica (`@Cqrs(DatabaseRole.READ)`)
-
-**Configuration**:
+**Configuration:**
 ```yaml
 datasource:
   write:
     url: jdbc:postgresql://${DB_WRITE_HOST}:${DB_WRITE_PORT}/${DB_WRITE_NAME}
   read:
     url: jdbc:postgresql://${DB_READ_HOST}:${DB_READ_PORT}/${DB_READ_NAME}
-```
 
-**Usage**:
-```java
-@DomainService
-@Cqrs(DatabaseRole.WRITE)
-public class CreateCompanyUseCase implements UseCase<Input, Output> {
-    // Writes to write database
-}
-
-@DomainService
-@Cqrs(DatabaseRole.READ)
-public class GetCompanyByIdUseCase implements UseCase<Input, Output> {
-    // Reads from read replica
-}
-```
-
-**Mode Control**:
-```yaml
 app:
   cqrs:
-    mode: ${APP_CQRS_MODE}  # Can be: ENABLED, DISABLED, WRITE_ONLY, READ_ONLY
+    mode: ${APP_CQRS_MODE}  # ENABLED, DISABLED, WRITE_ONLY, READ_ONLY
 ```
 
----
+**Routing:** Annotation-based routing to correct datasource
 
-### 5. Event-Driven Architecture
+### UUID v7 for IDs
 
-#### Domain Events Pattern
-
-**Purpose**: Decouple modules and enable eventual consistency.
-
-**Outbox Pattern Implementation**:
-1. **Aggregate** places events in memory collection
-2. **Repository** saves aggregate + events to outbox table **in same transaction**
-3. **Outbox Publisher** polls outbox table and publishes to RabbitMQ
-4. **Event Listeners** in other modules consume events
-
-**Example - Company Module**:
-```java
-// 1. Domain raises event
-company.placeDomainEvent(new CompanyCreated(company.getId(), company.toString()));
-
-// 2. Repository saves both
-@Override
-public Company create(Company company) {
-    companyJpaRepository.save(CompanyEntity.of(company));
-    outboxGateway.save(COMPANY_SCHEMA, company.getDomainEvents(), CompanyOutboxEntity.class);
-    return company;
-}
-
-// 3. Outbox publisher sends to RabbitMQ (automatically)
-
-// 4. Other modules listen - Company module listening to ShipmentOrderCreated event
-@Component
-@Cqrs(DatabaseRole.WRITE)
-@Lazy(false)
-public class IncrementShipmentOrderListener {
-
-    private final VoidUseCaseExecutor voidUseCaseExecutor;
-    private final IncrementShipmentOrderUseCase incrementShipmentOrderUseCase;
-
-    public IncrementShipmentOrderListener(VoidUseCaseExecutor voidUseCaseExecutor,
-                                          IncrementShipmentOrderUseCase incrementShipmentOrderUseCase) {
-        this.voidUseCaseExecutor = voidUseCaseExecutor;
-        this.incrementShipmentOrderUseCase = incrementShipmentOrderUseCase;
-    }
-
-    @RabbitListener(queues = "integration.company.shipmentorder.created")
-    public void handle(ShipmentOrderCreatedDTO shipmentOrderCreated, Message message, Channel channel) {
-        voidUseCaseExecutor
-                .from(incrementShipmentOrderUseCase)
-                .withInput(new IncrementShipmentOrderUseCase.Input(shipmentOrderCreated.companyId()))
-                .execute();
-    }
-
-}
-```
-
-**Benefits**:
-- **Guaranteed delivery**: Events stored in database before publishing
-- **Decoupling**: Modules don't directly depend on each other
-- **Asynchronous**: Non-blocking communication
-- **Audit trail**: All domain events are stored
-
----
-
-## Immutability & Functional Patterns
-
-### Immutable Aggregates
-
-**Principle**: Domain objects never mutate - updates return new instances.
-
-**Pattern**:
-```java
-public Company updateName(String name) {
-    if (this.name.equals(name)) 
-        return this; // No change
-    
-    // Create new instance with updated value
-    Company updated = new Company(
-        this.companyId,
-        name,  // New value
-        this.cnpj,
-        this.companyTypes,
-        this.configurations,
-        this.agreements,
-        this.getDomainEvents(),
-        this.getPersistentMetadata()
-    );
-    
-    updated.placeDomainEvent(new CompanyUpdated(...));
-    return updated;
-}
-```
-
-**Why**:
-- Thread-safe by default
-- Clear audit trail (events capture all changes)
-- Easier to reason about state changes
-- Fits functional programming paradigms
-
----
-
-## Technical Decisions
-
-### UUID v7 (ULID) for IDs
-
-**Decision**: Use time-based sequential UUIDs instead of auto-increment or random UUIDs.
-
-**Implementation**:
 ```java
 public record Id() {
     public static UUID unique() {
@@ -368,236 +406,100 @@ public record Id() {
 }
 ```
 
-**Benefits**:
-- Time-ordered (better database index performance)
+**Benefits:**
+- Time-ordered (better database performance)
 - No database roundtrip needed
-- Domain remains independent of persistence
 - Sortable by creation time
 
-**Reference**: See [ADR-001](../adr/ADR-001-ID-Format.md)
+**Reference:** See [/doc/adr/ADR-001-ID-Format.md](../adr/ADR-001-ID-Format.md)
 
----
+### Event-Driven Architecture Flow
 
-### Virtual Threads (Java 21)
+```
+1. Aggregate places event in memory
+   company.placeDomainEvent(new CompanyCreated(...));
 
-**Configuration**:
-```yaml
-spring:
-  threads:
-    virtual:
-      enabled: true
+2. Repository saves aggregate + events (same transaction)
+   @Transactional
+   public Company create(Company company) {
+       jpaRepository.save(CompanyEntity.of(company));
+       outboxGateway.save(company.getDomainEvents(), CompanyOutboxEntity.class);
+       return company;
+   }
+
+3. Background publisher polls outbox and sends to RabbitMQ
+
+4. Other modules listen via @RabbitListener
 ```
 
-**Impact**:
-- High concurrency with low resource usage
-- Blocking I/O doesn't starve thread pool
-- Requires async logging (configured in Logback)
+### Module Communication Rules
 
----
-
-### Read/Write Database Separation
-
-**Current Setup**: Both point to same PostgreSQL instance (or read replica).
-
-**Annotation-Based Routing**:
+**✅ Correct:**
 ```java
-@Cqrs(DatabaseRole.WRITE) // Routes to write datasource
-@Cqrs(DatabaseRole.READ)  // Routes to read datasource
+// Module A: Company aggregate places event
+company.placeDomainEvent(new CompanyCreated(...));
+
+// Module B: ShipmentOrder listens to event
+@RabbitListener(queues = "integration.shipmentorder.company.created")
+public void handle(CompanyCreatedDTO dto) { ... }
 ```
 
-**Future-Proof**: Can switch read operations to different database type (e.g., Elasticsearch) without code changes.
-
-**Technical Debt**: See [DEBT-010](../debt/DEBT.md) - Need to support mixed read/write transactions.
-
----
-
-## Observability
-
-### OpenTelemetry Integration
-
-**Enabled by default** with traces, metrics, and logs sent to OTEL Collector.
-
-**Configuration**:
-```yaml
-otel:
-  exporter:
-    otlp:
-      protocol: grpc
-      endpoint: http://0.0.0.0:4317
-  instrumentation:
-    jdbc:
-      enabled: true  # Auto-instrument database calls
-```
-
-**Stack**:
-- **Traces**: Jaeger
-- **Metrics**: Prometheus
-- **Logs**: Loki
-- **Visualization**: Grafana
-
----
-
-## Request Flow Example
-
-**Creating a Company**:
-
-```
-1. Client → NGINX (API key validation)
-2. NGINX → OAuth2-Proxy (Bearer token validation)
-3. OAuth2-Proxy → Keycloak (Token verification)
-4. Validated request → TMS Application
-
-5. CreateController receives HTTP POST
-   ↓
-6. RestUseCaseExecutor orchestrates:
-   - Maps DTO → UseCase.Input
-   - Executes CreateCompanyUseCase
-   - Maps UseCase.Output → ResponseDTO
-   - Applies presenter (status 201)
-   ↓
-7. CreateCompanyUseCase:
-   - Validates CNPJ doesn't exist
-   - Calls Company.createCompany() (domain method)
-   - Company places CompanyCreated event
-   - Saves via CompanyRepository
-   ↓
-8. CompanyRepositoryImpl:
-   - Persists CompanyEntity (JPA)
-   - Saves domain events to outbox table
-   - Returns domain object
-   ↓
-9. Background: Outbox publisher
-   - Polls outbox table
-   - Publishes CompanyCreated to RabbitMQ
-   ↓
-10. Other modules consume event (if listening)
-```
-
----
-
-## Module Communication Rules
-
-### Internal Module Communication
-
-**Rule**: Modules communicate **only through domain events**.
-
-**❌ Don't**:
+**❌ Wrong:**
 ```java
-// Direct repository call to another module
-private final CompanyRepository companyRepository; // Wrong in ShipmentOrder module
+// ShipmentOrder module calling Company repository directly
+private final CompanyRepository companyRepository;  // WRONG!
 ```
-
-**✅ Do**:
-```java
-// Listen to events from other modules - example Company module listening ShipmentOrderCreated event
-public class IncrementShipmentOrderListener {
-
-    private final VoidUseCaseExecutor voidUseCaseExecutor;
-    private final IncrementShipmentOrderUseCase incrementShipmentOrderUseCase;
-
-    public IncrementShipmentOrderListener(VoidUseCaseExecutor voidUseCaseExecutor,
-                                          IncrementShipmentOrderUseCase incrementShipmentOrderUseCase) {
-        this.voidUseCaseExecutor = voidUseCaseExecutor;
-        this.incrementShipmentOrderUseCase = incrementShipmentOrderUseCase;
-    }
-
-    @RabbitListener(queues = "integration.company.shipmentorder.created")
-    public void handle(ShipmentOrderCreatedDTO shipmentOrderCreated, Message message, Channel channel) {
-        voidUseCaseExecutor
-                .from(incrementShipmentOrderUseCase)
-                .withInput(new IncrementShipmentOrderUseCase.Input(shipmentOrderCreated.companyId()))
-                .execute();
-    }
-
-}
-```
-
-### External API Communication
-
-**Rule**: Each module exposes its own REST API under its namespace.
-
-**Structure**:
-- `/companies/**` - Company module endpoints
-- `/shipment-orders/**` - ShipmentOrder module endpoints
 
 ---
 
-## Testing Strategy
+## 🧪 Testing Strategy
 
 ### Test Levels
 
-1. **Domain Tests**: Pure unit tests for aggregates and value objects
-   - No Spring context
-   - Fast, isolated
-   - Example: `CompanyTest.java`
+1. **Domain Tests** - Pure unit tests, no Spring context
+2. **Use Case Tests** - Mock repositories (TODO: not yet fully implemented)
+3. **Integration Tests** - Full Spring context with Testcontainers
+4. **Modularity Tests** - Spring Modulith boundary verification
 
-2. **Use Case Tests**: Test application logic with mocked repositories
-   - No Spring context (TODO: currently incomplete)
-   - Example: `CreateCompanyUseCaseTest.java`
-
-3. **Integration Tests**: Full module testing with Testcontainers
-   - PostgreSQL + RabbitMQ containers
-   - Tests full flow including persistence
-   - Example: `TmsApplicationTests.java`
-
-4. **Modularity Tests**: Verify module boundaries
-   - Spring Modulith verification
-   - Example: `ModularityTests.java`
+**Examples:** See [examples/testing-patterns.md](examples/testing-patterns.md)
 
 ---
 
-## Key Architectural Constraints
+## 📚 Additional Resources
 
-1. **Domain Layer Purity**: No framework dependencies in domain
-2. **Immutability**: Domain objects return new instances, never mutate
-3. **Event-Driven**: Inter-module communication via events only
-4. **Aggregate Boundaries**: All changes go through aggregate root
-5. **Repository Pattern**: Infrastructure hidden behind interfaces
-6. **CQRS Annotations**: All use cases and controllers must specify database role
-7. **Outbox Pattern**: All domain events persisted before publishing
+### Full Documentation
+- **Original Architecture (Full Detail):** [ARCHITECTURE_FULL.md](ARCHITECTURE_FULL.md)
+- **Quick Reference:** [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
+- **Code Examples:** [examples/](examples/)
+- **Creation Prompts:** [prompts/](prompts/)
+
+### Related Docs
+- **Codebase Context:** [CODEBASE_CONTEXT.md](CODEBASE_CONTEXT.md)
+- **Glossary:** [GLOSSARY.md](GLOSSARY.md)
+- **Architecture Decisions:** [../adr/](../adr/)
+- **Technical Debt:** [../debt/DEBT.md](../debt/DEBT.md)
+
+### GitHub Copilot
+- **Auto-loaded Instructions:** [/.github/copilot-instructions.md](../../.github/copilot-instructions.md)
 
 ---
 
-## For AI Assistants
+## 🎓 For AI Assistants
 
 When generating code:
 
-1. **Always respect layer boundaries**:
-   - Domain → No external dependencies
-   - Application → Depends only on domain
-   - Infrastructure → Implements application interfaces
+1. **Always respect layer boundaries** - Domain = pure Java only
+2. **Follow use case pattern** - One operation per use case, annotated correctly
+3. **Domain events in aggregates** - Never throw from use cases
+4. **Immutability** - Update methods return new instances
+5. **Testing** - Domain tests with no frameworks, integration tests with Testcontainers
+6. **IDs** - Always use `Id.unique()` for new entities
+7. **Transactions** - One transaction per use case execution
 
-2. **Follow the use case pattern**:
-   - One use case per operation
-   - Input/Output records nested inside use case
-   - Annotated with `@DomainService` and `@Cqrs`
-
-3. **Domain events**:
-   - Always place events in aggregate methods
-   - Never throw events directly from use cases
-
-4. **Immutability**:
-   - Update methods return new instances
-   - Use records for value objects
-
-5. **Testing**:
-   - Domain tests with no frameworks
-   - Integration tests with Testcontainers
-
-6. **IDs**:
-   - Always use `Id.unique()` for new entities
-   - Never use auto-increment
-
-7. **Transactions**:
-   - Repository methods handle transactions
-   - One transaction per use case execution
+**When in doubt:** Check [QUICK_REFERENCE.md](QUICK_REFERENCE.md) or [examples/](examples/)
 
 ---
 
-## References
+**Last Updated:** 2025-11-05
 
-- [ADR-001: ID Format](../adr/ADR-001-ID-Format.md)
-- [ADR-002: Log Pattern](../adr/ADR-002-Log-Pattern.md)
-- [Technical Debt](../debt/DEBT.md)
-- [Spring Modulith Documentation](https://docs.spring.io/spring-modulith/reference/)
-- [DDD Reference](https://www.domainlanguage.com/ddd/reference/)
+**Note:** This is the condensed version optimized for AI consumption. For complete details, see [ARCHITECTURE_FULL.md](ARCHITECTURE_FULL.md).

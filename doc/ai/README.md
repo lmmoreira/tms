@@ -4,23 +4,31 @@ This directory contains comprehensive documentation for AI assistants working on
 
 ---
 
+## 🚀 Quick Start
+
+**First time here?** Go to [START_HERE.md](START_HERE.md) for fast navigation.
+
+**Need a specific pattern?** Go to [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for code snippets.
+
+**Need complete architecture?** Go to [ARCHITECTURE.md](ARCHITECTURE.md) for full details.
+
+---
+
 ## 📚 Documentation Structure
 
-### Core Documentation
+### Core Documentation (Start Here)
 
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Complete architecture guide
-  - System overview and principles
-  - Layer architecture details
-  - CQRS implementation
-  - Event-driven patterns
-  - Module structure
+- **[START_HERE.md](START_HERE.md)** ⭐ - Quick navigation hub with decision tree
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** ⭐ - Fast pattern lookup, code snippets
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Architecture guide (inverted pyramid structure)
+- **[CODEBASE_CONTEXT.md](CODEBASE_CONTEXT.md)** - Project essentials (tech stack, modules, commands)
+- **[GLOSSARY.md](GLOSSARY.md)** - Domain terminology and ubiquitous language
 
-- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Quick lookup guide
-  - Essential annotations
-  - Code snippets
-  - Common commands
-  - Validation rules
-  - Troubleshooting
+### Detailed Documentation
+
+- **[ARCHITECTURE_FULL.md](ARCHITECTURE_FULL.md)** - Complete architecture details
+- **[CODEBASE_CONTEXT_FULL.md](CODEBASE_CONTEXT_FULL.md)** - Complete project context
+- **[AI_DOCUMENTATION_REVIEW.md](AI_DOCUMENTATION_REVIEW.md)** - Optimization analysis and strategy
 
 ### Examples (`examples/`)
 
@@ -89,170 +97,55 @@ Templates for creating new components:
 
 ---
 
-## 🎯 Quick Start for AI Assistants
+## 🎯 Most Common Tasks
 
-### When Asked to Create Something New
-
-1. **New Aggregate?** → Check `prompts/new-aggregate.md`
-2. **New Use Case?** → Check `prompts/new-use-case.md`
-3. **New Event Listener?** → Check `prompts/new-event-listener.md`
-4. **New Module?** → Check `prompts/new-module.md`
-
-### When Reviewing Code
-
-1. Check layer boundaries (ARCHITECTURE.md)
-2. Verify immutability patterns (examples/complete-aggregate.md)
-3. Validate CQRS annotations (QUICK_REFERENCE.md)
-4. Ensure event patterns (examples/event-driven-communication.md)
-
-### When Writing Tests
-
-1. Refer to `examples/testing-patterns.md`
-2. Use Testcontainers for integration tests
-3. Mock repositories for use case tests
-4. Pure domain tests with no Spring context
+| Task | Primary Reference | Secondary |
+|------|------------------|-----------|
+| **Create Use Case** | [prompts/new-use-case.md](prompts/new-use-case.md) | [examples/complete-use-case.md](examples/complete-use-case.md) |
+| **Create Controller** | [examples/complete-controller.md](examples/complete-controller.md) | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) |
+| **Create Aggregate** | [prompts/new-aggregate.md](prompts/new-aggregate.md) | [examples/complete-aggregate.md](examples/complete-aggregate.md) |
+| **Add Event Listener** | [prompts/new-event-listener.md](prompts/new-event-listener.md) | [examples/event-driven-communication.md](examples/event-driven-communication.md) |
+| **Quick Pattern Lookup** | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | - |
+| **Review Code** | [QUICK_REFERENCE.md § Validation](QUICK_REFERENCE.md) | [ARCHITECTURE.md](ARCHITECTURE.md) |
 
 ---
 
-## 📖 How to Use This Documentation
+## 📖 Learning Paths
 
-### For Understanding the System
+### First Time Here?
+1. Read [START_HERE.md](START_HERE.md) - Decision tree navigation
+2. Scan [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - 5 min patterns
+3. Review [ARCHITECTURE.md](ARCHITECTURE.md) - 10 min overview
+4. Browse [examples/](examples/) - See real code
 
-Read in this order:
-1. `ARCHITECTURE.md` - Big picture
-2. `examples/complete-aggregate.md` - Domain layer
-3. `examples/complete-use-case.md` - Application layer
-4. `examples/complete-controller.md` - Infrastructure layer
-5. `examples/event-driven-communication.md` - Module communication
+### Creating Something Specific?
+1. Go to [START_HERE.md](START_HERE.md)
+2. Use decision tree to find right prompt/example
+3. Follow the template
+4. Validate against [QUICK_REFERENCE.md](QUICK_REFERENCE.md)
 
-### For Creating New Features
+---
+---
 
-Follow this process:
-1. Identify what you're creating (aggregate, use case, etc.)
-2. Find the relevant prompt in `prompts/`
-3. Gather required information
-4. Reference the corresponding example in `examples/`
-5. Follow the checklist in the prompt
-6. Validate against patterns in `QUICK_REFERENCE.md`
+## 🔑 Key Principles
 
-### For Code Reviews
+1. **Domain objects are IMMUTABLE** - Update methods return NEW instances
+2. **Events are placed in AGGREGATES** - Not in use cases, saved transactionally
+3. **Modules communicate via EVENTS** - No direct repository calls between modules
+4. **CQRS is MANDATORY** - All use cases and controllers annotated
+5. **Layer boundaries are STRICT** - Domain = pure Java only
+6. **One aggregate per transaction** - Eventual consistency between aggregates
 
-Check these aspects:
-1. ✅ Layer boundaries respected
-2. ✅ Immutability maintained
-3. ✅ Events placed correctly
-4. ✅ CQRS annotations present
-5. ✅ Naming conventions followed
-6. ✅ Tests included
+See [ARCHITECTURE.md](ARCHITECTURE.md) for complete details.
 
 ---
 
-## 🎨 Architecture at a Glance
+## 📝 Related Documentation
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    REST Controllers                      │
-│              (Infrastructure Layer)                      │
-│    @Cqrs(WRITE/READ) + RestUseCaseExecutor             │
-└──────────────────────┬──────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────┐
-│                      Use Cases                           │
-│              (Application Layer)                         │
-│    @DomainService + @Cqrs(WRITE/READ)                   │
-└──────────────────────┬──────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────┐
-│              Aggregates (Immutable)                      │
-│               (Domain Layer)                             │
-│    Pure Java - Events - Business Logic                  │
-└──────────────────────┬──────────────────────────────────┘
-                       │
-                       ▼
-┌─────────────────────────────────────────────────────────┐
-│         Repository Implementation                        │
-│              (Infrastructure Layer)                      │
-│    JPA + Outbox Pattern                                 │
-└─────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🔑 Key Principles (Never Forget)
-
-1. **Domain objects are IMMUTABLE**
-   - Update methods return NEW instances
-   - No setters allowed
-
-2. **Events are placed in AGGREGATES**
-   - Not in use cases
-   - Saved transactionally with entity
-
-3. **Modules communicate via EVENTS**
-   - No direct repository calls between modules
-   - RabbitMQ for async communication
-
-4. **CQRS is MANDATORY**
-   - All use cases annotated
-   - All controllers annotated
-   - Routes to correct database
-
-5. **Layer boundaries are STRICT**
-   - Domain: Pure Java only
-   - Application: Use cases + interfaces
-   - Infrastructure: All frameworks
-
-6. **One aggregate per transaction**
-   - Maintain consistency within aggregate
-   - Eventual consistency between aggregates
-
----
-
-## 🛠️ Common Tasks
-
-### Add new operation to existing aggregate
-
-1. Create use case → `prompts/new-use-case.md`
-2. Create controller → `examples/complete-controller.md`
-3. Create DTOs
-4. Add tests
-
-### Add communication between modules
-
-1. Define domain event in source module
-2. Place event in aggregate
-3. Create listener in target module → `prompts/new-event-listener.md`
-4. Configure queue/binding
-5. Test event flow
-
-### Fix failing tests
-
-1. Check test output
-2. Verify immutability (new instances returned?)
-3. Check mocks (correct behavior?)
-4. Validate database state (Testcontainers logs)
-5. Check event outbox (events saved?)
-
----
-
-## 📝 Additional Resources
-
-### Related Documentation
-
-- `/doc/CODEBASE_CONTEXT.md` - Project overview
-- `/doc/GLOSSARY.md` - Domain terminology
-- `/doc/TESTING_GUIDE.md` - Testing strategies
-- `/doc/CONTRIBUTING.md` - Contribution guidelines
-- `/.github/copilot-instructions.md` - GitHub Copilot config
-- `/.github/AI_GUIDELINES.md` - PR review guidelines
-
-### Example Modules
-
-- `src/main/java/.../company/` - Reference implementation
-- `src/main/java/.../shipmentorder/` - Another reference
-- `src/main/java/.../commons/` - Shared infrastructure
+- **GitHub Copilot Config:** [/.github/copilot-instructions.md](../../.github/copilot-instructions.md) (auto-loaded)
+- **Architecture Decisions:** [../adr/](../adr/)
+- **Technical Debt:** [../debt/DEBT.md](../debt/DEBT.md)
+- **Example Modules:** `src/main/java/.../company/`, `src/main/java/.../shipmentorder/`
 
 ---
 
@@ -260,9 +153,18 @@ Check these aspects:
 
 When adding new patterns or examples:
 
-1. Follow existing structure
-2. Include complete, runnable code
-3. Add validation checklist
+1. Keep files focused (<200 lines ideal)
+2. Use inverted pyramid (critical info first)
+3. Include complete, runnable code
+4. Update [START_HERE.md](START_HERE.md) decision tree
+5. Follow existing structure and formatting
+
+---
+
+**Last Updated:** 2025-11-05
+
+**Quick Links:** [START_HERE](START_HERE.md) | [ARCHITECTURE](ARCHITECTURE.md) | [QUICK_REFERENCE](QUICK_REFERENCE.md) | [Examples](examples/)
+
 4. Provide anti-patterns (what NOT to do)
 5. Update this README if adding new files
 

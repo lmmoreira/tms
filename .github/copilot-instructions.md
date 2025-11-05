@@ -9,6 +9,31 @@
 
 ---
 
+## 🎯 Quick Decision Tree
+
+**What do you need to do?**
+
+```
+CREATE something new?
+├─ Aggregate? → Use "Essential Patterns #1" below + /doc/ai/prompts/new-aggregate.md
+├─ Use Case? → Use "Essential Patterns #2" below + /doc/ai/prompts/new-use-case.md
+├─ Controller? → Use "Essential Patterns #3" below
+├─ Event Listener? → Use "Essential Patterns #6" below
+└─ Module? → See /doc/ai/prompts/new-module.md
+
+UNDERSTAND a pattern?
+├─ Quick lookup? → See sections below or /doc/ai/QUICK_REFERENCE.md
+├─ Full architecture? → See /doc/ai/ARCHITECTURE.md
+└─ Project overview? → See /doc/ai/CODEBASE_CONTEXT.md
+
+REVIEW code?
+├─ Check patterns? → Compare against sections below
+├─ Validation rules? → See "Critical Rules" and "Anti-Patterns" sections
+└─ Examples? → See /doc/ai/examples/
+```
+
+---
+
 ## Essential Patterns
 
 ### 1. Use Case Pattern
