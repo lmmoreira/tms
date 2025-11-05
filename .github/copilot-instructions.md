@@ -19,11 +19,14 @@ CREATE something new?
 ├─ Use Case? → Use "Essential Patterns #2" below + /doc/ai/prompts/new-use-case.md
 ├─ Controller? → Use "Essential Patterns #3" below + /doc/ai/prompts/new-controller.md
 ├─ Event Listener? → Use "Essential Patterns #6" below + /doc/ai/prompts/new-event-listener.md
+├─ Database Migration? → See "Database Migrations" section + /doc/ai/prompts/new-migration.md
+├─ HTTP Request File? → See /doc/ai/prompts/http-requests.md
 └─ Module? → See /doc/ai/prompts/new-module.md
 
 UNDERSTAND a pattern?
 ├─ Quick lookup? → See sections below or /doc/ai/QUICK_REFERENCE.md
 ├─ Full architecture? → See /doc/ai/ARCHITECTURE.md
+├─ HTTP testing? → See /doc/ai/prompts/http-requests.md
 └─ Project overview? → See /doc/ai/CODEBASE_CONTEXT.md
 
 REVIEW code?
@@ -278,6 +281,59 @@ public class IncrementShipmentOrderListener {
 - ✅ Modules communicate ONLY via events
 - ✅ Use `@RabbitListener` for inter-module events
 - ✅ Never call other module's repositories directly
+
+---
+
+## Database Migrations
+
+**Location:** `/infra/database/migration/`
+
+**Process:**
+1. Migrations are versioned SQL files: `V{number}__{description}.sql`
+2. Applied automatically by Flyway container during `docker compose up`
+3. Run in sequential order (V1, V2, V3, ...)
+4. Never modify existing migrations - create new ones
+
+**Creating a Migration:**
+```bash
+# 1. Check last version
+ls infra/database/migration/
+# Example output: V1...V6__create_shipment_order_outbox.sql
+
+# 2. Create V{N+1} file
+touch infra/database/migration/V7__add_field_to_table.sql
+
+# 3. Write SQL
+echo "ALTER TABLE schema.table ADD COLUMN field UUID NOT NULL;" > infra/database/migration/V7__add_field_to_table.sql
+
+# 4. Apply (automatic on compose up)
+docker compose up
+```
+
+**Common Operations:**
+```sql
+-- Add column
+ALTER TABLE {schema}.{table} ADD COLUMN {field} {type} {constraints};
+
+-- Create table
+CREATE TABLE {schema}.{table} (
+    id UUID NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+-- Create index
+CREATE INDEX idx_{table}_{field} ON {schema}.{table}({field});
+```
+
+**Key Points:**
+- ✅ Use sequential numbers (V7, V8, V9...)
+- ✅ Clear, objective descriptions
+- ✅ Check existing migrations to understand schemas
+- ✅ Include schema name in SQL
+- ❌ Never modify existing migrations
+
+**See Also:** `/doc/ai/prompts/new-migration.md` for complete guide
 
 ---
 

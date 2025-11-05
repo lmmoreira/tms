@@ -26,19 +26,21 @@ public class CreateShipmentOrderUseCase implements UseCase<CreateShipmentOrderUs
             throw new ValidationException("ShipmentOrder already exists");
         }
 
-        final ShipmentOrder shipmentOrder = shipmentOrderRepository.create(ShipmentOrder.createShipmentOrder(input.companyId, input.externalId));
+        final ShipmentOrder shipmentOrder = shipmentOrderRepository.create(ShipmentOrder.createShipmentOrder(input.companyId, input.shipperId, input.externalId));
 
         return new Output(shipmentOrder.getShipmentOrderId().value(),
                 shipmentOrder.getCompany(),
+                shipmentOrder.getShipper(),
                 shipmentOrder.getExternalId(),
                 shipmentOrder.getCreatedAt());
     }
 
-    public record Input(UUID companyId, String externalId) {
+    public record Input(UUID companyId, UUID shipperId, String externalId) {
     }
 
     public record Output(UUID shipmentOrderId,
                          UUID companyId,
+                         UUID shipperId,
                          String externalId,
                          Instant createdAt) {
     }

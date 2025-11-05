@@ -14,6 +14,10 @@ A Transportation Management System that automates quotation, order orchestration
 - Shipment order — creation, assignment, tracking, delivery confirmation
 - Volume tracking — monitor capacity and utilization across time windows
 
+## Database Migrations
+Database schema changes are managed via Flyway migrations in `/infra/database/migration/`.
+Migrations are applied automatically during `docker compose up`. See [HELP.md](HELP.md) for details.
+
 ## High Level
 
 ```mermaid

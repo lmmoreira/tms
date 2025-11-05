@@ -29,6 +29,7 @@ public class GetShipmentOrderByCompanyIdUseCase implements UseCase<GetShipmentOr
                 .map(so -> new Output.ShipmentOrder(
                         so.getShipmentOrderId().value(),
                         so.getCompany(),
+                        so.getShipper(),
                         so.getExternalId(),
                         so.getCreatedAt()))
                 .collect(java.util.stream.Collectors.toSet());
@@ -44,7 +45,7 @@ public class GetShipmentOrderByCompanyIdUseCase implements UseCase<GetShipmentOr
                          int page,
                          int size,
                          long totalElements, long totalPages) {
-        public record ShipmentOrder(UUID shipmentOrderId, UUID companyId, String externalId, Instant createdAt) {
+        public record ShipmentOrder(UUID shipmentOrderId, UUID companyId, UUID shipperId, String externalId, Instant createdAt) {
         }
     }
 

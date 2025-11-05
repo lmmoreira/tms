@@ -6,6 +6,7 @@ import java.util.UUID;
 public record ShipmentOrderCreatedDTO(UUID domainEventId,
         UUID shipmentOrderId,
         UUID companyId,
+        UUID shipperId,
         String externalId,
         Instant occurredOn,
         String aggregateId,

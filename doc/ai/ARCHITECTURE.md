@@ -37,6 +37,58 @@ Infrastructure Layer (infrastructure/)
 
 ---
 
+## 🗄️ Database Migrations
+
+**Location:** `/infra/database/migration/`
+
+**How It Works:**
+1. Migrations are versioned SQL files in `/infra/database/migration/`
+2. Named as `V{number}__{description}.sql` (e.g., `V7__add_shipper_to_shipment_order.sql`)
+3. Flyway container applies migrations automatically during `docker compose up`
+4. Migrations run in order (V1, V2, V3, ...)
+
+**Creating a Migration:**
+
+```bash
+# 1. Check existing migrations to get next version number
+ls infra/database/migration/
+# Output: V1__create_schema.sql, V2__create_company.sql, ...V6__create_shipment_order_outbox.sql
+
+# 2. Create new migration file
+touch infra/database/migration/V7__add_field_to_table.sql
+
+# 3. Write SQL migration
+```
+
+**Migration Examples:**
+
+```sql
+-- Add NOT NULL column
+ALTER TABLE {schema}.{table} ADD COLUMN {field_name} UUID NOT NULL;
+
+-- Add nullable column
+ALTER TABLE {schema}.{table} ADD COLUMN {field_name} VARCHAR(255);
+
+-- Create index
+CREATE INDEX idx_{table}_{field} ON {schema}.{table}({field});
+
+-- Modify column
+ALTER TABLE {schema}.{table} ALTER COLUMN {field} TYPE VARCHAR(500);
+
+-- Add constraint
+ALTER TABLE {schema}.{table} ADD CONSTRAINT fk_{name} 
+    FOREIGN KEY ({column}) REFERENCES {other_table}(id);
+```
+
+**Key Points:**
+- ✅ Migrations run transactionally
+- ✅ Applied automatically by Flyway during `docker compose up`
+- ✅ Never modify existing migrations (create new ones for changes)
+- ✅ Use descriptive names (what change, which table)
+- ✅ Check existing migrations to understand table schemas
+
+---
+
 ## 📦 Essential Patterns (Most Used)
 
 ### Pattern 1: Use Case (Application Layer)

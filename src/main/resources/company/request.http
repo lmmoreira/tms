@@ -1,6 +1,6 @@
 @server = http://localhost:8080
 
-### Create company
+### Create company (Shein - Marketplace)
 POST {{server}}/companies
 Content-Type: application/json
 Accept: application/json
@@ -16,6 +16,24 @@ Accept: application/json
 }
 
 > {% client.global.set("companyId", response.body.companyId) %}
+
+
+### Create shipper (Loggi - Logistics Provider)
+POST {{server}}/companies
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Loggi",
+  "cnpj": "13.895.286/0001-93",
+  "types": ["LOGISTICS_PROVIDER"],
+  "configuration": {
+    "notification": "true",
+    "webhook": "http://loggi.com.br/logistics/callback"
+  }
+}
+
+> {% client.global.set("shipper", response.body.companyId) %}
 
 
 ### Get company

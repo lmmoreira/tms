@@ -214,18 +214,46 @@ mvn spring-boot:run
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-### Database
+### Database Migrations
 
-```bash
-# Create migration
-# Create file: src/main/resources/{module}/db/migration/V{version}__{description}.sql
+**Location:** `/infra/database/migration/`
 
-# Apply migrations
-mvn liquibase:update
+**Naming Convention:** `V{number}__{objective_description}.sql`
+- `{number}`: Last migration number + 1 (e.g., V7, V8, V9)
+- `{objective_description}`: Brief, clear purpose (e.g., `add_shipper_to_shipment_order`)
 
-# Rollback
-mvn liquibase:rollback -Dliquibase.rollbackCount=1
+**Migration Examples:**
+
+```sql
+-- Create table
+CREATE TABLE {schema}.{table_name} (
+    id UUID NOT NULL,
+    field_name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (id)
+);
+
+-- Add column
+ALTER TABLE {schema}.{table_name} ADD COLUMN {column_name} {type} NOT NULL;
+
+-- Create index
+CREATE INDEX idx_{table}_{column} ON {schema}.{table}({column});
 ```
+
+**Applying Migrations:**
+```bash
+# Via Docker Compose (automatically applies on startup)
+docker compose up
+
+# Migrations are applied by Flyway container during compose up
+# Check migration status in logs: docker compose logs tms-flyway
+```
+
+**Creating New Migration:**
+1. Check last migration number: `ls infra/database/migration/`
+2. Create new file: `V{N+1}__{description}.sql`
+3. Write SQL (CREATE, ALTER, DROP, INDEX, etc.)
+4. Run `docker compose up` to apply
 
 ### Git Workflow
 
@@ -323,6 +351,44 @@ PUT    /{resource}/{id}         Update
 PATCH  /{resource}/{id}         Partial update
 DELETE /{resource}/{id}         Delete
 ```
+
+---
+
+## HTTP Request Files (Testing)
+
+**Location:** `src/main/resources/{module}/request.http`
+
+IntelliJ HTTP Client files for manual API testing with variable chaining.
+
+**Basic Pattern:**
+```http
+@server = http://localhost:8080
+
+### Create
+POST {{server}}/resources
+Content-Type: application/json
+
+{ "name": "value" }
+
+> {% client.global.set("resourceId", response.body.id) %}
+
+### Get
+GET {{server}}/resources/{{resourceId}}
+```
+
+**Dynamic Variables:**
+- `{{$uuid}}` - Generate UUID
+- `{{$timestamp}}` - Current timestamp
+- `{{variableName}}` - Use stored variable
+
+**Chaining Example:**
+1. Create parent resource → save ID to variable
+2. Create child resource using parent ID variable
+3. Query using both variables
+
+**Files:**
+- `src/main/resources/company/request.http`
+- `src/main/resources/shipmentorder/request.http`
 
 ---
 

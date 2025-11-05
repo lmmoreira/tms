@@ -30,6 +30,9 @@ public class ShipmentOrderEntity implements Serializable {
     @Column(name = "company_id", nullable = false)
     private UUID companyId;
 
+    @Column(name = "shipper")
+    private UUID shipper;
+
     @Column(name = "external_id", nullable = false, length = 255)
     private String externalId;
 
@@ -44,6 +47,7 @@ public class ShipmentOrderEntity implements Serializable {
                 shipmentOrder.getShipmentOrderId().value(),
                 false,//shipmentOrder.isArchived(),
                 shipmentOrder.getCompany(),
+                shipmentOrder.getShipper(),
                 shipmentOrder.getExternalId(),
                 shipmentOrder.getCreatedAt(),
                 shipmentOrder.getUpdatedAt());
@@ -54,6 +58,7 @@ public class ShipmentOrderEntity implements Serializable {
                 ShipmentOrderId.with(this.id),
                 this.isArchived,
                 this.companyId,
+                this.shipper,
                 this.externalId,
                 this.createdAt,
                 this.updatedAt,

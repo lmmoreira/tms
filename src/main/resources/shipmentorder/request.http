@@ -8,6 +8,7 @@ Accept: application/json
 
 {
   "companyId": "{{companyId}}",
+  "shipperId": "{{shipper}}",
   "externalId": "externalId_{{$uuid}}",
   "createdAt": "{{now}}"
 }

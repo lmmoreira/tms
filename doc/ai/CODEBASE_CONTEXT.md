@@ -69,7 +69,7 @@
 
 ### Persistence
 - PostgreSQL (primary database)
-- Flyway (migrations)
+- Flyway (database migrations via Docker container)
 - Spring Data JPA
 - Hibernate (ORM)
 
