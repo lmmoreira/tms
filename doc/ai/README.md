@@ -30,6 +30,8 @@ This directory contains comprehensive documentation for AI assistants working on
 - **[CODEBASE_CONTEXT_FULL.md](CODEBASE_CONTEXT_FULL.md)** - Complete project context
 - **[AI_DOCUMENTATION_REVIEW.md](AI_DOCUMENTATION_REVIEW.md)** - Optimization analysis and strategy
 - **[ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md)** ⭐ - Comprehensive ArchUnit testing guide
+- **[ARCHUNIT_TEST_CATALOG.md](ARCHUNIT_TEST_CATALOG.md)** ⭐ - Complete catalog of all ArchUnit tests
+- **[ARCHUNIT_CHEATSHEET.md](ARCHUNIT_CHEATSHEET.md)** ⭐ - Quick reference for utility classes
 
 ### Examples (`examples/`)
 
@@ -108,7 +110,8 @@ Templates for creating new components:
 | **Add Event Listener** | [prompts/new-event-listener.md](prompts/new-event-listener.md) | [examples/event-driven-communication.md](examples/event-driven-communication.md) |
 | **Quick Pattern Lookup** | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | - |
 | **Review Code** | [QUICK_REFERENCE.md § Validation](QUICK_REFERENCE.md) | [ARCHITECTURE.md](ARCHITECTURE.md) |
-| **Create ArchUnit Tests** | [ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md) | - |
+| **Create ArchUnit Tests** | [ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md) | [ARCHUNIT_TEST_CATALOG.md](ARCHUNIT_TEST_CATALOG.md) |
+| **Find Existing ArchUnit Tests** | [ARCHUNIT_TEST_CATALOG.md](ARCHUNIT_TEST_CATALOG.md) | [ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md) |
 
 ---
 
@@ -229,7 +232,9 @@ If this documentation doesn't answer your question:
 - [x] Repository patterns
 - [x] Event-driven patterns
 - [x] Testing patterns (unit + integration)
-- [x] **ArchUnit testing patterns** ⭐ NEW
+- [x] **ArchUnit testing patterns** ⭐ 
+- [x] **ArchUnit test catalog** ⭐ NEW
+- [x] **ArchUnit utility classes** ⭐ NEW
 - [x] Module creation
 - [x] Quick reference
 - [x] Code examples
@@ -239,6 +244,6 @@ If this documentation doesn't answer your question:
 
 ---
 
-**Last Updated:** 2025-11-04
+**Last Updated:** 2025-11-06
 
 **Maintained by:** TMS Development Team

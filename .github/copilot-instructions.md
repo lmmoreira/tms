@@ -23,17 +23,21 @@ CREATE something new?
 ├─ Database Migration? → See "Database Migrations" section + /doc/ai/prompts/new-migration.md
 ├─ HTTP Request File? → See /doc/ai/prompts/http-requests.md
 ├─ Eventual Consistency? → See /doc/ai/prompts/eventual-consistency.md
-└─ Module? → See /doc/ai/prompts/new-module.md
+├─ Module? → See /doc/ai/prompts/new-module.md
+└─ ArchUnit Test? → See /doc/ai/ARCHUNIT_GUIDELINES.md + /doc/ai/ARCHUNIT_TEST_CATALOG.md
 
 UNDERSTAND a pattern?
 ├─ Quick lookup? → See sections below or /doc/ai/QUICK_REFERENCE.md
 ├─ Full architecture? → See /doc/ai/ARCHITECTURE.md
 ├─ HTTP testing? → See /doc/ai/prompts/http-requests.md
+├─ ArchUnit testing? → See /doc/ai/ARCHUNIT_GUIDELINES.md
+├─ Existing tests? → See /doc/ai/ARCHUNIT_TEST_CATALOG.md
 └─ Project overview? → See /doc/ai/CODEBASE_CONTEXT.md
 
 REVIEW code?
 ├─ Check patterns? → Compare against sections below
 ├─ Validation rules? → See "Critical Rules" and "Anti-Patterns" sections
+├─ ArchUnit tests? → See /doc/ai/ARCHUNIT_TEST_CATALOG.md
 └─ Examples? → See /doc/ai/examples/
 ```
 
@@ -598,7 +602,61 @@ class CreateCompanyIntegrationTest {
 - **Glossary:** `/doc/ai/GLOSSARY.md`
 - **Codebase Context:** `/doc/ai/CODEBASE_CONTEXT.md`
 - **Quick Reference:** `/doc/ai/QUICK_REFERENCE.md`
+- **ArchUnit Guidelines:** `/doc/ai/ARCHUNIT_GUIDELINES.md`
+- **ArchUnit Test Catalog:** `/doc/ai/ARCHUNIT_TEST_CATALOG.md`
 - **Readme:** `/doc/ai/README.md`
+
+---
+
+## ArchUnit Testing
+
+**Architecture tests are enforced via ArchUnit. Use utility classes for consistency!**
+
+### Available Utility Classes
+
+**ArchUnitConditions** - Reusable custom conditions:
+```java
+import static br.com.logistics.tms.architecture.ArchUnitConditions.*;
+
+// Check for setters
+noClasses().should(haveSetters())
+
+// Check for static method
+classes().should(haveStaticMethodNamed("unique"))
+
+// Check for field type
+classes().should(haveFieldOfTypeContaining("Executor"))
+```
+
+**ArchUnitPredicates** - Reusable predicates:
+```java
+import static br.com.logistics.tms.architecture.ArchUnitPredicates.*;
+
+// Filter by name pattern
+classes().that(matchSimpleNamePattern("^[A-Z].*Created$"))
+```
+
+### Creating ArchUnit Tests
+
+1. ✅ **Check existing tests first:** `/doc/ai/ARCHUNIT_TEST_CATALOG.md`
+2. ✅ **Use utility classes:** Import from `ArchUnitConditions` or `ArchUnitPredicates`
+3. ✅ **Follow guidelines:** See `/doc/ai/ARCHUNIT_GUIDELINES.md`
+4. ✅ **Test compilation:** `mvn test-compile` before committing
+5. ✅ **Add to catalog:** Update catalog if adding reusable conditions
+
+**Example:**
+```java
+import static br.com.logistics.tms.architecture.ArchUnitConditions.*;
+
+@Test
+void aggregatesShouldNotHaveSetters() {
+    noClasses()
+        .that().resideInAPackage("..domain..")
+        .should(haveSetters())  // ✅ Reuse condition
+        .because("Aggregates must be immutable")
+        .check(classes);
+}
+```
 
 ---
 
@@ -611,5 +669,6 @@ When suggesting code:
 4. Place events in aggregates, not use cases
 5. Use proper annotations (`@DomainService`, `@Cqrs`)
 6. Generate tests alongside code
+7. **Use ArchUnit utility classes** instead of duplicating conditions
 
 **Remember:** Junior developers will read this code. Prioritize clarity and consistency over cleverness.

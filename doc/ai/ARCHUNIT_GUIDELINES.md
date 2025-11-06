@@ -9,6 +9,7 @@
 | Need | Go To |
 |------|-------|
 | First time? | [Quick Start Template](#quick-start-template) |
+| Utility classes? | [ArchUnit Utilities](#archunit-utilities) |
 | What can I check? | [Decision Tree](#decision-tree) |
 | Copy-paste patterns | [Common Patterns](#common-patterns) |
 | Custom conditions | [Custom Conditions Library](#custom-conditions-library) |
@@ -17,30 +18,85 @@
 
 ---
 
+## 🆕 ArchUnit Utilities
+
+**TMS now provides reusable utility classes for common ArchUnit patterns!**
+
+### Available Utilities
+
+| Class | Purpose | Location |
+|-------|---------|----------|
+| `ArchUnitConditions` | Reusable custom conditions | `src/test/java/.../architecture/` |
+| `ArchUnitPredicates` | Reusable predicates for filtering | `src/test/java/.../architecture/` |
+
+### Using ArchUnitConditions
+
+Import and use shared conditions instead of duplicating code:
+
+```java
+import static br.com.logistics.tms.architecture.ArchUnitConditions.*;
+
+@Test
+void aggregatesShouldNotHaveSetters() {
+    noClasses()
+        .that().resideInAPackage("..domain..")
+        .should(haveSetters())  // ✅ Reusable condition
+        .because("aggregates must be immutable")
+        .check(classes);
+}
+
+@Test
+void idsShouldHaveUniqueMethod() {
+    classes()
+        .that().haveSimpleNameEndingWith("Id")
+        .should(haveStaticMethodNamed("unique"))  // ✅ Reusable condition
+        .because("ID value objects need unique() factory")
+        .check(classes);
+}
+```
+
+### Using ArchUnitPredicates
+
+Use predicates for filtering classes before applying rules:
+
+```java
+import static br.com.logistics.tms.architecture.ArchUnitPredicates.*;
+
+@Test
+void eventsShouldFollowNamingPattern() {
+    classes()
+        .that(matchSimpleNamePattern("^[A-Z][a-zA-Z]*Created$"))  // ✅ Reusable predicate
+        .should().resideInAPackage("..domain..")
+        .because("created events follow {Entity}Created pattern")
+        .check(classes);
+}
+```
+
+---
+
 ## ⚡ Quick Start Template
 
 ```java
 package br.com.logistics.tms.architecture;
 
-import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
-import com.tngtech.archunit.core.domain.JavaMethod;
-import com.tngtech.archunit.core.domain.JavaField;
-import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
-import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
-import com.tngtech.archunit.lang.ConditionEvents;
-import com.tngtech.archunit.lang.SimpleConditionEvent;
-import com.tngtech.archunit.base.DescribedPredicate;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.regex.Pattern;
-
+import static br.com.logistics.tms.architecture.ArchUnitConditions.*;
+import static br.com.logistics.tms.architecture.ArchUnitPredicates.*;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.*;
 
+/**
+ * ArchUnit tests to enforce [describe what you're testing].
+ * 
+ * Rules:
+ * - [Rule 1]
+ * - [Rule 2]
+ */
 class MyArchitectureTest {
 
     private static JavaClasses classes;
@@ -270,12 +326,88 @@ private static ArchCondition<JavaClass> haveFieldInjection() {
 
 ---
 
-## 🛠️ Custom Conditions Library
+## 🛠️ Available ArchUnit Conditions & Predicates
+
+### From ArchUnitConditions (Import and Use Directly)
+
+The project provides these ready-to-use conditions in `ArchUnitConditions.java`:
+
+| Method | Purpose | Example |
+|--------|---------|---------|
+| `haveSetters()` | Check for setter methods | `noClasses().should(haveSetters())` |
+| `haveStaticMethodNamed(name)` | Check for static method | `classes().should(haveStaticMethodNamed("unique"))` |
+| `haveMethodNamed(name)` | Check for instance method | `classes().should(haveMethodNamed("execute"))` |
+| `haveFieldOfTypeContaining(fragments...)` | Check field type (partial match) | `classes().should(haveFieldOfTypeContaining("Executor"))` |
+| `haveFieldOfTypeExactly(type)` | Check field type (exact match) | `classes().should(haveFieldOfTypeExactly("VoidUseCaseExecutor"))` |
+| `haveFieldAnnotatedWith(annotation)` | Check field has annotation | `classes().should(haveFieldAnnotatedWith("jakarta.persistence.Id"))` |
+| `haveSimpleNameEndingWithAny(suffixes...)` | Check multiple suffix options | `classes().should(haveSimpleNameEndingWithAny("Impl", "Repository"))` |
+| `matchSimpleNamePattern(regex)` | Check name matches regex | `classes().should(matchSimpleNamePattern("^[A-Z].*Created$"))` |
+| `returnTheSameClassAsDeclaring()` | For update methods returning self | `methods().should(returnTheSameClassAsDeclaring())` |
+
+**Usage Example:**
+
+```java
+import static br.com.logistics.tms.architecture.ArchUnitConditions.*;
+
+@Test
+void aggregatesShouldNotHaveSetters() {
+    noClasses()
+        .that().resideInAPackage("..domain..")
+        .and().areAssignableTo(AbstractAggregateRoot.class)
+        .should(haveSetters())  // ✅ Use shared condition
+        .because("Aggregates must be immutable")
+        .check(classes);
+}
+
+@Test  
+void controllersShouldHaveExecutor() {
+    classes()
+        .that().haveSimpleNameEndingWith("Controller")
+        .should(haveFieldOfTypeContaining("RestUseCaseExecutor", "RestPresenter"))  // ✅ Use shared condition
+        .because("Controllers delegate to executors")
+        .check(classes);
+}
+```
+
+### From ArchUnitPredicates (For Filtering)
+
+The project provides these predicates for filtering classes:
+
+| Method | Purpose | Example |
+|--------|---------|---------|
+| `matchSimpleNamePattern(regex)` | Filter by name pattern | `.that(matchSimpleNamePattern(".*Created$"))` |
+
+**Usage Example:**
+
+```java
+import static br.com.logistics.tms.architecture.ArchUnitPredicates.*;
+
+@Test
+void createdEventsShouldFollowPattern() {
+    classes()
+        .that(matchSimpleNamePattern("^[A-Z][a-zA-Z]*Created$"))  // ✅ Use shared predicate
+        .should().resideInAPackage("..domain..")
+        .because("Created events follow {Entity}Created pattern")
+        .check(classes);
+}
+```
+
+---
+
+## 🛠️ Creating New Custom Conditions
+
+**⚠️ Before creating a new condition, check if it already exists in `ArchUnitConditions`!**
+
+If you need a NEW custom condition:
 
 ### Template for Custom Conditions
 
 ```java
-private static ArchCondition<JavaClass> myCustomCondition(String parameter) {
+import com.tngtech.archunit.lang.ArchCondition;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
+
+private static ArchCondition<JavaClass> myCustomCondition(final String parameter) {
     return new ArchCondition<>("description of what this checks") {
         @Override
         public void check(final JavaClass javaClass, final ConditionEvents events) {
@@ -294,9 +426,27 @@ private static ArchCondition<JavaClass> myCustomCondition(String parameter) {
 classes().that()...should(myCustomCondition("param"))
 ```
 
-### 1. Check for Setters
+### When to Add to ArchUnitConditions
+
+Add your custom condition to `ArchUnitConditions.java` if:
+- ✅ It will be reused in multiple test files
+- ✅ It checks a common architectural pattern
+- ✅ It's generic enough for other modules
+
+Keep it local if:
+- ❌ It's very specific to one test file
+- ❌ It's a one-off check
+
+---
+
+## 📚 Custom Condition Examples (For Local Use)
+
+### 1. Check for Setters (Already in ArchUnitConditions - Use That!)
 
 ```java
+// ⚠️ This is already available in ArchUnitConditions!
+// Just import: import static br.com.logistics.tms.architecture.ArchUnitConditions.haveSetters;
+
 private static ArchCondition<JavaClass> haveSetters() {
     return new ArchCondition<>("have setter methods") {
         @Override
@@ -314,61 +464,9 @@ private static ArchCondition<JavaClass> haveSetters() {
         }
     };
 }
-
-// Use: noClasses().that().resideInAPackage("..domain..").should(haveSetters())
 ```
 
-### 2. Check for Static Method by Name
-
-```java
-private static ArchCondition<JavaClass> haveStaticMethodNamed(final String methodName) {
-    return new ArchCondition<>("have static method named '" + methodName + "'") {
-        @Override
-        public void check(final JavaClass javaClass, final ConditionEvents events) {
-            final boolean hasMethod = javaClass.getMethods().stream()
-                    .anyMatch(m -> m.getName().equals(methodName) && m.getModifiers().contains(JavaModifier.STATIC));
-
-            if (!hasMethod) {
-                final String message = String.format(
-                        "Class %s should have static method '%s'",
-                        javaClass.getSimpleName(),
-                        methodName
-                );
-                events.add(SimpleConditionEvent.violated(javaClass, message));
-            }
-        }
-    };
-}
-
-// Use: classes().that()...should(haveStaticMethodNamed("unique"))
-```
-
-### 3. Check for Instance Method by Name
-
-```java
-private static ArchCondition<JavaClass> haveMethodNamed(final String methodName) {
-    return new ArchCondition<>("have method named '" + methodName + "'") {
-        @Override
-        public void check(final JavaClass javaClass, final ConditionEvents events) {
-            final boolean hasMethod = javaClass.getMethods().stream()
-                    .anyMatch(m -> m.getName().equals(methodName));
-
-            if (!hasMethod) {
-                final String message = String.format(
-                        "Class %s should have method '%s'",
-                        javaClass.getSimpleName(),
-                        methodName
-                );
-                events.add(SimpleConditionEvent.violated(javaClass, message));
-            }
-        }
-    };
-}
-
-// Use: classes().that()...should(haveMethodNamed("execute"))
-```
-
-### 4. Check for Field of Type (Contains)
+### 2. Check for Field of Type (Contains - Already Available!)
 
 ```java
 private static ArchCondition<JavaClass> haveFieldOfTypeContaining(final String... typeFragments) {
