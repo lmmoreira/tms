@@ -29,6 +29,7 @@ This directory contains comprehensive documentation for AI assistants working on
 - **[ARCHITECTURE_FULL.md](ARCHITECTURE_FULL.md)** - Complete architecture details
 - **[CODEBASE_CONTEXT_FULL.md](CODEBASE_CONTEXT_FULL.md)** - Complete project context
 - **[AI_DOCUMENTATION_REVIEW.md](AI_DOCUMENTATION_REVIEW.md)** - Optimization analysis and strategy
+- **[ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md)** ⭐ - Comprehensive ArchUnit testing guide
 
 ### Examples (`examples/`)
 
@@ -107,6 +108,7 @@ Templates for creating new components:
 | **Add Event Listener** | [prompts/new-event-listener.md](prompts/new-event-listener.md) | [examples/event-driven-communication.md](examples/event-driven-communication.md) |
 | **Quick Pattern Lookup** | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | - |
 | **Review Code** | [QUICK_REFERENCE.md § Validation](QUICK_REFERENCE.md) | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| **Create ArchUnit Tests** | [ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md) | - |
 
 ---
 
@@ -226,7 +228,8 @@ If this documentation doesn't answer your question:
 - [x] Controller patterns
 - [x] Repository patterns
 - [x] Event-driven patterns
-- [x] Testing patterns
+- [x] Testing patterns (unit + integration)
+- [x] **ArchUnit testing patterns** ⭐ NEW
 - [x] Module creation
 - [x] Quick reference
 - [x] Code examples

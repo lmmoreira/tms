@@ -29,7 +29,7 @@ public class ShipmentOrderCompanyEntity implements Serializable {
     @Column(name = "data", nullable = false)
     private Map<String, Object> data;
 
-    public static ShipmentOrderCompanyEntity from(final Company company) {
+    public static ShipmentOrderCompanyEntity of(final Company company) {
         return new ShipmentOrderCompanyEntity(
                 company.getCompanyId().value(),
                 company.getData().value()

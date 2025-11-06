@@ -19,7 +19,7 @@ public class ShipmentOrderCompanyRepositoryImpl implements CompanyRepository {
 
     @Override
     public Company save(final Company company) {
-        ShipmentOrderCompanyEntity entity = ShipmentOrderCompanyEntity.from(company);
+        ShipmentOrderCompanyEntity entity = ShipmentOrderCompanyEntity.of(company);
         entity = shipmentOrderCompanyJpaRepository.save(entity);
         return entity.toDomain();
     }

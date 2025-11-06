@@ -1,17 +1,17 @@
 package br.com.logistics.tms.commons.domain;
 
-import com.fasterxml.uuid.Generators;
-import com.fasterxml.uuid.impl.UUIDUtil;
+import br.com.logistics.tms.commons.domain.id.DomainUuidProvider;
+
 import java.util.UUID;
 
 public record Id() {
 
     public static UUID unique() {
-        return Generators.timeBasedEpochGenerator().generate();
+        return DomainUuidProvider.getUuidAdapter().generate();
     }
 
     public static UUID with(final String value) {
-        return UUIDUtil.uuid(value);
+        return DomainUuidProvider.getUuidAdapter().fromString(value);
     }
 
 }
