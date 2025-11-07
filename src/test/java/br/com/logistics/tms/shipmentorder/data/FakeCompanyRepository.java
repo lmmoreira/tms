@@ -29,8 +29,8 @@ public class FakeCompanyRepository implements CompanyRepository {
     }
 
     @Override
-    public boolean existsById(final UUID companyId) {
-        return storage.containsKey(companyId);
+    public boolean existsById(final CompanyId companyId) {
+        return storage.containsKey(companyId.value());
     }
 
     /**

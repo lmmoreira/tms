@@ -86,7 +86,7 @@ class SynchronizeCompanyUseCaseTest {
 
         // Then
         assertEquals(0, companyRepository.count(), "No company should be saved");
-        assertFalse(companyRepository.existsById(companyId));
+        assertFalse(companyRepository.existsById(CompanyId.with(companyId)));
     }
 
     @Test
@@ -102,7 +102,7 @@ class SynchronizeCompanyUseCaseTest {
 
         // Then
         assertEquals(0, companyRepository.count(), "No company should be saved");
-        assertFalse(companyRepository.existsById(companyId));
+        assertFalse(companyRepository.existsById(CompanyId.with(companyId)));
     }
 
     @Test
@@ -118,7 +118,7 @@ class SynchronizeCompanyUseCaseTest {
 
         // Then
         assertEquals(0, companyRepository.count(), "No company should be saved");
-        assertFalse(companyRepository.existsById(companyId));
+        assertFalse(companyRepository.existsById(CompanyId.with(companyId)));
     }
 
     @Test
