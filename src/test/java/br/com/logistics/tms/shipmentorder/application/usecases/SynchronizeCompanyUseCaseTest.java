@@ -26,21 +26,17 @@ class SynchronizeCompanyUseCaseTest {
     @Test
     @DisplayName("Should create a new company when company does not exist")
     void shouldCreateNewCompanyWhenCompanyDoesNotExist() {
-        // Given
         final UUID companyId = UUID.randomUUID();
         final List<String> types = List.of("LOGISTICS_PROVIDER", "CARRIER");
         final Map<String, Object> inputData = Map.of("types", types);
         final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
 
-        // When
         useCase.execute(input);
 
-        // Then
         final Optional<Company> savedCompany = companyRepository.findById(CompanyId.with(companyId));
         assertTrue(savedCompany.isPresent(), "Company should be saved");
         assertEquals(companyId, savedCompany.get().getCompanyId().value());
         
-        // Verify types are stored correctly
         final Set<String> savedTypes = savedCompany.get().types();
         assertEquals(2, savedTypes.size());
         assertTrue(savedTypes.contains("LOGISTICS_PROVIDER"));
@@ -50,7 +46,6 @@ class SynchronizeCompanyUseCaseTest {
     @Test
     @DisplayName("Should update existing company when company exists")
     void shouldUpdateExistingCompanyWhenCompanyExists() {
-        // Given - existing company with initial types
         final UUID companyId = UUID.randomUUID();
         final Company existingCompany = CompanyTestDataBuilder.aCompany()
                 .withCompanyId(companyId)
@@ -58,13 +53,11 @@ class SynchronizeCompanyUseCaseTest {
                 .build();
         companyRepository.save(existingCompany);
 
-        // When - synchronize with new types
         final List<String> newTypes = List.of("LOGISTICS_PROVIDER", "SHIPPER");
         final Map<String, Object> inputData = Map.of("types", newTypes);
         final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
         useCase.execute(input);
 
-        // Then - company should be updated with new types
         final Optional<Company> updatedCompany = companyRepository.findById(CompanyId.with(companyId));
         assertTrue(updatedCompany.isPresent(), "Company should exist");
         
@@ -77,14 +70,11 @@ class SynchronizeCompanyUseCaseTest {
     @Test
     @DisplayName("Should not save anything when data is null")
     void shouldNotSaveWhenDataIsNull() {
-        // Given
         final UUID companyId = UUID.randomUUID();
         final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, null);
 
-        // When
         useCase.execute(input);
 
-        // Then
         assertEquals(0, companyRepository.count(), "No company should be saved");
         assertFalse(companyRepository.existsById(CompanyId.with(companyId)));
     }
@@ -92,15 +82,12 @@ class SynchronizeCompanyUseCaseTest {
     @Test
     @DisplayName("Should not save anything when data does not contain types key")
     void shouldNotSaveWhenDataDoesNotContainTypesKey() {
-        // Given
         final UUID companyId = UUID.randomUUID();
         final Map<String, Object> inputData = Map.of("someOtherKey", "someValue");
         final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
 
-        // When
         useCase.execute(input);
 
-        // Then
         assertEquals(0, companyRepository.count(), "No company should be saved");
         assertFalse(companyRepository.existsById(CompanyId.with(companyId)));
     }
@@ -108,15 +95,12 @@ class SynchronizeCompanyUseCaseTest {
     @Test
     @DisplayName("Should not save anything when data is empty")
     void shouldNotSaveWhenDataIsEmpty() {
-        // Given
         final UUID companyId = UUID.randomUUID();
         final Map<String, Object> inputData = Map.of();
         final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
 
-        // When
         useCase.execute(input);
 
-        // Then
         assertEquals(0, companyRepository.count(), "No company should be saved");
         assertFalse(companyRepository.existsById(CompanyId.with(companyId)));
     }
@@ -124,16 +108,13 @@ class SynchronizeCompanyUseCaseTest {
     @Test
     @DisplayName("Should handle empty types list")
     void shouldHandleEmptyTypesList() {
-        // Given
         final UUID companyId = UUID.randomUUID();
         final List<String> emptyTypes = List.of();
         final Map<String, Object> inputData = Map.of("types", emptyTypes);
         final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
 
-        // When
         useCase.execute(input);
 
-        // Then
         final Optional<Company> savedCompany = companyRepository.findById(CompanyId.with(companyId));
         assertTrue(savedCompany.isPresent(), "Company should be saved even with empty types");
         assertTrue(savedCompany.get().types().isEmpty(), "Types should be empty");
@@ -142,7 +123,6 @@ class SynchronizeCompanyUseCaseTest {
     @Test
     @DisplayName("Should preserve other data fields when updating existing company")
     void shouldPreserveOtherDataFieldsWhenUpdating() {
-        // Given - existing company with multiple data fields
         final UUID companyId = UUID.randomUUID();
         final Map<String, Object> initialData = new HashMap<>();
         initialData.put("types", List.of("CARRIER"));
@@ -152,13 +132,11 @@ class SynchronizeCompanyUseCaseTest {
         final Company existingCompany = Company.createCompany(companyId, initialData);
         companyRepository.save(existingCompany);
 
-        // When - synchronize with new types
         final List<String> newTypes = List.of("LOGISTICS_PROVIDER");
         final Map<String, Object> inputData = Map.of("types", newTypes);
         final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
         useCase.execute(input);
 
-        // Then - other fields should be preserved, types should be updated
         final Optional<Company> updatedCompany = companyRepository.findById(CompanyId.with(companyId));
         assertTrue(updatedCompany.isPresent());
         
@@ -168,7 +146,6 @@ class SynchronizeCompanyUseCaseTest {
         assertEquals("Test Company", updatedData.get("name"));
         assertEquals("123 Test St", updatedData.get("address"));
         
-        // Types should be updated
         final Set<String> types = updatedCompany.get().types();
         assertEquals(1, types.size());
         assertTrue(types.contains("LOGISTICS_PROVIDER"));
@@ -177,16 +154,13 @@ class SynchronizeCompanyUseCaseTest {
     @Test
     @DisplayName("Should handle single type value")
     void shouldHandleSingleTypeValue() {
-        // Given
         final UUID companyId = UUID.randomUUID();
         final List<String> singleType = List.of("SHIPPER");
         final Map<String, Object> inputData = Map.of("types", singleType);
         final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
 
-        // When
         useCase.execute(input);
 
-        // Then
         final Optional<Company> savedCompany = companyRepository.findById(CompanyId.with(companyId));
         assertTrue(savedCompany.isPresent());
         
@@ -198,16 +172,13 @@ class SynchronizeCompanyUseCaseTest {
     @Test
     @DisplayName("Should verify company is logistics provider after synchronization")
     void shouldVerifyCompanyIsLogisticsProviderAfterSynchronization() {
-        // Given
         final UUID companyId = UUID.randomUUID();
         final List<String> types = List.of("LOGISTICS_PROVIDER", "CARRIER");
         final Map<String, Object> inputData = Map.of("types", types);
         final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
 
-        // When
         useCase.execute(input);
 
-        // Then
         final Optional<Company> savedCompany = companyRepository.findById(CompanyId.with(companyId));
         assertTrue(savedCompany.isPresent());
         assertTrue(savedCompany.get().isLogisticsProvider(), 
