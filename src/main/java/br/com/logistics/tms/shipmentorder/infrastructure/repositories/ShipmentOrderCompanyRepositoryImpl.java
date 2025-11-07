@@ -31,7 +31,7 @@ public class ShipmentOrderCompanyRepositoryImpl implements CompanyRepository {
     }
 
     @Override
-    public boolean existsById(final UUID companyId) {
-        return shipmentOrderCompanyJpaRepository.existsById(companyId);
+    public boolean existsById(final CompanyId companyId) {
+        return shipmentOrderCompanyJpaRepository.existsById(companyId.value());
     }
 }

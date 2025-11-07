@@ -16,6 +16,8 @@ import java.util.UUID;
 @Cqrs(DatabaseRole.WRITE)
 public class SynchronizeCompanyUseCase implements VoidUseCase<SynchronizeCompanyUseCase.Input> {
 
+    public static final String TYPES_KEY = "types";
+
     private final CompanyRepository companyRepository;
 
     public SynchronizeCompanyUseCase(final CompanyRepository companyRepository) {
@@ -24,11 +26,11 @@ public class SynchronizeCompanyUseCase implements VoidUseCase<SynchronizeCompany
 
     @Override
     public void execute(final Input input) {
-        if (input.data() == null || !input.data().containsKey("types")) {
+        if (input.data() == null || !input.data().containsKey(TYPES_KEY)) {
             return;
         }
 
-        final Map<String, Object> data = Map.of("types", input.data().get("types"));
+        final Map<String, Object> data = Map.of(TYPES_KEY, input.data().get(TYPES_KEY));
         companyRepository.save(companyRepository.findById(CompanyId.with(input.companyId()))
                 .map(existing -> existing.updateData(data))
                 .orElseGet(() -> Company.createCompany(input.companyId(), data)));

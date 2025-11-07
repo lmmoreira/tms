@@ -4,7 +4,6 @@ import br.com.logistics.tms.shipmentorder.domain.Company;
 import br.com.logistics.tms.shipmentorder.domain.CompanyId;
 
 import java.util.Optional;
-import java.util.UUID;
 
 public interface CompanyRepository {
 
@@ -12,5 +11,5 @@ public interface CompanyRepository {
 
     Optional<Company> findById(CompanyId companyId);
 
-    boolean existsById(UUID companyId);
+    boolean existsById(CompanyId companyId);
 }
