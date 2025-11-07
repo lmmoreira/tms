@@ -15,6 +15,8 @@
 | **New Controller** (REST endpoint) | [examples/controller-post.md](examples/complete-controller.md) |
 | **New Event Listener** (module communication) | [prompts/new-event-listener.md](prompts/new-event-listener.md) |
 | **New Module** (bounded context) | [prompts/new-module.md](prompts/new-module.md) |
+| **Test Data Builder** (test utilities) | [prompts/test-data-builders.md](prompts/test-data-builders.md) |
+| **Fake Repository** (test doubles) | [prompts/fake-repositories.md](prompts/fake-repositories.md) |
 
 ### 📚 Understand Pattern
 
@@ -22,6 +24,7 @@
 |------|-------|
 | **Quick pattern lookup** | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) ⭐ |
 | **Core architectural concepts** | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| **Code style & comments** | [CODE_STYLE.md](CODE_STYLE.md) |
 | **Project overview & tech stack** | [CODEBASE_CONTEXT.md](CODEBASE_CONTEXT.md) |
 | **Domain terminology** | [GLOSSARY.md](GLOSSARY.md) |
 
@@ -84,8 +87,10 @@
 
 1. Domain tests → [examples/testing-patterns.md § Unit Tests](examples/testing-patterns.md)
 2. Use case tests → [examples/testing-patterns.md § Integration Tests](examples/testing-patterns.md)
-3. Full integration → [examples/testing-patterns.md § Full Integration](examples/testing-patterns.md)
-4. REST tests → [examples/testing-patterns.md § REST API Tests](examples/testing-patterns.md)
+3. Test data builders → [prompts/test-data-builders.md](prompts/test-data-builders.md)
+4. Fake repositories → [prompts/fake-repositories.md](prompts/fake-repositories.md)
+5. Full integration → [examples/testing-patterns.md § Full Integration](examples/testing-patterns.md)
+6. REST tests → [examples/testing-patterns.md § REST API Tests](examples/testing-patterns.md)
 
 ---
 
@@ -108,6 +113,7 @@ doc/ai/
 ├── START_HERE.md (this file) ⭐ Navigation hub
 ├── QUICK_REFERENCE.md ⭐ Fast pattern lookup
 ├── ARCHITECTURE.md - Complete architecture guide
+├── CODE_STYLE.md - Code style and documentation guidelines
 ├── CODEBASE_CONTEXT.md - Project overview
 ├── GLOSSARY.md - Domain terminology
 ├── AI_DOCUMENTATION_REVIEW.md - Optimization analysis
@@ -124,7 +130,9 @@ doc/ai/
     ├── new-aggregate.md
     ├── new-use-case.md
     ├── new-event-listener.md
-    └── new-module.md
+    ├── new-module.md
+    ├── test-data-builders.md
+    └── fake-repositories.md
 ```
 
 ---
