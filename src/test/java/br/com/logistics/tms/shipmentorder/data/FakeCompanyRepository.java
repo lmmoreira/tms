@@ -7,7 +7,6 @@ import br.com.logistics.tms.shipmentorder.domain.CompanyId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Fake implementation of CompanyRepository for testing purposes.
@@ -15,22 +14,22 @@ import java.util.UUID;
  */
 public class FakeCompanyRepository implements CompanyRepository {
 
-    private final Map<UUID, Company> storage = new HashMap<>();
+    private final Map<CompanyId, Company> storage = new HashMap<>();
 
     @Override
     public Company save(final Company company) {
-        storage.put(company.getCompanyId().value(), company);
+        storage.put(company.getCompanyId(), company);
         return company;
     }
 
     @Override
     public Optional<Company> findById(final CompanyId companyId) {
-        return Optional.ofNullable(storage.get(companyId.value()));
+        return Optional.ofNullable(storage.get(companyId));
     }
 
     @Override
     public boolean existsById(final CompanyId companyId) {
-        return storage.containsKey(companyId.value());
+        return storage.containsKey(companyId);
     }
 
     /**

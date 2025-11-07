@@ -1,5 +1,6 @@
 package br.com.logistics.tms.shipmentorder.application.usecases;
 
+import br.com.logistics.tms.shipmentorder.application.usecases.data.SynchronizeCompanyUseCaseInputDataBuilder;
 import br.com.logistics.tms.shipmentorder.data.CompanyTestDataBuilder;
 import br.com.logistics.tms.shipmentorder.data.FakeCompanyRepository;
 import br.com.logistics.tms.shipmentorder.domain.Company;
@@ -27,9 +28,10 @@ class SynchronizeCompanyUseCaseTest {
     @DisplayName("Should create a new company when company does not exist")
     void shouldCreateNewCompanyWhenCompanyDoesNotExist() {
         final UUID companyId = UUID.randomUUID();
-        final List<String> types = List.of("LOGISTICS_PROVIDER", "CARRIER");
-        final Map<String, Object> inputData = Map.of("types", types);
-        final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
+        final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+                .withCompanyId(companyId)
+                .withTypes("LOGISTICS_PROVIDER", "CARRIER")
+                .build();
 
         useCase.execute(input);
 
@@ -53,9 +55,10 @@ class SynchronizeCompanyUseCaseTest {
                 .build();
         companyRepository.save(existingCompany);
 
-        final List<String> newTypes = List.of("LOGISTICS_PROVIDER", "SHIPPER");
-        final Map<String, Object> inputData = Map.of("types", newTypes);
-        final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
+        final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+                .withCompanyId(companyId)
+                .withTypes("LOGISTICS_PROVIDER", "SHIPPER")
+                .build();
         useCase.execute(input);
 
         final Optional<Company> updatedCompany = companyRepository.findById(CompanyId.with(companyId));
@@ -71,7 +74,10 @@ class SynchronizeCompanyUseCaseTest {
     @DisplayName("Should not save anything when data is null")
     void shouldNotSaveWhenDataIsNull() {
         final UUID companyId = UUID.randomUUID();
-        final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, null);
+        final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+                .withCompanyId(companyId)
+                .withNullData()
+                .build();
 
         useCase.execute(input);
 
@@ -83,8 +89,10 @@ class SynchronizeCompanyUseCaseTest {
     @DisplayName("Should not save anything when data does not contain types key")
     void shouldNotSaveWhenDataDoesNotContainTypesKey() {
         final UUID companyId = UUID.randomUUID();
-        final Map<String, Object> inputData = Map.of("someOtherKey", "someValue");
-        final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
+        final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+                .withCompanyId(companyId)
+                .withDataEntry("someOtherKey", "someValue")
+                .build();
 
         useCase.execute(input);
 
@@ -96,8 +104,10 @@ class SynchronizeCompanyUseCaseTest {
     @DisplayName("Should not save anything when data is empty")
     void shouldNotSaveWhenDataIsEmpty() {
         final UUID companyId = UUID.randomUUID();
-        final Map<String, Object> inputData = Map.of();
-        final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
+        final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+                .withCompanyId(companyId)
+                .withEmptyData()
+                .build();
 
         useCase.execute(input);
 
@@ -109,9 +119,10 @@ class SynchronizeCompanyUseCaseTest {
     @DisplayName("Should handle empty types list")
     void shouldHandleEmptyTypesList() {
         final UUID companyId = UUID.randomUUID();
-        final List<String> emptyTypes = List.of();
-        final Map<String, Object> inputData = Map.of("types", emptyTypes);
-        final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
+        final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+                .withCompanyId(companyId)
+                .withTypes(List.of())
+                .build();
 
         useCase.execute(input);
 
@@ -132,9 +143,10 @@ class SynchronizeCompanyUseCaseTest {
         final Company existingCompany = Company.createCompany(companyId, initialData);
         companyRepository.save(existingCompany);
 
-        final List<String> newTypes = List.of("LOGISTICS_PROVIDER");
-        final Map<String, Object> inputData = Map.of("types", newTypes);
-        final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
+        final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+                .withCompanyId(companyId)
+                .withTypes("LOGISTICS_PROVIDER")
+                .build();
         useCase.execute(input);
 
         final Optional<Company> updatedCompany = companyRepository.findById(CompanyId.with(companyId));
@@ -155,9 +167,10 @@ class SynchronizeCompanyUseCaseTest {
     @DisplayName("Should handle single type value")
     void shouldHandleSingleTypeValue() {
         final UUID companyId = UUID.randomUUID();
-        final List<String> singleType = List.of("SHIPPER");
-        final Map<String, Object> inputData = Map.of("types", singleType);
-        final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
+        final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+                .withCompanyId(companyId)
+                .withTypes("SHIPPER")
+                .build();
 
         useCase.execute(input);
 
@@ -173,9 +186,10 @@ class SynchronizeCompanyUseCaseTest {
     @DisplayName("Should verify company is logistics provider after synchronization")
     void shouldVerifyCompanyIsLogisticsProviderAfterSynchronization() {
         final UUID companyId = UUID.randomUUID();
-        final List<String> types = List.of("LOGISTICS_PROVIDER", "CARRIER");
-        final Map<String, Object> inputData = Map.of("types", types);
-        final SynchronizeCompanyUseCase.Input input = new SynchronizeCompanyUseCase.Input(companyId, inputData);
+        final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+                .withCompanyId(companyId)
+                .withTypes("LOGISTICS_PROVIDER", "CARRIER")
+                .build();
 
         useCase.execute(input);
 
