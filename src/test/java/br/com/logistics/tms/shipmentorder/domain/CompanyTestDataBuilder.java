@@ -1,7 +1,6 @@
-package br.com.logistics.tms.shipmentorder.data;
+package br.com.logistics.tms.shipmentorder.domain;
 
 import br.com.logistics.tms.shipmentorder.application.usecases.SynchronizeCompanyUseCase;
-import br.com.logistics.tms.shipmentorder.domain.Company;
 
 import java.util.*;
 

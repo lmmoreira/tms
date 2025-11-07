@@ -17,6 +17,7 @@
 | **New Module** (bounded context) | [prompts/new-module.md](prompts/new-module.md) |
 | **Test Data Builder** (test utilities) | [prompts/test-data-builders.md](prompts/test-data-builders.md) |
 | **Fake Repository** (test doubles) | [prompts/fake-repositories.md](prompts/fake-repositories.md) |
+| **Understand Test Structure** | [TEST_STRUCTURE.md](TEST_STRUCTURE.md) ⭐ |
 
 ### 📚 Understand Pattern
 
@@ -25,6 +26,7 @@
 | **Quick pattern lookup** | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) ⭐ |
 | **Core architectural concepts** | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | **Code style & comments** | [CODE_STYLE.md](CODE_STYLE.md) |
+| **Test organization** | [TEST_STRUCTURE.md](TEST_STRUCTURE.md) ⭐ |
 | **Project overview & tech stack** | [CODEBASE_CONTEXT.md](CODEBASE_CONTEXT.md) |
 | **Domain terminology** | [GLOSSARY.md](GLOSSARY.md) |
 
@@ -85,12 +87,13 @@
 
 ### "I need to write tests"
 
-1. Domain tests → [examples/testing-patterns.md § Unit Tests](examples/testing-patterns.md)
-2. Use case tests → [examples/testing-patterns.md § Integration Tests](examples/testing-patterns.md)
-3. Test data builders → [prompts/test-data-builders.md](prompts/test-data-builders.md)
-4. Fake repositories → [prompts/fake-repositories.md](prompts/fake-repositories.md)
-5. Full integration → [examples/testing-patterns.md § Full Integration](examples/testing-patterns.md)
-6. REST tests → [examples/testing-patterns.md § REST API Tests](examples/testing-patterns.md)
+1. Understand test structure → [TEST_STRUCTURE.md](TEST_STRUCTURE.md) ⭐
+2. Domain tests → [examples/testing-patterns.md § Unit Tests](examples/testing-patterns.md)
+3. Use case tests → [examples/testing-patterns.md § Integration Tests](examples/testing-patterns.md)
+4. Test data builders → [prompts/test-data-builders.md](prompts/test-data-builders.md)
+5. Fake repositories → [prompts/fake-repositories.md](prompts/fake-repositories.md)
+6. Full integration → [examples/testing-patterns.md § Full Integration](examples/testing-patterns.md)
+7. REST tests → [examples/testing-patterns.md § REST API Tests](examples/testing-patterns.md)
 
 ---
 
@@ -112,10 +115,14 @@
 doc/ai/
 ├── START_HERE.md (this file) ⭐ Navigation hub
 ├── QUICK_REFERENCE.md ⭐ Fast pattern lookup
+├── TEST_STRUCTURE.md ⭐ Test organization guide
 ├── ARCHITECTURE.md - Complete architecture guide
 ├── CODE_STYLE.md - Code style and documentation guidelines
 ├── CODEBASE_CONTEXT.md - Project overview
 ├── GLOSSARY.md - Domain terminology
+├── ARCHUNIT_GUIDELINES.md - ArchUnit testing guidelines
+├── ARCHUNIT_TEST_CATALOG.md - Catalog of existing ArchUnit tests
+├── ARCHUNIT_CHEATSHEET.md - Quick ArchUnit reference
 ├── AI_DOCUMENTATION_REVIEW.md - Optimization analysis
 │
 ├── examples/ - Complete code examples
@@ -162,6 +169,6 @@ doc/ai/
 
 ---
 
-**Last Updated:** 2025-11-05
+**Last Updated:** 2025-11-07 (Added test structure guide)
 
 **Questions?** Most answers are in [QUICK_REFERENCE.md](QUICK_REFERENCE.md) or [ARCHITECTURE.md](ARCHITECTURE.md).

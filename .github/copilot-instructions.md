@@ -24,11 +24,14 @@ CREATE something new?
 ├─ HTTP Request File? → See /doc/ai/prompts/http-requests.md
 ├─ Eventual Consistency? → See /doc/ai/prompts/eventual-consistency.md
 ├─ Module? → See /doc/ai/prompts/new-module.md
+├─ Test Data Builder? → See /doc/ai/prompts/test-data-builders.md + /doc/ai/TEST_STRUCTURE.md
+├─ Fake Repository? → See /doc/ai/prompts/fake-repositories.md + /doc/ai/TEST_STRUCTURE.md
 └─ ArchUnit Test? → See /doc/ai/ARCHUNIT_GUIDELINES.md + /doc/ai/ARCHUNIT_TEST_CATALOG.md
 
 UNDERSTAND a pattern?
 ├─ Quick lookup? → See sections below or /doc/ai/QUICK_REFERENCE.md
 ├─ Full architecture? → See /doc/ai/ARCHITECTURE.md
+├─ Test structure? → See /doc/ai/TEST_STRUCTURE.md
 ├─ HTTP testing? → See /doc/ai/prompts/http-requests.md
 ├─ ArchUnit testing? → See /doc/ai/ARCHUNIT_GUIDELINES.md
 ├─ Existing tests? → See /doc/ai/ARCHUNIT_TEST_CATALOG.md
@@ -597,6 +600,7 @@ class CreateCompanyIntegrationTest {
 ## Quick Reference Links
 
 - **Comprehensive Guide:** `/doc/ai/ARCHITECTURE.md`
+- **Test Structure:** `/doc/ai/TEST_STRUCTURE.md`
 - **Architecture Decisions:** `/doc/adr/`
 - **Code Examples:** `/doc/ai/examples/`
 - **Glossary:** `/doc/ai/GLOSSARY.md`

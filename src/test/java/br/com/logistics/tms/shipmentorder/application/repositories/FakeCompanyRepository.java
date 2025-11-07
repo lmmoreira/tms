@@ -1,6 +1,5 @@
-package br.com.logistics.tms.shipmentorder.data;
+package br.com.logistics.tms.shipmentorder.application.repositories;
 
-import br.com.logistics.tms.shipmentorder.application.repositories.CompanyRepository;
 import br.com.logistics.tms.shipmentorder.domain.Company;
 import br.com.logistics.tms.shipmentorder.domain.CompanyId;
 

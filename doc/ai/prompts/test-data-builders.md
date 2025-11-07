@@ -18,12 +18,16 @@ Test data builders use the fluent builder pattern to create test objects with se
 ## Where to Place Builders
 
 ### For Domain Aggregates
-**Location:** `src/test/java/{module}/data/`
+**Location:** `src/test/java/{module}/domain/`
 
-Example: `src/test/java/br/com/logistics/tms/shipmentorder/data/CompanyTestDataBuilder.java`
+**Rationale:** Test data builders for domain aggregates are placed in the domain package within the test structure, as they create domain objects.
+
+Example: `src/test/java/br/com/logistics/tms/shipmentorder/domain/CompanyTestDataBuilder.java`
 
 ### For Use Case Inputs
 **Location:** `src/test/java/{module}/application/usecases/data/`
+
+**Rationale:** Input builders are placed alongside the use case tests they support, making them easy to discover and maintain.
 
 Example: `src/test/java/br/com/logistics/tms/shipmentorder/application/usecases/data/SynchronizeCompanyUseCaseInputDataBuilder.java`
 
@@ -34,7 +38,7 @@ Example: `src/test/java/br/com/logistics/tms/shipmentorder/application/usecases/
 ### Basic Builder Template
 
 ```java
-package br.com.logistics.tms.{module}.data;
+package br.com.logistics.tms.{module}.domain;
 
 import java.util.*;
 
@@ -83,10 +87,9 @@ public class {Entity}TestDataBuilder {
 **File:** `CompanyTestDataBuilder.java`
 
 ```java
-package br.com.logistics.tms.shipmentorder.data;
+package br.com.logistics.tms.shipmentorder.domain;
 
 import br.com.logistics.tms.shipmentorder.application.usecases.SynchronizeCompanyUseCase;
-import br.com.logistics.tms.shipmentorder.domain.Company;
 
 import java.util.*;
 
@@ -317,8 +320,8 @@ public {UseCase}.Input build()                         // Build the input record
 ## Naming Conventions
 
 - **Class:** `{Entity}TestDataBuilder` or `{UseCase}InputDataBuilder`
-- **Package (Aggregate):** `{module}.data`
-- **Package (Input):** `{module}.application.usecases.data`
+- **Package (Aggregate):** `{module}.domain` (in test source root)
+- **Package (Input):** `{module}.application.usecases.data` (in test source root)
 - **Factory method:** `a{Entity}()` or `anInput()`
 - **With methods:** `with{Field}()`
 - **Build method:** `build()`

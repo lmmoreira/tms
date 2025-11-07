@@ -1,5 +1,6 @@
-package br.com.logistics.tms;
+package br.com.logistics.tms.architecture;
 
+import br.com.logistics.tms.TmsApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.modulith.core.ApplicationModules;
 import org.springframework.modulith.docs.Documenter;

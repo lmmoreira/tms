@@ -410,8 +410,8 @@ Everything else should be obvious from the code itself.
 
 See these files for examples of clean, comment-free code:
 
-- `src/test/java/br/com/logistics/tms/shipmentorder/data/CompanyTestDataBuilder.java`
-- `src/test/java/br/com/logistics/tms/shipmentorder/data/FakeCompanyRepository.java`
+- `src/test/java/br/com/logistics/tms/shipmentorder/domain/CompanyTestDataBuilder.java`
+- `src/test/java/br/com/logistics/tms/shipmentorder/application/repositories/FakeCompanyRepository.java`
 - `src/test/java/br/com/logistics/tms/shipmentorder/application/usecases/data/SynchronizeCompanyUseCaseInputDataBuilder.java`
 - `src/test/java/br/com/logistics/tms/shipmentorder/application/usecases/SynchronizeCompanyUseCaseTest.java`
 - `src/main/java/br/com/logistics/tms/shipmentorder/application/usecases/SynchronizeCompanyUseCase.java`

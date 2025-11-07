@@ -1,8 +1,8 @@
 package br.com.logistics.tms.shipmentorder.application.usecases;
 
 import br.com.logistics.tms.shipmentorder.application.usecases.data.SynchronizeCompanyUseCaseInputDataBuilder;
-import br.com.logistics.tms.shipmentorder.data.CompanyTestDataBuilder;
-import br.com.logistics.tms.shipmentorder.data.FakeCompanyRepository;
+import br.com.logistics.tms.shipmentorder.domain.CompanyTestDataBuilder;
+import br.com.logistics.tms.shipmentorder.application.repositories.FakeCompanyRepository;
 import br.com.logistics.tms.shipmentorder.domain.Company;
 import br.com.logistics.tms.shipmentorder.domain.CompanyId;
 import org.junit.jupiter.api.BeforeEach;

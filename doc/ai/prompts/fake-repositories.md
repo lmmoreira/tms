@@ -46,7 +46,7 @@ Fake repositories implement the repository interface using in-memory data struct
 ### Basic Fake Repository Template
 
 ```java
-package br.com.logistics.tms.{module}.data;
+package br.com.logistics.tms.{module}.application.repositories;
 
 import br.com.logistics.tms.{module}.application.repositories.{Entity}Repository;
 import br.com.logistics.tms.{module}.domain.{Entity};
@@ -90,10 +90,10 @@ public class Fake{Entity}Repository implements {Entity}Repository {
 
 ## Real Example
 
-**File:** `src/test/java/br/com/logistics/tms/shipmentorder/data/FakeCompanyRepository.java`
+**File:** `src/test/java/br/com/logistics/tms/shipmentorder/application/repositories/FakeCompanyRepository.java`
 
 ```java
-package br.com.logistics.tms.shipmentorder.data;
+package br.com.logistics.tms.shipmentorder.application.repositories;
 
 import br.com.logistics.tms.shipmentorder.application.repositories.CompanyRepository;
 import br.com.logistics.tms.shipmentorder.domain.Company;
@@ -343,16 +343,18 @@ public Optional<Company> findById(final CompanyId companyId) {
 
 ## File Location
 
-**Package:** `src/test/java/{module}/data/`
+**Package:** `src/test/java/{module}/application/repositories/`
 
-**Example:** `src/test/java/br/com/logistics/tms/shipmentorder/data/FakeCompanyRepository.java`
+**Rationale:** Fake repositories implement repository interfaces from the application layer, so they are placed alongside the interface they implement in the test structure.
+
+**Example:** `src/test/java/br/com/logistics/tms/shipmentorder/application/repositories/FakeCompanyRepository.java`
 
 ---
 
 ## Naming Conventions
 
 - **Class:** `Fake{Entity}Repository`
-- **Package:** `{module}.data`
+- **Package:** `{module}.application.repositories` (in test source root)
 - **No "Test" suffix** - It's a test utility, not a test class
 
 ---
@@ -363,8 +365,8 @@ public Optional<Company> findById(final CompanyId companyId) {
 package br.com.logistics.tms.shipmentorder.application.usecases;
 
 import br.com.logistics.tms.shipmentorder.application.usecases.data.SynchronizeCompanyUseCaseInputDataBuilder;
-import br.com.logistics.tms.shipmentorder.data.CompanyTestDataBuilder;
-import br.com.logistics.tms.shipmentorder.data.FakeCompanyRepository;
+import br.com.logistics.tms.shipmentorder.domain.CompanyTestDataBuilder;
+import br.com.logistics.tms.shipmentorder.application.repositories.FakeCompanyRepository;
 import br.com.logistics.tms.shipmentorder.domain.Company;
 import br.com.logistics.tms.shipmentorder.domain.CompanyId;
 import org.junit.jupiter.api.BeforeEach;
@@ -449,4 +451,4 @@ For repository testing in use cases, **always prefer fakes over mocks**.
 
 - **Test Data Builders:** `/doc/ai/prompts/test-data-builders.md`
 - **Complete Example:** `src/test/java/br/com/logistics/tms/shipmentorder/application/usecases/SynchronizeCompanyUseCaseTest.java`
-- **Fake Repository Example:** `src/test/java/br/com/logistics/tms/shipmentorder/data/FakeCompanyRepository.java`
+- **Fake Repository Example:** `src/test/java/br/com/logistics/tms/shipmentorder/application/repositories/FakeCompanyRepository.java`
