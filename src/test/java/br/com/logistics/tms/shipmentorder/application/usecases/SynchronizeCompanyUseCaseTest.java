@@ -159,7 +159,7 @@ class SynchronizeCompanyUseCaseTest {
 
     @Test
     @DisplayName("Should use builder pattern for creating test data")
-    void shouldUseBuilderpPatternForTestData() {
+    void shouldUseBuilderPatternForTestData() {
         // given
         final CompanyTestDataBuilder builder = CompanyTestDataBuilder.aCompany()
                 .withTypes(List.of("LOGISTICS_PROVIDER"));
