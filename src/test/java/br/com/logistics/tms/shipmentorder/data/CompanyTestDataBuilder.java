@@ -1,5 +1,6 @@
 package br.com.logistics.tms.shipmentorder.data;
 
+import br.com.logistics.tms.shipmentorder.application.usecases.SynchronizeCompanyUseCase;
 import br.com.logistics.tms.shipmentorder.domain.Company;
 
 import java.util.*;
@@ -32,7 +33,7 @@ public class CompanyTestDataBuilder {
      * Sets the company types.
      */
     public CompanyTestDataBuilder withTypes(final List<String> types) {
-        this.data.put("types", types);
+        this.data.put(SynchronizeCompanyUseCase.TYPES_KEY, types);
         return this;
     }
 
@@ -65,7 +66,7 @@ public class CompanyTestDataBuilder {
     public Company build() {
         // Ensure we have at least some data to satisfy CompanyData validation
         if (data.isEmpty()) {
-            data.put("types", List.of("DEFAULT"));
+            data.put(SynchronizeCompanyUseCase.TYPES_KEY, List.of("DEFAULT"));
         }
         return Company.createCompany(companyId, data);
     }

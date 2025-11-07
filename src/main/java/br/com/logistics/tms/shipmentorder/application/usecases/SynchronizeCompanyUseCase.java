@@ -16,7 +16,7 @@ import java.util.UUID;
 @Cqrs(DatabaseRole.WRITE)
 public class SynchronizeCompanyUseCase implements VoidUseCase<SynchronizeCompanyUseCase.Input> {
 
-    private static final String TYPES_KEY = "types";
+    public static final String TYPES_KEY = "types";
 
     private final CompanyRepository companyRepository;
 
