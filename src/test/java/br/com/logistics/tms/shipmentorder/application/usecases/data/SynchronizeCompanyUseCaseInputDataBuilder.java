@@ -4,10 +4,6 @@ import br.com.logistics.tms.shipmentorder.application.usecases.SynchronizeCompan
 
 import java.util.*;
 
-/**
- * Test data builder for creating SynchronizeCompanyUseCase.Input instances using a fluent builder pattern.
- * Provides sensible defaults and reduces repetition in tests.
- */
 public class SynchronizeCompanyUseCaseInputDataBuilder {
 
     private UUID companyId = UUID.randomUUID();

@@ -135,12 +135,12 @@ class SynchronizeCompanyUseCaseTest {
     @DisplayName("Should preserve other data fields when updating existing company")
     void shouldPreserveOtherDataFieldsWhenUpdating() {
         final UUID companyId = UUID.randomUUID();
-        final Map<String, Object> initialData = new HashMap<>();
-        initialData.put("types", List.of("CARRIER"));
-        initialData.put("name", "Test Company");
-        initialData.put("address", "123 Test St");
-        
-        final Company existingCompany = Company.createCompany(companyId, initialData);
+        final Company existingCompany = CompanyTestDataBuilder.aCompany()
+                .withCompanyId(companyId)
+                .withTypes("CARRIER")
+                .withDataEntry("name", "Test Company")
+                .withDataEntry("address", "123 Test St")
+                .build();
         companyRepository.save(existingCompany);
 
         final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()

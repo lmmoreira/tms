@@ -5,10 +5,6 @@ import br.com.logistics.tms.shipmentorder.domain.Company;
 
 import java.util.*;
 
-/**
- * Test data builder for creating Company instances using a fluent builder pattern.
- * Provides sensible defaults for testing.
- */
 public class CompanyTestDataBuilder {
 
     private UUID companyId = UUID.randomUUID();
