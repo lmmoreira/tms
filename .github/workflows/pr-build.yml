@@ -1,0 +1,42 @@
+name: PR Build and Test
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Install parent POMs
+        run: |
+          mvn install:install-file -Dfile=infra/artifact/tms-ecosystem.pom -DpomFile=infra/artifact/tms-ecosystem.pom
+          mvn install:install-file -Dfile=infra/artifact/tms-parent.pom -DpomFile=infra/artifact/tms-parent.pom
+
+      - name: Build project
+        run: ./mvnw clean compile -B -V
+
+      - name: Run tests
+        run: ./mvnw test -B
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: target/surefire-reports/
+          retention-days: 30
