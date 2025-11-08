@@ -25,7 +25,6 @@ jobs:
       - name: Install parent POMs
         run: |
           mvn install:install-file -Dfile=infra/artifact/tms-ecosystem.pom -DpomFile=infra/artifact/tms-ecosystem.pom
-          mvn install:install-file -Dfile=infra/artifact/tms-parent.pom -DpomFile=infra/artifact/tms-parent.pom
 
       - name: Build project
         run: ./mvnw clean compile -B -V
