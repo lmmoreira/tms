@@ -6,7 +6,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.RabbitMQContainer;
-import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
 @SpringBootTest(classes = {TmsApplication.class})
@@ -18,14 +17,13 @@ public abstract class AbstractIntegrationTest {
             .withUsername("tms")
             .withPassword("tms");
 
-    static final RabbitMQContainer rabbit = new RabbitMQContainer(DockerImageName.parse("bitnami/rabbitmq:latest")
-            .asCompatibleSubstituteFor("rabbitmq"))
+    static final RabbitMQContainer rabbit = new RabbitMQContainer("rabbitmq:management")
             .withCopyFileToContainer(
                     MountableFile.forHostPath("infra/rabbitmq/definitions.json"),
                     "/etc/rabbitmq/definitions.json"
             )
-            .withEnv("RABBITMQ_LOAD_DEFINITIONS", "true")
-            .withEnv("RABBITMQ_DEFINITIONS_FILE", "/etc/rabbitmq/definitions.json");
+            .withEnv("RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS",
+                    "-rabbitmq_management load_definitions \"/etc/rabbitmq/definitions.json\"");
 
     static {
         postgres.start();

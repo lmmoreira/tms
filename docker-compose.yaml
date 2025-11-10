@@ -43,22 +43,24 @@ services:
     networks:
       - tms-network
   tms-keycloak:
-    image: bitnami/keycloak:latest
+    image: quay.io/keycloak/keycloak:latest
     container_name: tms-keycloak
     depends_on:
       - tms-keycloak-database
     environment:
-      KEYCLOAK_LOG_LEVEL: debug
-      KEYCLOAK_HTTP_PORT: 8000
-      KEYCLOAK_BIND_ADDRESS: localhost
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: password
-      KEYCLOAK_DATABASE_HOST: tms-keycloak-database
-      KEYCLOAK_DATABASE_PORT: 5434
-      KEYCLOAK_DATABASE_NAME: tms-keycloak
-      KEYCLOAK_DATABASE_USER: tms-keycloak
-      KEYCLOAK_DATABASE_PASSWORD: tms-password
-      KEYCLOAK_EXTRA_ARGS: --import-realm
+      KC_DB: postgres
+      KC_DB_URL_HOST: tms-keycloak-database
+      KC_DB_URL_PORT: "5434"
+      KC_DB_URL_DATABASE: tms-keycloak
+      KC_DB_USERNAME: tms-keycloak
+      KC_DB_PASSWORD: tms-password
+      KC_LOGLEVEL: DEBUG
+      KC_IMPORT: /opt/keycloak/data/import
+      KC_HTTP_PORT: "8000"
+    command:
+      - start-dev
     volumes:
       - ./infra/keycloak/realms:/opt/bitnami/keycloak/data/import
     ports:
@@ -148,7 +150,7 @@ services:
     networks:
       - tms-network
   tms-broker:
-    image: bitnami/rabbitmq:latest
+    image: rabbitmq:management
     container_name: tms-broker
     healthcheck:
       test: rabbitmq-diagnostics -q ping
@@ -162,10 +164,7 @@ services:
     volumes:
       - ./infra/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
     environment:
-      RABBITMQ_MANAGEMENT_ALLOW_WEB_ACCESS: "true"
-      RABBITMQ_LOAD_DEFINITIONS: "true"
-      RABBITMQ_PLUGINS: rabbitmq_management rabbitmq_prometheus
-      RABBITMQ_DEFINITIONS_FILE: /etc/rabbitmq/definitions.json
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbitmq_management load_definitions \"/etc/rabbitmq/definitions.json\""
     networks:
       - tms-network
   tms-flyway:
