@@ -1,12 +1,12 @@
 package br.com.logistics.tms;
 
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
-import org.testcontainers.containers.Network;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.RabbitMQContainer;
+import org.testcontainers.containers.*;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.MountableFile;
@@ -14,6 +14,7 @@ import org.testcontainers.utility.MountableFile;
 @SpringBootTest(classes = {TmsApplication.class})
 @TestPropertySource(locations = "classpath:env-test")
 @Testcontainers
+@ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
 
     private static final Network network = Network.newNetwork();
@@ -24,7 +25,17 @@ public abstract class AbstractIntegrationTest {
             .withUsername("tms")
             .withPassword("tms")
             .withNetwork(network)
-            .withReuse(true);
+            .withNetworkAliases("tms-database");
+
+    @Container
+    static final GenericContainer<?> flyway = new GenericContainer<>("flyway/flyway:latest")
+            .withFileSystemBind("infra/database/migration", "/flyway/sql", BindMode.READ_ONLY)
+            .withEnv("FLYWAY_URL", "jdbc:postgresql://tms-database:5432/tms") // use network alias + internal port
+            .withEnv("FLYWAY_USER", "tms")
+            .withEnv("FLYWAY_PASSWORD", "tms")
+            .withNetwork(network)
+            .withCommand("migrate")
+            .dependsOn(postgres);
 
     @Container
     static final RabbitMQContainer rabbit = new RabbitMQContainer("rabbitmq:management")
@@ -46,8 +57,5 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.read.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.read.username", postgres::getUsername);
         registry.add("spring.datasource.read.password", postgres::getPassword);
-
-        registry.add("spring.rabbitmq.host", rabbit::getHost);
-        registry.add("spring.rabbitmq.port", rabbit::getAmqpPort);
     }
 }
