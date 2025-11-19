@@ -18,7 +18,7 @@ import static br.com.logistics.tms.integration.assertions.CompanyEntityAssert.as
 import static br.com.logistics.tms.integration.assertions.ShipmentOrderCompanyEntityAssert.assertThatShipmentOrderCompany;
 import static br.com.logistics.tms.integration.assertions.ShipmentOrderEntityAssert.assertThatShipmentOrder;
 
-class CompanyShipmentOrderIntegrationTest extends AbstractIntegrationTest {
+class CompanyShipmentOrderIT extends AbstractIntegrationTest {
 
     @Test
     void shouldCreateAndUpdateCompanyThenCreateShipmentOrderAndIncrementCompanyOrders() throws Exception {
@@ -26,8 +26,7 @@ class CompanyShipmentOrderIntegrationTest extends AbstractIntegrationTest {
                 CreateCompanyDTODataBuilder.aCreateCompanyDTO()
                         .withName("Test Company")
                         .withTypes(CompanyType.SELLER)
-                        .build()
-        );
+                        .build());
 
         final CompanyEntity company = companyJpaRepository.findById(companyId.value()).orElseThrow();
         assertThatCompany(company)
@@ -47,22 +46,19 @@ class CompanyShipmentOrderIntegrationTest extends AbstractIntegrationTest {
                 CreateCompanyDTODataBuilder.aCreateCompanyDTO()
                         .withName("Shipper Company")
                         .withTypes(CompanyType.LOGISTICS_PROVIDER)
-                        .build()
-        );
+                        .build());
 
         final CompanyEntity shipperCompany = companyJpaRepository.findById(shipperId.value()).orElseThrow();
         assertThatCompany(shipperCompany)
                 .hasName("Shipper Company")
                 .hasTypes(CompanyType.LOGISTICS_PROVIDER);
 
-        companyFixture.updateCompany(
-                companyId,
+        companyFixture.updateCompany(companyId,
                 UpdateCompanyDTODataBuilder.anUpdateCompanyDTO()
                         .withName("Updated Company")
                         .withTypes(CompanyType.SELLER, CompanyType.MARKETPLACE)
                         .withConfigurationEntry("webhook", "http://updated-webhook.com")
-                        .build()
-        );
+                        .build());
 
         final CompanyEntity updatedCompany = companyJpaRepository.findById(companyId.value()).orElseThrow();
         assertThatCompany(updatedCompany)
@@ -109,7 +105,6 @@ class CompanyShipmentOrderIntegrationTest extends AbstractIntegrationTest {
         final CompanyId shipperId = companyFixture.createCompany(
                 CreateCompanyDTODataBuilder.aCreateCompanyDTO()
                         .withTypes(CompanyType.LOGISTICS_PROVIDER)
-                        .withName("Shipper")
                         .build()
         );
 
@@ -117,7 +112,6 @@ class CompanyShipmentOrderIntegrationTest extends AbstractIntegrationTest {
                 CreateShipmentOrderDTODataBuilder.aCreateShipmentOrderDTO()
                         .withCompanyId(companyId.value())
                         .withShipperId(shipperId.value())
-                        .withExternalId("ORDER-1")
                         .build()
         );
 
@@ -125,7 +119,6 @@ class CompanyShipmentOrderIntegrationTest extends AbstractIntegrationTest {
                 CreateShipmentOrderDTODataBuilder.aCreateShipmentOrderDTO()
                         .withCompanyId(companyId.value())
                         .withShipperId(shipperId.value())
-                        .withExternalId("ORDER-2")
                         .build()
         );
 
@@ -133,7 +126,6 @@ class CompanyShipmentOrderIntegrationTest extends AbstractIntegrationTest {
                 CreateShipmentOrderDTODataBuilder.aCreateShipmentOrderDTO()
                         .withCompanyId(companyId.value())
                         .withShipperId(shipperId.value())
-                        .withExternalId("ORDER-3")
                         .build()
         );
 

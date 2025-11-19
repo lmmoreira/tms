@@ -18,60 +18,23 @@ You are creating a new integration test for the TMS project. Integration tests v
 package br.com.logistics.tms.integration;
 
 import br.com.logistics.tms.AbstractIntegrationTest;
-import br.com.logistics.tms.integration.fixtures.CompanyIntegrationFixture;
-import br.com.logistics.tms.integration.fixtures.ShipmentOrderIntegrationFixture;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
+import br.com.logistics.tms.company.domain.CompanyId;
+import br.com.logistics.tms.company.infrastructure.jpa.entities.CompanyEntity;
+import br.com.logistics.tms.integration.data.CreateCompanyDTODataBuilder;
+import br.com.logistics.tms.shipmentorder.infrastructure.jpa.entities.ShipmentOrderCompanyEntity;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.test.web.servlet.MockMvc;
 
 import static br.com.logistics.tms.integration.assertions.CompanyEntityAssert.assertThatCompany;
+import static br.com.logistics.tms.integration.assertions.ShipmentOrderCompanyEntityAssert.assertThatShipmentOrderCompany;
 
-@AutoConfigureMockMvc
-class {Flow}IntegrationTest extends AbstractIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-    
-    @Autowired
-    private ObjectMapper objectMapper;
-    
-    // Inject repositories needed for assertions
-    @Autowired
-    private CompanyJpaRepository companyJpaRepository;
-    
-    @Autowired
-    private CompanyOutboxJpaRepository companyOutboxJpaRepository;
-    
-    @Autowired
-    private ShipmentOrderCompanyJpaRepository shipmentOrderCompanyJpaRepository;
-    
-    // Fixtures (manually instantiated)
-    private CompanyIntegrationFixture companyFixture;
-    private ShipmentOrderIntegrationFixture shipmentOrderFixture;
-
-    @BeforeEach
-    void setUp() {
-        // Instantiate fixtures with required dependencies
-        companyFixture = new CompanyIntegrationFixture(
-                mockMvc,
-                objectMapper,
-                companyOutboxJpaRepository,
-                shipmentOrderCompanyJpaRepository
-        );
-        
-        shipmentOrderFixture = new ShipmentOrderIntegrationFixture(
-                mockMvc,
-                objectMapper,
-                shipmentOrderOutboxJpaRepository,
-                companyJpaRepository
-        );
-    }
+class {Flow}IT extends AbstractIntegrationTest {
 
     @Test
     void shouldDoSomething() throws Exception {
+        // Fixtures and repositories already available from AbstractIntegrationTest
+        // companyFixture, shipmentOrderFixture automatically created
+        // companyJpaRepository, shipmentOrderCompanyJpaRepository automatically injected
+        
         // 1. Create entities via fixtures
         final CompanyId companyId = companyFixture.createCompany(
                 CreateCompanyDTODataBuilder.aCreateCompanyDTO()
@@ -94,6 +57,12 @@ class {Flow}IntegrationTest extends AbstractIntegrationTest {
 }
 ```
 
+**Key Points:**
+- ✅ Use `*IT.java` suffix (NOT `*IntegrationTest.java`)
+- ✅ Extend `AbstractIntegrationTest` - gets fixtures + repositories for free
+- ✅ No `@Autowired` needed - everything injected by AbstractIntegrationTest
+- ✅ No `@BeforeEach` needed - database cleanup automatic
+
 ---
 
 ## Checklist
@@ -110,17 +79,16 @@ Before creating the test:
 When writing the test:
 
 - [ ] Extends `AbstractIntegrationTest`
-- [ ] Has `@AutoConfigureMockMvc`
-- [ ] Injects `MockMvc` and `ObjectMapper`
-- [ ] Injects required repositories
-- [ ] Creates fixtures in `@BeforeEach` (NOT `@Autowired`)
-- [ ] Uses fixtures for REST operations
+- [ ] Uses `*IT.java` suffix (Failsafe execution)
+- [ ] Uses fixtures for REST operations (already available)
 - [ ] Uses custom assertions (`assertThatCompany()`)
 - [ ] Uses test data builders (`CreateCompanyDTODataBuilder`)
 - [ ] Tests outbox publishing
 - [ ] Tests cross-module synchronization
 - [ ] Has descriptive test method name
 - [ ] Tests complete business flow (not individual operations)
+- [ ] NO `@Autowired` needed (AbstractIntegrationTest provides everything)
+- [ ] NO `@BeforeEach` needed (unless specific setup required)
 
 ---
 
@@ -188,7 +156,7 @@ If you need a custom assertion for a new entity:
 
 ## Examples
 
-See: `src/test/java/br/com/logistics/tms/integration/CompanyShipmentOrderIntegrationTest.java`
+See: `src/test/java/br/com/logistics/tms/integration/CompanyShipmentOrderIT.java`
 
 ---
 

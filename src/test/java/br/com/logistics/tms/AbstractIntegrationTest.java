@@ -17,20 +17,16 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.*;
-import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.MountableFile;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.RabbitMQContainer;
 
 @SpringBootTest(classes = {TmsApplication.class})
 @TestPropertySource(locations = "classpath:env-test")
-@Testcontainers
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public abstract class AbstractIntegrationTest {
 
-    private static final Network network = Network.newNetwork();
+    private static final TestContainersManager containers = TestContainersManager.getInstance();
 
     @Autowired
     protected MockMvc mockMvc;
@@ -53,38 +49,11 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     protected ShipmentOrderOutboxJpaRepository shipmentOrderOutboxJpaRepository;
 
-    @Container
-    static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest")
-            .withDatabaseName("tms")
-            .withUsername("tms")
-            .withPassword("tms")
-            .withNetwork(network)
-            .withNetworkAliases("tms-database");
-
-    @Container
-    static final GenericContainer<?> flyway = new GenericContainer<>("flyway/flyway:latest")
-            .withFileSystemBind("infra/database/migration", "/flyway/sql", BindMode.READ_ONLY)
-            .withEnv("FLYWAY_URL", "jdbc:postgresql://tms-database:5432/tms") // use network alias + internal port
-            .withEnv("FLYWAY_USER", "tms")
-            .withEnv("FLYWAY_PASSWORD", "tms")
-            .withNetwork(network)
-            .withCommand("migrate")
-            .dependsOn(postgres);
-
-    @Container
-    static final RabbitMQContainer rabbit = new RabbitMQContainer("rabbitmq:management")
-            .withCopyFileToContainer(
-                    MountableFile.forHostPath("infra/rabbitmq/definitions.json"),
-                    "/etc/rabbitmq/definitions.json"
-            )
-            .withEnv("RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS",
-                    "-rabbitmq_management load_definitions \"/etc/rabbitmq/definitions.json\"")
-            .withReuse(true)
-            .withNetwork(network)
-            .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1));
-
     @DynamicPropertySource
-    static void registerProps(DynamicPropertyRegistry registry) {
+    static void registerProps(final DynamicPropertyRegistry registry) {
+        final PostgreSQLContainer<?> postgres = containers.getPostgres();
+        final RabbitMQContainer rabbit = containers.getRabbit();
+
         registry.add("spring.datasource.write.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.write.username", postgres::getUsername);
         registry.add("spring.datasource.write.password", postgres::getPassword);
@@ -95,8 +64,6 @@ public abstract class AbstractIntegrationTest {
 
         registry.add("spring.rabbitmq.host", rabbit::getHost);
         registry.add("spring.rabbitmq.port", rabbit::getAmqpPort);
-        registry.add("spring.rabbitmq.username", () -> "tms");
-        registry.add("spring.rabbitmq.password", () -> "bitnami");
     }
 
     protected CompanyIntegrationFixture companyFixture;
@@ -118,6 +85,5 @@ public abstract class AbstractIntegrationTest {
                 companyJpaRepository
         );
     }
-
 
 }

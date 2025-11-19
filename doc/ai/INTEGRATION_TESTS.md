@@ -67,27 +67,31 @@ void shouldCreateCompanyUpdateItAndCreateShipmentOrderIncrementingCounter() {
 ### Directory Organization
 
 ```
-src/test/java/br/com/logistics/tms/integration/
-├── CompanyShipmentOrderIntegrationTest.java    # Integration tests
-├── fixtures/                                     # Test helpers
-│   ├── CompanyIntegrationFixture.java
-│   └── ShipmentOrderIntegrationFixture.java
-├── assertions/                                   # Custom assertions
-│   ├── CompanyEntityAssert.java
-│   ├── ShipmentOrderEntityAssert.java
-│   ├── ShipmentOrderCompanyEntityAssert.java
-│   └── OutboxAssert.java
-└── data/                                         # DTO builders
-    ├── CreateCompanyDTODataBuilder.java
-    ├── UpdateCompanyDTODataBuilder.java
-    └── CreateShipmentOrderDTODataBuilder.java
+src/test/java/br/com/logistics/tms/
+├── AbstractIntegrationTest.java                 # Base class with Testcontainers setup
+├── TestContainersManager.java                   # Singleton managing shared containers
+└── integration/
+    ├── CompanyShipmentOrderIT.java              # Integration tests (*IT.java suffix)
+    ├── fixtures/                                # Test helpers
+    │   ├── CompanyIntegrationFixture.java
+    │   └── ShipmentOrderIntegrationFixture.java
+    ├── assertions/                              # Custom AssertJ assertions
+    │   ├── CompanyEntityAssert.java
+    │   ├── ShipmentOrderEntityAssert.java
+    │   ├── ShipmentOrderCompanyEntityAssert.java
+    │   └── OutboxAssert.java
+    └── data/                                    # DTO builders
+        ├── CreateCompanyDTODataBuilder.java
+        ├── UpdateCompanyDTODataBuilder.java
+        ├── CreateShipmentOrderDTODataBuilder.java
+        └── CnpjGenerator.java
 ```
 
 ### Why This Structure?
 
 - **`fixtures/`** - Encapsulates REST calls + event waiting logic
 - **`assertions/`** - Provides fluent, domain-specific assertions
-- **`data/`** - Builds DTOs with sensible defaults
+- **`data/`** - Builds DTOs with sensible defaults + test utilities
 
 ---
 
@@ -182,8 +186,56 @@ void myTest() throws Exception {
 
 - ❌ Fixtures are NOT Spring beans
 - ❌ They should NOT be in application context
-- ✅ Manually instantiated in `@BeforeEach`
+- ✅ Manually instantiated in `@BeforeEach` (via `AbstractIntegrationTest`)
 - ✅ Fresh instance per test (no shared state)
+
+**Note:** `AbstractIntegrationTest` automatically creates fixtures in `@BeforeEach` - you don't need to create them manually in most tests
+
+---
+
+## Testcontainers Setup
+
+### TestContainersManager Singleton
+
+All integration tests share a **single** PostgreSQL + RabbitMQ instance via the `TestContainersManager` singleton pattern.
+
+**Key Features:**
+- ✅ Single PostgreSQL container for all tests (shared via singleton)
+- ✅ Single RabbitMQ container for all tests
+- ✅ Flyway migrations run once on container startup
+- ✅ Network shared between containers
+- ✅ Shutdown hook ensures cleanup on JVM exit
+- ✅ Thread-safe via synchronized getInstance()
+
+**Benefits:**
+- ⚡ **10x faster** test execution (no container restarts between tests)
+- 💰 **Reduced resource usage** (one DB + RabbitMQ instance instead of N)
+- 🔄 **Test isolation** via transactional cleanup in `AbstractIntegrationTest`
+
+### AbstractIntegrationTest
+
+Provides common setup for all integration tests:
+
+```java
+@SpringBootTest(classes = {TmsApplication.class})
+@TestPropertySource(locations = "classpath:env-test")
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
+public abstract class AbstractIntegrationTest {
+    
+    // Automatically injects MockMvc, ObjectMapper, repositories
+    // Automatically creates CompanyIntegrationFixture + ShipmentOrderIntegrationFixture
+    // @BeforeEach cleans database + recreates fixtures
+}
+```
+
+**What you get for free:**
+- ✅ Testcontainers configured (shared singleton)
+- ✅ MockMvc injected
+- ✅ ObjectMapper injected
+- ✅ All JPA repositories injected
+- ✅ Fixtures automatically created in `@BeforeEach`
+- ✅ Database cleaned between tests
 
 ---
 
@@ -319,48 +371,20 @@ CreateShipmentOrderDTODataBuilder.aCreateShipmentOrderDTO()
 package br.com.logistics.tms.integration;
 
 import br.com.logistics.tms.AbstractIntegrationTest;
-import br.com.logistics.tms.integration.fixtures.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
+import br.com.logistics.tms.company.domain.CompanyId;
+import br.com.logistics.tms.company.infrastructure.jpa.entities.CompanyEntity;
+import br.com.logistics.tms.integration.data.CreateCompanyDTODataBuilder;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.test.web.servlet.MockMvc;
 
 import static br.com.logistics.tms.integration.assertions.CompanyEntityAssert.assertThatCompany;
 
-@AutoConfigureMockMvc
 class MyIntegrationTest extends AbstractIntegrationTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-    
-    @Autowired
-    private ObjectMapper objectMapper;
-    
-    @Autowired
-    private CompanyJpaRepository companyJpaRepository;
-    
-    @Autowired
-    private CompanyOutboxJpaRepository companyOutboxJpaRepository;
-    
-    @Autowired
-    private ShipmentOrderCompanyJpaRepository shipmentOrderCompanyJpaRepository;
-    
-    private CompanyIntegrationFixture companyFixture;
-
-    @BeforeEach
-    void setUp() {
-        companyFixture = new CompanyIntegrationFixture(
-                mockMvc,
-                objectMapper,
-                companyOutboxJpaRepository,
-                shipmentOrderCompanyJpaRepository
-        );
-    }
 
     @Test
     void shouldDoSomething() throws Exception {
+        // Fixtures (companyFixture, shipmentOrderFixture) already available from AbstractIntegrationTest
+        // All repositories already injected
+        
         final CompanyId companyId = companyFixture.createCompany(
                 CreateCompanyDTODataBuilder.aCreateCompanyDTO()
                         .withName("Test")
@@ -374,9 +398,15 @@ class MyIntegrationTest extends AbstractIntegrationTest {
 }
 ```
 
+**Key Points:**
+- ✅ Extends `AbstractIntegrationTest` - gets everything for free
+- ✅ No `@Autowired` needed - repositories/fixtures already available
+- ✅ No `@BeforeEach` needed - AbstractIntegrationTest handles it
+- ✅ Use `*IT.java` suffix for Failsafe execution
+
 ### Complete Example
 
-See: `src/test/java/br/com/logistics/tms/integration/CompanyShipmentOrderIntegrationTest.java`
+See: `src/test/java/br/com/logistics/tms/integration/CompanyShipmentOrderIT.java`
 
 ```java
 @Test
@@ -638,25 +668,13 @@ When creating a new integration test:
 ### Quick Start
 
 ```java
-@AutoConfigureMockMvc
-class MyIntegrationTest extends AbstractIntegrationTest {
-    
-    @Autowired private MockMvc mockMvc;
-    @Autowired private ObjectMapper objectMapper;
-    @Autowired private CompanyJpaRepository companyJpaRepository;
-    @Autowired private CompanyOutboxJpaRepository companyOutboxJpaRepository;
-    @Autowired private ShipmentOrderCompanyJpaRepository shipmentOrderCompanyJpaRepository;
-    
-    private CompanyIntegrationFixture companyFixture;
-    
-    @BeforeEach
-    void setUp() {
-        companyFixture = new CompanyIntegrationFixture(mockMvc, objectMapper, 
-                companyOutboxJpaRepository, shipmentOrderCompanyJpaRepository);
-    }
+class MyIT extends AbstractIntegrationTest {
     
     @Test
     void shouldDoSomething() throws Exception {
+        // companyFixture already available from AbstractIntegrationTest
+        // companyJpaRepository already injected
+        
         final CompanyId id = companyFixture.createCompany(
                 CreateCompanyDTODataBuilder.aCreateCompanyDTO().build()
         );
@@ -674,5 +692,6 @@ class MyIntegrationTest extends AbstractIntegrationTest {
 - `/doc/ai/TEST_STRUCTURE.md` - Overall test organization
 - `/doc/ai/prompts/test-data-builders.md` - Creating test builders
 - `/doc/ai/ARCHITECTURE.md` - Event-driven architecture
-- `AbstractIntegrationTest.java` - Testcontainers setup
-- Example: `CompanyShipmentOrderIntegrationTest.java`
+- `AbstractIntegrationTest.java` - Base class with Testcontainers
+- `TestContainersManager.java` - Singleton container management
+- Example: `CompanyShipmentOrderIT.java`

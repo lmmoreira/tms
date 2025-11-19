@@ -10,7 +10,7 @@ import java.util.Set;
 public class UpdateCompanyDTODataBuilder {
 
     private String name = "Updated Company";
-    private String cnpj = "50.617.696/0002-06";
+    private String cnpj = CnpjGenerator.randomCnpj();
     private Set<CompanyType> types = Set.of(CompanyType.SELLER);
     private Map<String, Object> configuration = new HashMap<>(Map.of(
             "notification", true

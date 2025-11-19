@@ -9,7 +9,7 @@ public class CreateShipmentOrderDTODataBuilder {
 
     private UUID companyId = UUID.randomUUID();
     private UUID shipperId = UUID.randomUUID();
-    private String externalId = "EXT-ORDER-DEFAULT";
+    private String externalId = "EXT-ORDER-DEFAULT" + UUID.randomUUID().toString();
     private Instant createdAt = Instant.now();
 
     public static CreateShipmentOrderDTODataBuilder aCreateShipmentOrderDTO() {
