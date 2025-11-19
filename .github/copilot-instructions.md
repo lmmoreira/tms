@@ -20,6 +20,7 @@ CREATE something new?
 ├─ Controller? → Use "Essential Patterns #3" below + /doc/ai/prompts/new-controller.md
 ├─ Value Object? → See /doc/ai/prompts/value-objects.md
 ├─ Event Listener? → Use "Essential Patterns #6" below + /doc/ai/prompts/new-event-listener.md
+├─ Integration Test? → See /doc/ai/INTEGRATION_TESTS.md
 ├─ Database Migration? → See "Database Migrations" section + /doc/ai/prompts/new-migration.md
 ├─ HTTP Request File? → See /doc/ai/prompts/http-requests.md
 ├─ Eventual Consistency? → See /doc/ai/prompts/eventual-consistency.md
@@ -32,6 +33,7 @@ UNDERSTAND a pattern?
 ├─ Quick lookup? → See sections below or /doc/ai/QUICK_REFERENCE.md
 ├─ Full architecture? → See /doc/ai/ARCHITECTURE.md
 ├─ Test structure? → See /doc/ai/TEST_STRUCTURE.md
+├─ Integration tests? → See /doc/ai/INTEGRATION_TESTS.md
 ├─ HTTP testing? → See /doc/ai/prompts/http-requests.md
 ├─ ArchUnit testing? → See /doc/ai/ARCHUNIT_GUIDELINES.md
 ├─ Existing tests? → See /doc/ai/ARCHUNIT_TEST_CATALOG.md

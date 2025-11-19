@@ -29,6 +29,8 @@ This directory contains comprehensive documentation for AI assistants working on
 - **[ARCHITECTURE_FULL.md](ARCHITECTURE_FULL.md)** - Complete architecture details
 - **[CODEBASE_CONTEXT_FULL.md](CODEBASE_CONTEXT_FULL.md)** - Complete project context
 - **[AI_DOCUMENTATION_REVIEW.md](AI_DOCUMENTATION_REVIEW.md)** - Optimization analysis and strategy
+- **[TEST_STRUCTURE.md](TEST_STRUCTURE.md)** ⭐ - Test organization and structure
+- **[INTEGRATION_TESTS.md](INTEGRATION_TESTS.md)** ⭐ - Complete integration test guide
 - **[ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md)** ⭐ - Comprehensive ArchUnit testing guide
 - **[ARCHUNIT_TEST_CATALOG.md](ARCHUNIT_TEST_CATALOG.md)** ⭐ - Complete catalog of all ArchUnit tests
 - **[ARCHUNIT_CHEATSHEET.md](ARCHUNIT_CHEATSHEET.md)** ⭐ - Quick reference for utility classes
@@ -69,10 +71,11 @@ Complete, runnable code examples following TMS patterns:
 
 - **[testing-patterns.md](examples/testing-patterns.md)**
   - Unit tests
-  - Integration tests
+  - Use case tests
   - REST API tests
   - Event-driven tests
   - Testcontainers setup
+  - **See also:** [INTEGRATION_TESTS.md](INTEGRATION_TESTS.md) ⭐
 
 ### Prompts (`prompts/`)
 
@@ -98,6 +101,12 @@ Templates for creating new components:
   - Module structure
   - Integration points
 
+- **[new-integration-test.md](prompts/new-integration-test.md)** ⭐
+  - Integration test creation
+  - Fixtures and assertions
+  - Test data builders
+  - **See also:** [INTEGRATION_TESTS.md](INTEGRATION_TESTS.md)
+
 ---
 
 ## 🎯 Most Common Tasks
@@ -108,6 +117,7 @@ Templates for creating new components:
 | **Create Controller** | [examples/complete-controller.md](examples/complete-controller.md) | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) |
 | **Create Aggregate** | [prompts/new-aggregate.md](prompts/new-aggregate.md) | [examples/complete-aggregate.md](examples/complete-aggregate.md) |
 | **Add Event Listener** | [prompts/new-event-listener.md](prompts/new-event-listener.md) | [examples/event-driven-communication.md](examples/event-driven-communication.md) |
+| **Create Integration Test** | [INTEGRATION_TESTS.md](INTEGRATION_TESTS.md) ⭐ | [prompts/new-integration-test.md](prompts/new-integration-test.md) |
 | **Quick Pattern Lookup** | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | - |
 | **Review Code** | [QUICK_REFERENCE.md § Validation](QUICK_REFERENCE.md) | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | **Create ArchUnit Tests** | [ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md) | [ARCHUNIT_TEST_CATALOG.md](ARCHUNIT_TEST_CATALOG.md) |

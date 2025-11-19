@@ -1,10 +1,22 @@
 package br.com.logistics.tms;
 
+import br.com.logistics.tms.company.infrastructure.jpa.repositories.CompanyJpaRepository;
+import br.com.logistics.tms.company.infrastructure.jpa.repositories.CompanyOutboxJpaRepository;
+import br.com.logistics.tms.integration.fixtures.CompanyIntegrationFixture;
+import br.com.logistics.tms.integration.fixtures.ShipmentOrderIntegrationFixture;
+import br.com.logistics.tms.shipmentorder.infrastructure.jpa.repositories.ShipmentOrderCompanyJpaRepository;
+import br.com.logistics.tms.shipmentorder.infrastructure.jpa.repositories.ShipmentOrderJpaRepository;
+import br.com.logistics.tms.shipmentorder.infrastructure.jpa.repositories.ShipmentOrderOutboxJpaRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.*;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
@@ -15,9 +27,31 @@ import org.testcontainers.utility.MountableFile;
 @TestPropertySource(locations = "classpath:env-test")
 @Testcontainers
 @ActiveProfiles("test")
+@AutoConfigureMockMvc
 public abstract class AbstractIntegrationTest {
 
     private static final Network network = Network.newNetwork();
+
+    @Autowired
+    protected MockMvc mockMvc;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
+
+    @Autowired
+    protected CompanyJpaRepository companyJpaRepository;
+
+    @Autowired
+    protected CompanyOutboxJpaRepository companyOutboxJpaRepository;
+
+    @Autowired
+    protected ShipmentOrderJpaRepository shipmentOrderJpaRepository;
+
+    @Autowired
+    protected ShipmentOrderCompanyJpaRepository shipmentOrderCompanyJpaRepository;
+
+    @Autowired
+    protected ShipmentOrderOutboxJpaRepository shipmentOrderOutboxJpaRepository;
 
     @Container
     static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest")
@@ -46,7 +80,8 @@ public abstract class AbstractIntegrationTest {
             .withEnv("RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS",
                     "-rabbitmq_management load_definitions \"/etc/rabbitmq/definitions.json\"")
             .withReuse(true)
-            .withNetwork(network);
+            .withNetwork(network)
+            .waitingFor(Wait.forLogMessage(".*Server startup complete.*", 1));
 
     @DynamicPropertySource
     static void registerProps(DynamicPropertyRegistry registry) {
@@ -57,5 +92,32 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.read.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.read.username", postgres::getUsername);
         registry.add("spring.datasource.read.password", postgres::getPassword);
+
+        registry.add("spring.rabbitmq.host", rabbit::getHost);
+        registry.add("spring.rabbitmq.port", rabbit::getAmqpPort);
+        registry.add("spring.rabbitmq.username", () -> "tms");
+        registry.add("spring.rabbitmq.password", () -> "bitnami");
     }
+
+    protected CompanyIntegrationFixture companyFixture;
+    protected ShipmentOrderIntegrationFixture shipmentOrderFixture;
+
+    @BeforeEach
+    void setUp() {
+        companyFixture = new CompanyIntegrationFixture(
+                mockMvc,
+                objectMapper,
+                companyOutboxJpaRepository,
+                shipmentOrderCompanyJpaRepository
+        );
+
+        shipmentOrderFixture = new ShipmentOrderIntegrationFixture(
+                mockMvc,
+                objectMapper,
+                shipmentOrderOutboxJpaRepository,
+                companyJpaRepository
+        );
+    }
+
+
 }

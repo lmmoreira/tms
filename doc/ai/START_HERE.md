@@ -14,6 +14,7 @@
 | **New Use Case** (business operation) | [prompts/new-use-case.md](prompts/new-use-case.md) |
 | **New Controller** (REST endpoint) | [examples/controller-post.md](examples/complete-controller.md) |
 | **New Event Listener** (module communication) | [prompts/new-event-listener.md](prompts/new-event-listener.md) |
+| **New Integration Test** (broad flow test) | [prompts/new-integration-test.md](prompts/new-integration-test.md) ⭐ |
 | **New Module** (bounded context) | [prompts/new-module.md](prompts/new-module.md) |
 | **Test Data Builder** (test utilities) | [prompts/test-data-builders.md](prompts/test-data-builders.md) |
 | **Fake Repository** (test doubles) | [prompts/fake-repositories.md](prompts/fake-repositories.md) |
@@ -27,6 +28,7 @@
 | **Core architectural concepts** | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | **Code style & comments** | [CODE_STYLE.md](CODE_STYLE.md) |
 | **Test organization** | [TEST_STRUCTURE.md](TEST_STRUCTURE.md) ⭐ |
+| **Integration test guide** | [INTEGRATION_TESTS.md](INTEGRATION_TESTS.md) ⭐ |
 | **Project overview & tech stack** | [CODEBASE_CONTEXT.md](CODEBASE_CONTEXT.md) |
 | **Domain terminology** | [GLOSSARY.md](GLOSSARY.md) |
 
@@ -88,12 +90,13 @@
 ### "I need to write tests"
 
 1. Understand test structure → [TEST_STRUCTURE.md](TEST_STRUCTURE.md) ⭐
-2. Domain tests → [examples/testing-patterns.md § Unit Tests](examples/testing-patterns.md)
-3. Use case tests → [examples/testing-patterns.md § Integration Tests](examples/testing-patterns.md)
-4. Test data builders → [prompts/test-data-builders.md](prompts/test-data-builders.md)
-5. Fake repositories → [prompts/fake-repositories.md](prompts/fake-repositories.md)
-6. Full integration → [examples/testing-patterns.md § Full Integration](examples/testing-patterns.md)
-7. REST tests → [examples/testing-patterns.md § REST API Tests](examples/testing-patterns.md)
+2. **Integration tests** → [INTEGRATION_TESTS.md](INTEGRATION_TESTS.md) ⭐
+3. Domain tests → [examples/testing-patterns.md § Unit Tests](examples/testing-patterns.md)
+4. Use case tests → [examples/testing-patterns.md § Integration Tests](examples/testing-patterns.md)
+5. Test data builders → [prompts/test-data-builders.md](prompts/test-data-builders.md)
+6. Fake repositories → [prompts/fake-repositories.md](prompts/fake-repositories.md)
+7. Full integration → [examples/testing-patterns.md § Full Integration](examples/testing-patterns.md)
+8. REST tests → [examples/testing-patterns.md § REST API Tests](examples/testing-patterns.md)
 
 ---
 

@@ -4,10 +4,12 @@ import br.com.logistics.tms.commons.infrastructure.jpa.repositories.CustomJpaRep
 import br.com.logistics.tms.company.infrastructure.jpa.entities.CompanyOutboxEntity;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
-
 
 @Repository
 public interface CompanyOutboxJpaRepository extends CustomJpaRepository<CompanyOutboxEntity, UUID> {
+
+    Optional<CompanyOutboxEntity> findFirstByAggregateIdOrderByCreatedAtDesc(UUID aggregateId);
 
 }

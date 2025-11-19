@@ -41,21 +41,36 @@ public class Company extends AbstractAggregateRoot {
     }
 
     public Set<String> types() {
-        final Object typesObj = this.data.value().get("types");
-        if (typesObj instanceof List<?> typesList) {
-            final Set<String> typesSet = new HashSet<>();
-            for (Object type : typesList) {
-                if (type instanceof String typeStr) {
-                    typesSet.add(typeStr);
-                }
-            }
-            return typesSet;
-        }
-        return Collections.emptySet();
+        return parseTypes(this.data.value().get("types").toString());
     }
 
     public boolean isLogisticsProvider() {
         return types().contains("LOGISTICS_PROVIDER");
+    }
+
+    public static Set<String> parseTypes(final String input) {
+        if (input == null) {
+            return Collections.emptySet();
+        }
+
+        final int start = input.indexOf('[');
+        final int end = (start >= 0) ? input.indexOf(']', start + 1) : -1;
+        if (start < 0 || end < 0 || end <= start) {
+            return Collections.emptySet();
+        }
+
+        final String inside = input.substring(start + 1, end);
+        final String[] parts = inside.split(",");
+
+        final Set<String> result = new LinkedHashSet<>();
+        for (final String part : parts) {
+            final String trimmed = (part == null) ? "" : part.trim();
+            if (!trimmed.isEmpty()) {
+                result.add(trimmed);
+            }
+        }
+
+        return Collections.unmodifiableSet(result);
     }
 
 }

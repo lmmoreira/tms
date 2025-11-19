@@ -107,6 +107,31 @@ src/test/java/br/com/logistics/tms/shipmentorder/domain/
 └── CompanyTest.java
 ```
 
+### 6. Integration Tests
+
+**Location:** `integration/`
+
+**Why:** Integration tests validate complete business flows across modules. They are placed in a separate `integration` package to distinguish them from unit tests.
+
+**Example:**
+```
+src/test/java/br/com/logistics/tms/integration/
+├── CompanyShipmentOrderIntegrationTest.java
+├── fixtures/
+│   ├── CompanyIntegrationFixture.java
+│   └── ShipmentOrderIntegrationFixture.java
+├── assertions/
+│   ├── CompanyEntityAssert.java
+│   ├── ShipmentOrderEntityAssert.java
+│   └── ShipmentOrderCompanyEntityAssert.java
+└── data/
+    ├── CreateCompanyDTODataBuilder.java
+    ├── UpdateCompanyDTODataBuilder.java
+    └── CreateShipmentOrderDTODataBuilder.java
+```
+
+**See:** `/doc/ai/INTEGRATION_TESTS.md` for complete integration test documentation.
+
 ---
 
 ## Migration History
@@ -150,8 +175,12 @@ src/test/java/br/com/logistics/tms/{module}/
 | **Fake Repository** | `Fake{Entity}Repository` | `FakeCompanyRepository` |
 | **Domain Builder** | `{Entity}TestDataBuilder` | `CompanyTestDataBuilder` |
 | **Input Builder** | `{UseCase}InputDataBuilder` | `SynchronizeCompanyUseCaseInputDataBuilder` |
+| **DTO Builder** | `{Operation}{Entity}DTODataBuilder` | `CreateCompanyDTODataBuilder` |
+| **Integration Fixture** | `{Entity}IntegrationFixture` | `CompanyIntegrationFixture` |
+| **Custom Assertion** | `{Entity}Assert` | `CompanyEntityAssert` |
 | **Domain Test** | `{Entity}Test` | `CompanyTest` |
 | **Use Case Test** | `{UseCase}Test` | `SynchronizeCompanyUseCaseTest` |
+| **Integration Test** | `{Flow}IntegrationTest` | `CompanyShipmentOrderIntegrationTest` |
 
 ---
 
@@ -160,16 +189,26 @@ src/test/java/br/com/logistics/tms/{module}/
 ### ShipmentOrder Module Test Structure
 
 ```
-src/test/java/br/com/logistics/tms/shipmentorder/
-├── application/
-│   ├── repositories/
-│   │   └── FakeCompanyRepository.java           # Fake repository
-│   └── usecases/
-│       ├── SynchronizeCompanyUseCaseTest.java   # Use case test
-│       └── data/
-│           └── SynchronizeCompanyUseCaseInputDataBuilder.java  # Input builder
-└── domain/
-    └── CompanyTestDataBuilder.java              # Domain aggregate builder
+src/test/java/br/com/logistics/tms/
+├── shipmentorder/
+│   ├── application/
+│   │   ├── repositories/
+│   │   │   └── FakeCompanyRepository.java           # Fake repository
+│   │   └── usecases/
+│   │       ├── SynchronizeCompanyUseCaseTest.java   # Use case test
+│   │       └── data/
+│   │           └── SynchronizeCompanyUseCaseInputDataBuilder.java  # Input builder
+│   └── domain/
+│       └── CompanyTestDataBuilder.java              # Domain aggregate builder
+└── integration/
+    ├── CompanyShipmentOrderIntegrationTest.java     # Integration test
+    ├── fixtures/
+    │   ├── CompanyIntegrationFixture.java
+    │   └── ShipmentOrderIntegrationFixture.java
+    ├── assertions/
+    │   └── CompanyEntityAssert.java
+    └── data/
+        └── CreateCompanyDTODataBuilder.java
 ```
 
 ### Imports in Tests
