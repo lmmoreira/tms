@@ -1,5 +1,8 @@
-package br.com.logistics.tms.integration.data;
+package br.com.logistics.tms.builders.dto;
 
+import br.com.logistics.tms.utils.CnpjGenerator;
+
+import br.com.logistics.tms.utils.CnpjGenerator;
 import br.com.logistics.tms.company.domain.CompanyType;
 import br.com.logistics.tms.company.infrastructure.dto.CreateCompanyDTO;
 
@@ -7,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class CreateCompanyDTODataBuilder {
+public class CreateCompanyDTOBuilder {
 
     private String name = "Default Company";
     private String cnpj = CnpjGenerator.randomCnpj();
@@ -16,36 +19,36 @@ public class CreateCompanyDTODataBuilder {
             "notification", true
     ));
 
-    public static CreateCompanyDTODataBuilder aCreateCompanyDTO() {
-        return new CreateCompanyDTODataBuilder();
+    public static CreateCompanyDTOBuilder aCreateCompanyDTO() {
+        return new CreateCompanyDTOBuilder();
     }
 
-    public CreateCompanyDTODataBuilder withName(final String name) {
+    public CreateCompanyDTOBuilder withName(final String name) {
         this.name = name;
         return this;
     }
 
-    public CreateCompanyDTODataBuilder withCnpj(final String cnpj) {
+    public CreateCompanyDTOBuilder withCnpj(final String cnpj) {
         this.cnpj = cnpj;
         return this;
     }
 
-    public CreateCompanyDTODataBuilder withTypes(final Set<CompanyType> types) {
+    public CreateCompanyDTOBuilder withTypes(final Set<CompanyType> types) {
         this.types = types;
         return this;
     }
 
-    public CreateCompanyDTODataBuilder withTypes(final CompanyType... types) {
+    public CreateCompanyDTOBuilder withTypes(final CompanyType... types) {
         this.types = Set.of(types);
         return this;
     }
 
-    public CreateCompanyDTODataBuilder withConfiguration(final Map<String, Object> configuration) {
+    public CreateCompanyDTOBuilder withConfiguration(final Map<String, Object> configuration) {
         this.configuration = new HashMap<>(configuration);
         return this;
     }
 
-    public CreateCompanyDTODataBuilder withConfigurationEntry(final String key, final Object value) {
+    public CreateCompanyDTOBuilder withConfigurationEntry(final String key, final Object value) {
         this.configuration.put(key, value);
         return this;
     }

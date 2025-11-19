@@ -1,13 +1,14 @@
-package br.com.logistics.tms.integration.data;
+package br.com.logistics.tms.builders.dto;
 
 import br.com.logistics.tms.company.domain.CompanyType;
 import br.com.logistics.tms.company.infrastructure.dto.UpdateCompanyDTO;
+import br.com.logistics.tms.utils.CnpjGenerator;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class UpdateCompanyDTODataBuilder {
+public class UpdateCompanyDTOBuilder {
 
     private String name = "Updated Company";
     private String cnpj = CnpjGenerator.randomCnpj();
@@ -16,36 +17,36 @@ public class UpdateCompanyDTODataBuilder {
             "notification", true
     ));
 
-    public static UpdateCompanyDTODataBuilder anUpdateCompanyDTO() {
-        return new UpdateCompanyDTODataBuilder();
+    public static UpdateCompanyDTOBuilder anUpdateCompanyDTO() {
+        return new UpdateCompanyDTOBuilder();
     }
 
-    public UpdateCompanyDTODataBuilder withName(final String name) {
+    public UpdateCompanyDTOBuilder withName(final String name) {
         this.name = name;
         return this;
     }
 
-    public UpdateCompanyDTODataBuilder withCnpj(final String cnpj) {
+    public UpdateCompanyDTOBuilder withCnpj(final String cnpj) {
         this.cnpj = cnpj;
         return this;
     }
 
-    public UpdateCompanyDTODataBuilder withTypes(final Set<CompanyType> types) {
+    public UpdateCompanyDTOBuilder withTypes(final Set<CompanyType> types) {
         this.types = types;
         return this;
     }
 
-    public UpdateCompanyDTODataBuilder withTypes(final CompanyType... types) {
+    public UpdateCompanyDTOBuilder withTypes(final CompanyType... types) {
         this.types = Set.of(types);
         return this;
     }
 
-    public UpdateCompanyDTODataBuilder withConfiguration(final Map<String, Object> configuration) {
+    public UpdateCompanyDTOBuilder withConfiguration(final Map<String, Object> configuration) {
         this.configuration = new HashMap<>(configuration);
         return this;
     }
 
-    public UpdateCompanyDTODataBuilder withConfigurationEntry(final String key, final Object value) {
+    public UpdateCompanyDTOBuilder withConfigurationEntry(final String key, final Object value) {
         this.configuration.put(key, value);
         return this;
     }
@@ -54,3 +55,4 @@ public class UpdateCompanyDTODataBuilder {
         return new UpdateCompanyDTO(name, cnpj, types, configuration);
     }
 }
+

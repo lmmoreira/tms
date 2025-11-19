@@ -81,9 +81,9 @@ src/test/java/br/com/logistics/tms/
     │   ├── ShipmentOrderCompanyEntityAssert.java
     │   └── OutboxAssert.java
     └── data/                                    # DTO builders
-        ├── CreateCompanyDTODataBuilder.java
-        ├── UpdateCompanyDTODataBuilder.java
-        ├── CreateShipmentOrderDTODataBuilder.java
+        ├── CreateCompanyDTOBuilder.java
+        ├── UpdateCompanyDTOBuilder.java
+        ├── CreateShipmentOrderDTOBuilder.java
         └── CnpjGenerator.java
 ```
 
@@ -250,7 +250,7 @@ Provide **fluent, domain-specific assertions** that are easier to read and maint
 #### CompanyEntityAssert
 
 ```java
-import static br.com.logistics.tms.integration.assertions.CompanyEntityAssert.assertThatCompany;
+import static br.com.logistics.tms.assertions.jpa.CompanyEntityAssert.assertThatCompany;
 
 final CompanyEntity company = companyJpaRepository.findById(id).orElseThrow();
 
@@ -266,7 +266,7 @@ assertThatCompany(company)
 #### ShipmentOrderEntityAssert
 
 ```java
-import static br.com.logistics.tms.integration.assertions.ShipmentOrderEntityAssert.assertThatShipmentOrder;
+import static br.com.logistics.tms.assertions.jpa.ShipmentOrderEntityAssert.assertThatShipmentOrder;
 
 assertThatShipmentOrder(order)
     .hasCompanyId(companyId)
@@ -280,7 +280,7 @@ assertThatShipmentOrder(order)
 #### ShipmentOrderCompanyEntityAssert
 
 ```java
-import static br.com.logistics.tms.integration.assertions.ShipmentOrderCompanyEntityAssert.assertThatShipmentOrderCompany;
+import static br.com.logistics.tms.assertions.jpa.ShipmentOrderCompanyEntityAssert.assertThatShipmentOrderCompany;
 
 assertThatShipmentOrderCompany(entity)
     .hasCompanyId(companyId)
@@ -293,7 +293,7 @@ assertThatShipmentOrderCompany(entity)
 #### OutboxAssert
 
 ```java
-import static br.com.logistics.tms.integration.assertions.OutboxAssert.assertThatOutbox;
+import static br.com.logistics.tms.assertions.jpa.OutboxAssert.assertThatOutbox;
 
 assertThatOutbox(outboxEntity)
     .isPublished()
@@ -308,7 +308,7 @@ assertThatOutbox(outboxEntity)
 **Template:**
 
 ```java
-package br.com.logistics.tms.integration.assertions;
+package br.com.logistics.tms.assertions.jpa;
 
 import org.assertj.core.api.AbstractAssert;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -337,22 +337,22 @@ public class {Entity}Assert extends AbstractAssert<{Entity}Assert, {Entity}> {
 
 ## Test Data Builders
 
-Use existing test data builders from `/integration/data/`:
+Use existing test data builders from `/builders/dto/`:
 
 ```java
-CreateCompanyDTODataBuilder.aCreateCompanyDTO()
+CreateCompanyDTOBuilder.aCreateCompanyDTO()
     .withName("Test Company")
     .withCnpj("12345678901234")
     .withTypes(CompanyType.SELLER)
     .withConfigurationEntry("key", "value")
     .build();
 
-UpdateCompanyDTODataBuilder.anUpdateCompanyDTO()
+UpdateCompanyDTOBuilder.anUpdateCompanyDTO()
     .withName("Updated Company")
     .withTypes(CompanyType.SELLER, CompanyType.MARKETPLACE)
     .build();
 
-CreateShipmentOrderDTODataBuilder.aCreateShipmentOrderDTO()
+CreateShipmentOrderDTOBuilder.aCreateShipmentOrderDTO()
     .withCompanyId(companyId.value())
     .withShipperId(shipperId.value())
     .withExternalId("EXT-ORDER-001")
@@ -373,10 +373,10 @@ package br.com.logistics.tms.integration;
 import br.com.logistics.tms.AbstractIntegrationTest;
 import br.com.logistics.tms.company.domain.CompanyId;
 import br.com.logistics.tms.company.infrastructure.jpa.entities.CompanyEntity;
-import br.com.logistics.tms.integration.data.CreateCompanyDTODataBuilder;
+import br.com.logistics.tms.builders.dto.CreateCompanyDTOBuilder;
 import org.junit.jupiter.api.Test;
 
-import static br.com.logistics.tms.integration.assertions.CompanyEntityAssert.assertThatCompany;
+import static br.com.logistics.tms.assertions.jpa.CompanyEntityAssert.assertThatCompany;
 
 class MyIntegrationTest extends AbstractIntegrationTest {
 
@@ -386,7 +386,7 @@ class MyIntegrationTest extends AbstractIntegrationTest {
         // All repositories already injected
         
         final CompanyId companyId = companyFixture.createCompany(
-                CreateCompanyDTODataBuilder.aCreateCompanyDTO()
+                CreateCompanyDTOBuilder.aCreateCompanyDTO()
                         .withName("Test")
                         .build()
         );
@@ -413,7 +413,7 @@ See: `src/test/java/br/com/logistics/tms/integration/CompanyShipmentOrderIT.java
 void shouldCreateAndUpdateCompanyThenCreateShipmentOrderAndIncrementCompanyOrders() throws Exception {
     // Create company
     final CompanyId companyId = companyFixture.createCompany(
-            CreateCompanyDTODataBuilder.aCreateCompanyDTO()
+            CreateCompanyDTOBuilder.aCreateCompanyDTO()
                     .withName("Test Company")
                     .build()
     );
@@ -676,7 +676,7 @@ class MyIT extends AbstractIntegrationTest {
         // companyJpaRepository already injected
         
         final CompanyId id = companyFixture.createCompany(
-                CreateCompanyDTODataBuilder.aCreateCompanyDTO().build()
+                CreateCompanyDTOBuilder.aCreateCompanyDTO().build()
         );
         
         assertThatCompany(companyJpaRepository.findById(id.value()).orElseThrow())

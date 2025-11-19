@@ -1,4 +1,4 @@
-package br.com.logistics.tms.integration.data;
+package br.com.logistics.tms.utils;
 
 import java.util.concurrent.ThreadLocalRandom;
 

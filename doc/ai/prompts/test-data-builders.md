@@ -18,18 +18,18 @@ Test data builders use the fluent builder pattern to create test objects with se
 ## Where to Place Builders
 
 ### For Domain Aggregates
-**Location:** `src/test/java/{module}/domain/`
+**Location:** `src/test/java/builders/domain/{module}/`
 
 **Rationale:** Test data builders for domain aggregates are placed in the domain package within the test structure, as they create domain objects.
 
-Example: `src/test/java/br/com/logistics/tms/shipmentorder/domain/CompanyTestDataBuilder.java`
+Example: `src/test/java/br/com/logistics/tms/shipmentorder/domain/CompanyBuilder.java`
 
 ### For Use Case Inputs
-**Location:** `src/test/java/{module}/application/usecases/data/`
+**Location:** `src/test/java/builders/input/`
 
 **Rationale:** Input builders are placed alongside the use case tests they support, making them easy to discover and maintain.
 
-Example: `src/test/java/br/com/logistics/tms/shipmentorder/application/usecases/data/SynchronizeCompanyUseCaseInputDataBuilder.java`
+Example: `src/test/java/br/com/logistics/tms/shipmentorder/application/usecases/data/SynchronizeCompanyUseCaseInputBuilder.java`
 
 ---
 
@@ -38,36 +38,36 @@ Example: `src/test/java/br/com/logistics/tms/shipmentorder/application/usecases/
 ### Basic Builder Template
 
 ```java
-package br.com.logistics.tms.{module}.domain;
+package br.com.logistics.tms.builders/domain/{module};
 
 import java.util.*;
 
-public class {Entity}TestDataBuilder {
+public class {Entity}Builder {
 
     private UUID id = UUID.randomUUID();
     private String field1 = "default value";
     private Map<String, Object> data = new HashMap<>();
 
-    public static {Entity}TestDataBuilder a{Entity}() {
-        return new {Entity}TestDataBuilder();
+    public static {Entity}Builder a{Entity}() {
+        return new {Entity}Builder();
     }
 
-    public {Entity}TestDataBuilder withId(final UUID id) {
+    public {Entity}Builder withId(final UUID id) {
         this.id = id;
         return this;
     }
 
-    public {Entity}TestDataBuilder withField1(final String field1) {
+    public {Entity}Builder withField1(final String field1) {
         this.field1 = field1;
         return this;
     }
 
-    public {Entity}TestDataBuilder withData(final Map<String, Object> data) {
+    public {Entity}Builder withData(final Map<String, Object> data) {
         this.data = new HashMap<>(data);
         return this;
     }
 
-    public {Entity}TestDataBuilder withDataEntry(final String key, final Object value) {
+    public {Entity}Builder withDataEntry(final String key, final Object value) {
         this.data.put(key, value);
         return this;
     }
@@ -84,7 +84,7 @@ public class {Entity}TestDataBuilder {
 
 ### Aggregate Builder Example
 
-**File:** `CompanyTestDataBuilder.java`
+**File:** `CompanyBuilder.java`
 
 ```java
 package br.com.logistics.tms.shipmentorder.domain;
@@ -93,35 +93,35 @@ import br.com.logistics.tms.shipmentorder.application.usecases.SynchronizeCompan
 
 import java.util.*;
 
-public class CompanyTestDataBuilder {
+public class CompanyBuilder {
 
     private UUID companyId = UUID.randomUUID();
     private Map<String, Object> data = new HashMap<>();
 
-    public static CompanyTestDataBuilder aCompany() {
-        return new CompanyTestDataBuilder();
+    public static CompanyBuilder aCompany() {
+        return new CompanyBuilder();
     }
 
-    public CompanyTestDataBuilder withCompanyId(final UUID companyId) {
+    public CompanyBuilder withCompanyId(final UUID companyId) {
         this.companyId = companyId;
         return this;
     }
 
-    public CompanyTestDataBuilder withTypes(final List<String> types) {
+    public CompanyBuilder withTypes(final List<String> types) {
         this.data.put(SynchronizeCompanyUseCase.TYPES_KEY, types);
         return this;
     }
 
-    public CompanyTestDataBuilder withTypes(final String... types) {
+    public CompanyBuilder withTypes(final String... types) {
         return withTypes(Arrays.asList(types));
     }
 
-    public CompanyTestDataBuilder withData(final Map<String, Object> data) {
+    public CompanyBuilder withData(final Map<String, Object> data) {
         this.data = new HashMap<>(data);
         return this;
     }
 
-    public CompanyTestDataBuilder withDataEntry(final String key, final Object value) {
+    public CompanyBuilder withDataEntry(final String key, final Object value) {
         this.data.put(key, value);
         return this;
     }
@@ -137,7 +137,7 @@ public class CompanyTestDataBuilder {
 
 ### Use Case Input Builder Example
 
-**File:** `SynchronizeCompanyUseCaseInputDataBuilder.java`
+**File:** `SynchronizeCompanyUseCaseInputBuilder.java`
 
 ```java
 package br.com.logistics.tms.shipmentorder.application.usecases.data;
@@ -146,45 +146,45 @@ import br.com.logistics.tms.shipmentorder.application.usecases.SynchronizeCompan
 
 import java.util.*;
 
-public class SynchronizeCompanyUseCaseInputDataBuilder {
+public class SynchronizeCompanyUseCaseInputBuilder {
 
     private UUID companyId = UUID.randomUUID();
     private Map<String, Object> data = new HashMap<>();
 
-    public static SynchronizeCompanyUseCaseInputDataBuilder anInput() {
-        return new SynchronizeCompanyUseCaseInputDataBuilder();
+    public static SynchronizeCompanyUseCaseInputBuilder anInput() {
+        return new SynchronizeCompanyUseCaseInputBuilder();
     }
 
-    public SynchronizeCompanyUseCaseInputDataBuilder withCompanyId(final UUID companyId) {
+    public SynchronizeCompanyUseCaseInputBuilder withCompanyId(final UUID companyId) {
         this.companyId = companyId;
         return this;
     }
 
-    public SynchronizeCompanyUseCaseInputDataBuilder withTypes(final List<String> types) {
+    public SynchronizeCompanyUseCaseInputBuilder withTypes(final List<String> types) {
         this.data.put(SynchronizeCompanyUseCase.TYPES_KEY, types);
         return this;
     }
 
-    public SynchronizeCompanyUseCaseInputDataBuilder withTypes(final String... types) {
+    public SynchronizeCompanyUseCaseInputBuilder withTypes(final String... types) {
         return withTypes(Arrays.asList(types));
     }
 
-    public SynchronizeCompanyUseCaseInputDataBuilder withData(final Map<String, Object> data) {
+    public SynchronizeCompanyUseCaseInputBuilder withData(final Map<String, Object> data) {
         this.data = new HashMap<>(data);
         return this;
     }
 
-    public SynchronizeCompanyUseCaseInputDataBuilder withNullData() {
+    public SynchronizeCompanyUseCaseInputBuilder withNullData() {
         this.data = null;
         return this;
     }
 
-    public SynchronizeCompanyUseCaseInputDataBuilder withEmptyData() {
+    public SynchronizeCompanyUseCaseInputBuilder withEmptyData() {
         this.data = new HashMap<>();
         return this;
     }
 
-    public SynchronizeCompanyUseCaseInputDataBuilder withDataEntry(final String key, final Object value) {
+    public SynchronizeCompanyUseCaseInputBuilder withDataEntry(final String key, final Object value) {
         if (this.data == null) {
             this.data = new HashMap<>();
         }
@@ -240,7 +240,7 @@ void shouldUpdateExistingCompany() {
 @Test
 void shouldCreateNewCompanyWhenCompanyDoesNotExist() {
     final UUID companyId = UUID.randomUUID();
-    final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+    final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputBuilder.anInput()
             .withCompanyId(companyId)
             .withTypes("LOGISTICS_PROVIDER", "CARRIER")
             .build();
@@ -253,14 +253,14 @@ void shouldCreateNewCompanyWhenCompanyDoesNotExist() {
 @Test
 void shouldUpdateExistingCompany() {
     final UUID companyId = UUID.randomUUID();
-    final Company existingCompany = CompanyTestDataBuilder.aCompany()
+    final Company existingCompany = CompanyBuilder.aCompany()
             .withCompanyId(companyId)
             .withTypes("CARRIER")
             .withDataEntry("name", "Test Company")
             .build();
     companyRepository.save(existingCompany);
 
-    final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+    final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputBuilder.anInput()
             .withCompanyId(companyId)
             .withTypes("LOGISTICS_PROVIDER", "SHIPPER")
             .build();
@@ -296,7 +296,7 @@ void shouldUpdateExistingCompany() {
 ### For Domain Aggregates
 
 ```java
-public static {Entity}TestDataBuilder a{Entity}()      // Factory method
+public static {Entity}Builder a{Entity}()      // Factory method
 public {Builder} withId(UUID id)                       // Set ID
 public {Builder} with{Field}(Type field)               // Set specific field
 public {Builder} withData(Map<String, Object> data)    // Set entire data map
@@ -319,9 +319,9 @@ public {UseCase}.Input build()                         // Build the input record
 
 ## Naming Conventions
 
-- **Class:** `{Entity}TestDataBuilder` or `{UseCase}InputDataBuilder`
-- **Package (Aggregate):** `{module}.domain` (in test source root)
-- **Package (Input):** `{module}.application.usecases.data` (in test source root)
+- **Class:** `{Entity}Builder` or `{UseCase}InputBuilder`
+- **Package (Aggregate):** `builders/domain/{module}` (in test source root)
+- **Package (Input):** `builders/input` (in test source root)
 - **Factory method:** `a{Entity}()` or `anInput()`
 - **With methods:** `with{Field}()`
 - **Build method:** `build()`
@@ -335,7 +335,7 @@ public {UseCase}.Input build()                         // Build the input record
 ```java
 @Test
 void shouldHandleNullData() {
-    final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+    final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputBuilder.anInput()
             .withNullData()
             .build();
 
@@ -346,7 +346,7 @@ void shouldHandleNullData() {
 
 @Test
 void shouldHandleEmptyTypes() {
-    final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+    final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputBuilder.anInput()
             .withTypes(List.of())
             .build();
 
@@ -363,12 +363,12 @@ void shouldHandleEmptyTypes() {
 void shouldUpdateExistingCompany() {
     final UUID companyId = UUID.randomUUID();
     
-    final Company existing = CompanyTestDataBuilder.aCompany()
+    final Company existing = CompanyBuilder.aCompany()
             .withCompanyId(companyId)
             .build();
     companyRepository.save(existing);
     
-    final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputDataBuilder.anInput()
+    final SynchronizeCompanyUseCase.Input input = SynchronizeCompanyUseCaseInputBuilder.anInput()
             .withCompanyId(companyId)
             .withTypes("NEW_TYPE")
             .build();
@@ -394,8 +394,8 @@ void shouldUpdateExistingCompany() {
 
 See the `SynchronizeCompanyUseCaseTest` for a complete example of using test data builders:
 
-- **Aggregate Builder:** `CompanyTestDataBuilder`
-- **Input Builder:** `SynchronizeCompanyUseCaseInputDataBuilder`
+- **Aggregate Builder:** `CompanyBuilder`
+- **Input Builder:** `SynchronizeCompanyUseCaseInputBuilder`
 - **Test File:** `src/test/java/br/com/logistics/tms/shipmentorder/application/usecases/SynchronizeCompanyUseCaseTest.java`
 
 All 9 test methods demonstrate different uses of the builders for various testing scenarios.

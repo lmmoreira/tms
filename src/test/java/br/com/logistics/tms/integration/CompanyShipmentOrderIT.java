@@ -1,29 +1,30 @@
 package br.com.logistics.tms.integration;
 
 import br.com.logistics.tms.AbstractIntegrationTest;
+import br.com.logistics.tms.assertions.jpa.CompanyEntityAssert;
+import br.com.logistics.tms.assertions.jpa.ShipmentOrderCompanyEntityAssert;
+import br.com.logistics.tms.assertions.jpa.ShipmentOrderEntityAssert;
+import br.com.logistics.tms.builders.dto.CreateCompanyDTOBuilder;
+import br.com.logistics.tms.builders.dto.CreateShipmentOrderDTOBuilder;
+import br.com.logistics.tms.builders.dto.UpdateCompanyDTOBuilder;
 import br.com.logistics.tms.company.domain.CompanyId;
 import br.com.logistics.tms.company.domain.CompanyType;
 import br.com.logistics.tms.company.infrastructure.jpa.entities.CompanyEntity;
-import br.com.logistics.tms.integration.data.CreateCompanyDTODataBuilder;
-import br.com.logistics.tms.integration.data.CreateShipmentOrderDTODataBuilder;
-import br.com.logistics.tms.integration.data.UpdateCompanyDTODataBuilder;
-import br.com.logistics.tms.integration.fixtures.CompanyIntegrationFixture;
-import br.com.logistics.tms.integration.fixtures.ShipmentOrderIntegrationFixture;
 import br.com.logistics.tms.shipmentorder.domain.ShipmentOrderId;
 import br.com.logistics.tms.shipmentorder.infrastructure.jpa.entities.ShipmentOrderCompanyEntity;
 import br.com.logistics.tms.shipmentorder.infrastructure.jpa.entities.ShipmentOrderEntity;
 import org.junit.jupiter.api.Test;
 
-import static br.com.logistics.tms.integration.assertions.CompanyEntityAssert.assertThatCompany;
-import static br.com.logistics.tms.integration.assertions.ShipmentOrderCompanyEntityAssert.assertThatShipmentOrderCompany;
-import static br.com.logistics.tms.integration.assertions.ShipmentOrderEntityAssert.assertThatShipmentOrder;
+import static br.com.logistics.tms.assertions.jpa.CompanyEntityAssert.assertThatCompany;
+import static br.com.logistics.tms.assertions.jpa.ShipmentOrderCompanyEntityAssert.assertThatShipmentOrderCompany;
+import static br.com.logistics.tms.assertions.jpa.ShipmentOrderEntityAssert.assertThatShipmentOrder;
 
 class CompanyShipmentOrderIT extends AbstractIntegrationTest {
 
     @Test
     void shouldCreateAndUpdateCompanyThenCreateShipmentOrderAndIncrementCompanyOrders() throws Exception {
         final CompanyId companyId = companyFixture.createCompany(
-                CreateCompanyDTODataBuilder.aCreateCompanyDTO()
+                CreateCompanyDTOBuilder.aCreateCompanyDTO()
                         .withName("Test Company")
                         .withTypes(CompanyType.SELLER)
                         .build());
@@ -43,7 +44,7 @@ class CompanyShipmentOrderIT extends AbstractIntegrationTest {
                 .dataCompanyTypesContains(CompanyType.SELLER);
 
         final CompanyId shipperId = companyFixture.createCompany(
-                CreateCompanyDTODataBuilder.aCreateCompanyDTO()
+                CreateCompanyDTOBuilder.aCreateCompanyDTO()
                         .withName("Shipper Company")
                         .withTypes(CompanyType.LOGISTICS_PROVIDER)
                         .build());
@@ -54,7 +55,7 @@ class CompanyShipmentOrderIT extends AbstractIntegrationTest {
                 .hasTypes(CompanyType.LOGISTICS_PROVIDER);
 
         companyFixture.updateCompany(companyId,
-                UpdateCompanyDTODataBuilder.anUpdateCompanyDTO()
+                UpdateCompanyDTOBuilder.anUpdateCompanyDTO()
                         .withName("Updated Company")
                         .withTypes(CompanyType.SELLER, CompanyType.MARKETPLACE)
                         .withConfigurationEntry("webhook", "http://updated-webhook.com")
@@ -75,7 +76,7 @@ class CompanyShipmentOrderIT extends AbstractIntegrationTest {
                 .dataCompanyTypesContains(CompanyType.MARKETPLACE);
 
         final ShipmentOrderId orderId = shipmentOrderFixture.createShipmentOrder(
-                CreateShipmentOrderDTODataBuilder.aCreateShipmentOrderDTO()
+                CreateShipmentOrderDTOBuilder.aCreateShipmentOrderDTO()
                         .withCompanyId(companyId.value())
                         .withShipperId(shipperId.value())
                         .withExternalId("EXT-ORDER-001")
@@ -97,33 +98,33 @@ class CompanyShipmentOrderIT extends AbstractIntegrationTest {
     @Test
     void shouldIncrementCompanyCounterForMultipleShipmentOrders() throws Exception {
         final CompanyId companyId = companyFixture.createCompany(
-                CreateCompanyDTODataBuilder.aCreateCompanyDTO()
+                CreateCompanyDTOBuilder.aCreateCompanyDTO()
                         .withName("Multi Order Company")
                         .build()
         );
 
         final CompanyId shipperId = companyFixture.createCompany(
-                CreateCompanyDTODataBuilder.aCreateCompanyDTO()
+                CreateCompanyDTOBuilder.aCreateCompanyDTO()
                         .withTypes(CompanyType.LOGISTICS_PROVIDER)
                         .build()
         );
 
         shipmentOrderFixture.createShipmentOrder(
-                CreateShipmentOrderDTODataBuilder.aCreateShipmentOrderDTO()
+                CreateShipmentOrderDTOBuilder.aCreateShipmentOrderDTO()
                         .withCompanyId(companyId.value())
                         .withShipperId(shipperId.value())
                         .build()
         );
 
         shipmentOrderFixture.createShipmentOrder(
-                CreateShipmentOrderDTODataBuilder.aCreateShipmentOrderDTO()
+                CreateShipmentOrderDTOBuilder.aCreateShipmentOrderDTO()
                         .withCompanyId(companyId.value())
                         .withShipperId(shipperId.value())
                         .build()
         );
 
         shipmentOrderFixture.createShipmentOrder(
-                CreateShipmentOrderDTODataBuilder.aCreateShipmentOrderDTO()
+                CreateShipmentOrderDTOBuilder.aCreateShipmentOrderDTO()
                         .withCompanyId(companyId.value())
                         .withShipperId(shipperId.value())
                         .build()

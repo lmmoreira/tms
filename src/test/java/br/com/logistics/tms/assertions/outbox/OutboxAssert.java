@@ -1,4 +1,4 @@
-package br.com.logistics.tms.integration.assertions;
+package br.com.logistics.tms.assertions.outbox;
 
 import br.com.logistics.tms.commons.infrastructure.gateways.outbox.AbstractOutboxEntity;
 import br.com.logistics.tms.commons.infrastructure.gateways.outbox.OutboxStatus;

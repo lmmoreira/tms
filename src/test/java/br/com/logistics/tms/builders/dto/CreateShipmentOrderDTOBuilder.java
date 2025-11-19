@@ -1,37 +1,37 @@
-package br.com.logistics.tms.integration.data;
+package br.com.logistics.tms.builders.dto;
 
 import br.com.logistics.tms.shipmentorder.infrastructure.dto.CreateShipmentOrderDTO;
 
 import java.time.Instant;
 import java.util.UUID;
 
-public class CreateShipmentOrderDTODataBuilder {
+public class CreateShipmentOrderDTOBuilder {
 
     private UUID companyId = UUID.randomUUID();
     private UUID shipperId = UUID.randomUUID();
     private String externalId = "EXT-ORDER-DEFAULT" + UUID.randomUUID().toString();
     private Instant createdAt = Instant.now();
 
-    public static CreateShipmentOrderDTODataBuilder aCreateShipmentOrderDTO() {
-        return new CreateShipmentOrderDTODataBuilder();
+    public static CreateShipmentOrderDTOBuilder aCreateShipmentOrderDTO() {
+        return new CreateShipmentOrderDTOBuilder();
     }
 
-    public CreateShipmentOrderDTODataBuilder withCompanyId(final UUID companyId) {
+    public CreateShipmentOrderDTOBuilder withCompanyId(final UUID companyId) {
         this.companyId = companyId;
         return this;
     }
 
-    public CreateShipmentOrderDTODataBuilder withShipperId(final UUID shipperId) {
+    public CreateShipmentOrderDTOBuilder withShipperId(final UUID shipperId) {
         this.shipperId = shipperId;
         return this;
     }
 
-    public CreateShipmentOrderDTODataBuilder withExternalId(final String externalId) {
+    public CreateShipmentOrderDTOBuilder withExternalId(final String externalId) {
         this.externalId = externalId;
         return this;
     }
 
-    public CreateShipmentOrderDTODataBuilder withCreatedAt(final Instant createdAt) {
+    public CreateShipmentOrderDTOBuilder withCreatedAt(final Instant createdAt) {
         this.createdAt = createdAt;
         return this;
     }

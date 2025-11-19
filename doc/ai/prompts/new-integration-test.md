@@ -20,12 +20,12 @@ package br.com.logistics.tms.integration;
 import br.com.logistics.tms.AbstractIntegrationTest;
 import br.com.logistics.tms.company.domain.CompanyId;
 import br.com.logistics.tms.company.infrastructure.jpa.entities.CompanyEntity;
-import br.com.logistics.tms.integration.data.CreateCompanyDTODataBuilder;
+import br.com.logistics.tms.builders.dto.CreateCompanyDTOBuilder;
 import br.com.logistics.tms.shipmentorder.infrastructure.jpa.entities.ShipmentOrderCompanyEntity;
 import org.junit.jupiter.api.Test;
 
-import static br.com.logistics.tms.integration.assertions.CompanyEntityAssert.assertThatCompany;
-import static br.com.logistics.tms.integration.assertions.ShipmentOrderCompanyEntityAssert.assertThatShipmentOrderCompany;
+import static br.com.logistics.tms.assertions.jpa.CompanyEntityAssert.assertThatCompany;
+import static br.com.logistics.tms.assertions.jpa.ShipmentOrderCompanyEntityAssert.assertThatShipmentOrderCompany;
 
 class {Flow}IT extends AbstractIntegrationTest {
 
@@ -37,7 +37,7 @@ class {Flow}IT extends AbstractIntegrationTest {
         
         // 1. Create entities via fixtures
         final CompanyId companyId = companyFixture.createCompany(
-                CreateCompanyDTODataBuilder.aCreateCompanyDTO()
+                CreateCompanyDTOBuilder.aCreateCompanyDTO()
                         .withName("Test Company")
                         .build()
         );
@@ -82,7 +82,7 @@ When writing the test:
 - [ ] Uses `*IT.java` suffix (Failsafe execution)
 - [ ] Uses fixtures for REST operations (already available)
 - [ ] Uses custom assertions (`assertThatCompany()`)
-- [ ] Uses test data builders (`CreateCompanyDTODataBuilder`)
+- [ ] Uses test data builders (`CreateCompanyDTOBuilder`)
 - [ ] Tests outbox publishing
 - [ ] Tests cross-module synchronization
 - [ ] Has descriptive test method name
@@ -146,7 +146,7 @@ If you need a fixture for a new module:
 
 If you need a custom assertion for a new entity:
 
-1. Create in `src/test/java/br/com/logistics/tms/integration/assertions/`
+1. Create in `src/test/java/br/com/logistics/tms/assertions.jpa/`
 2. Extend `AbstractAssert`
 3. Follow pattern from `CompanyEntityAssert`
 4. Provide fluent methods: `has{Field}()`, `is{State}()`

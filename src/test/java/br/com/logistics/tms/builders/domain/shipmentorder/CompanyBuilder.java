@@ -1,38 +1,39 @@
-package br.com.logistics.tms.shipmentorder.domain;
+package br.com.logistics.tms.builders.domain.shipmentorder;
 
 import br.com.logistics.tms.shipmentorder.application.usecases.SynchronizeCompanyUseCase;
+import br.com.logistics.tms.shipmentorder.domain.Company;
 
 import java.util.*;
 
-public class CompanyTestDataBuilder {
+public class CompanyBuilder {
 
     private UUID companyId = UUID.randomUUID();
     private Map<String, Object> data = new HashMap<>();
 
-    public static CompanyTestDataBuilder aCompany() {
-        return new CompanyTestDataBuilder();
+    public static CompanyBuilder aCompany() {
+        return new CompanyBuilder();
     }
 
-    public CompanyTestDataBuilder withCompanyId(final UUID companyId) {
+    public CompanyBuilder withCompanyId(final UUID companyId) {
         this.companyId = companyId;
         return this;
     }
 
-    public CompanyTestDataBuilder withTypes(final List<String> types) {
+    public CompanyBuilder withTypes(final List<String> types) {
         this.data.put(SynchronizeCompanyUseCase.TYPES_KEY, types);
         return this;
     }
 
-    public CompanyTestDataBuilder withTypes(final String... types) {
+    public CompanyBuilder withTypes(final String... types) {
         return withTypes(Arrays.asList(types));
     }
 
-    public CompanyTestDataBuilder withData(final Map<String, Object> data) {
+    public CompanyBuilder withData(final Map<String, Object> data) {
         this.data = new HashMap<>(data);
         return this;
     }
 
-    public CompanyTestDataBuilder withDataEntry(final String key, final Object value) {
+    public CompanyBuilder withDataEntry(final String key, final Object value) {
         this.data.put(key, value);
         return this;
     }

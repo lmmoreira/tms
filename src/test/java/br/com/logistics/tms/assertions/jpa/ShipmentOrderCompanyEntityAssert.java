@@ -1,4 +1,4 @@
-package br.com.logistics.tms.integration.assertions;
+package br.com.logistics.tms.assertions.jpa;
 
 import br.com.logistics.tms.company.domain.CompanyType;
 import br.com.logistics.tms.shipmentorder.domain.Company;

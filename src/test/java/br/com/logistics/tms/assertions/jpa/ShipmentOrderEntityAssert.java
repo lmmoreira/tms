@@ -1,4 +1,4 @@
-package br.com.logistics.tms.integration.assertions;
+package br.com.logistics.tms.assertions.jpa;
 
 import br.com.logistics.tms.shipmentorder.infrastructure.jpa.entities.ShipmentOrderEntity;
 import org.assertj.core.api.AbstractAssert;
