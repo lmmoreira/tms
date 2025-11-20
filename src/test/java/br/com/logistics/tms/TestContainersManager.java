@@ -6,7 +6,7 @@ import org.testcontainers.utility.MountableFile;
 
 public final class TestContainersManager {
 
-    private static TestContainersManager INSTANCE;
+    private static volatile TestContainersManager INSTANCE;
 
     private final Network network;
     private final PostgreSQLContainer<?> postgres;

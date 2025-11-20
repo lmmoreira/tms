@@ -1,4 +1,4 @@
-package br.com.logistics.tms.company.application.domain;
+package br.com.logistics.tms.company.domain;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
