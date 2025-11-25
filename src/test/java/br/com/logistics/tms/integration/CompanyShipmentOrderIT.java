@@ -143,6 +143,12 @@ class CompanyShipmentOrderIT extends AbstractIntegrationTest {
                         .withTypes(CompanyType.SELLER)
                         .build());
 
+        final CompanyId shipperId = companyFixture.createCompany(
+                CreateCompanyDTOBuilder.aCreateCompanyDTO()
+                        .withTypes(CompanyType.LOGISTICS_PROVIDER)
+                        .build()
+        );
+
         final CompanyEntity createdCompany = companyJpaRepository.findById(companyId.value()).orElseThrow();
         assertThatCompany(createdCompany)
                 .hasName("Status Sync Test Company")
@@ -198,5 +204,12 @@ class CompanyShipmentOrderIT extends AbstractIntegrationTest {
                 .dataCompanyTypesContains(CompanyType.SELLER)
                 .dataCompanyTypesContains(CompanyType.LOGISTICS_PROVIDER)
                 .isDeleted();
+
+        shipmentOrderFixture.createShipmentOrderWithDeletedCompany(
+                CreateShipmentOrderDTOBuilder.aCreateShipmentOrderDTO()
+                        .withCompanyId(companyId.value())
+                        .withShipperId(shipperId.value())
+                        .build()
+        );
     }
 }

@@ -58,6 +58,25 @@ public class ShipmentOrderIntegrationFixture {
         return ShipmentOrderId.with((String) responseMap.get("shipmentOrderId"));
     }
 
+    public void createShipmentOrderWithDeletedCompany(final CreateShipmentOrderDTO dto) throws Exception {
+        final String json = objectMapper.writeValueAsString(dto);
+
+        final String response = mockMvc.perform(post("/shipmentorders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().is4xxClientError())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        final Map<String, Object> responseMap = objectMapper.readValue(response, Map.class);
+        assertThat(responseMap.get("type")).isEqualTo("about:blank");
+        assertThat(responseMap.get("title")).asString().startsWith("Cannot create shipment order for an inactive company:");
+        assertThat(responseMap.get("status")).isEqualTo(400);
+        assertThat(responseMap.get("detail")).asString().startsWith("Cannot create shipment order for an inactive company:");
+        assertThat(responseMap.get("instance")).isEqualTo("/shipmentorders");
+    }
+
     private void waitForOutboxPublished(final ShipmentOrderId shipmentOrderId) {
         await().atMost(Duration.ofSeconds(30))
                 .pollInterval(Duration.ofMillis(200))
