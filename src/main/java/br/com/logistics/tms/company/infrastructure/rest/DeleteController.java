@@ -4,7 +4,7 @@ import br.com.logistics.tms.commons.application.annotation.Cqrs;
 import br.com.logistics.tms.commons.application.annotation.DatabaseRole;
 import br.com.logistics.tms.commons.infrastructure.presenters.rest.DefaultRestPresenter;
 import br.com.logistics.tms.commons.infrastructure.usecases.RestUseCaseExecutor;
-import br.com.logistics.tms.company.application.usecases.DeleteCompanyByIdUseCase;
+import br.com.logistics.tms.company.application.usecases.DeleteCompanyUseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,24 +18,24 @@ import java.util.UUID;
 @Cqrs(DatabaseRole.WRITE)
 public class DeleteController {
 
-    private final DeleteCompanyByIdUseCase deleteCompanyByIdUseCase;
+    private final DeleteCompanyUseCase deleteCompanyUseCase;
     private final DefaultRestPresenter defaultRestPresenter;
     private final RestUseCaseExecutor restUseCaseExecutor;
 
     public DeleteController(DefaultRestPresenter defaultRestPresenter,
-                            DeleteCompanyByIdUseCase deleteCompanyByIdUseCase,
+                            DeleteCompanyUseCase deleteCompanyUseCase,
                             RestUseCaseExecutor restUseCaseExecutor
     ) {
         this.defaultRestPresenter = defaultRestPresenter;
-        this.deleteCompanyByIdUseCase = deleteCompanyByIdUseCase;
+        this.deleteCompanyUseCase = deleteCompanyUseCase;
         this.restUseCaseExecutor = restUseCaseExecutor;
     }
 
     @DeleteMapping("/{companyId}")
     public Object delete(@PathVariable UUID companyId) {
         return restUseCaseExecutor
-                .from(deleteCompanyByIdUseCase)
-                .withInput(new DeleteCompanyByIdUseCase.Input(companyId))
+                .from(deleteCompanyUseCase)
+                .withInput(new DeleteCompanyUseCase.Input(companyId))
                 .presentWith(output -> defaultRestPresenter.present(HttpStatus.NO_CONTENT.value()))
                 .execute();
     }

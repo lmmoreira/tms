@@ -134,4 +134,69 @@ class CompanyShipmentOrderIT extends AbstractIntegrationTest {
         assertThatCompany(company)
                 .hasShipmentOrderCount(3);
     }
+
+    @Test
+    void shouldUpdateCompanyTypesThenDeleteAndSyncStatusToShipmentOrder() throws Exception {
+        final CompanyId companyId = companyFixture.createCompany(
+                CreateCompanyDTOBuilder.aCreateCompanyDTO()
+                        .withName("Status Sync Test Company")
+                        .withTypes(CompanyType.SELLER)
+                        .build());
+
+        final CompanyEntity createdCompany = companyJpaRepository.findById(companyId.value()).orElseThrow();
+        assertThatCompany(createdCompany)
+                .hasName("Status Sync Test Company")
+                .hasTypes(CompanyType.SELLER)
+                .isActive();
+
+        final ShipmentOrderCompanyEntity shipmentOrderCompanyAfterCreation = shipmentOrderCompanyJpaRepository
+                .findById(companyId.value())
+                .orElseThrow();
+        assertThatShipmentOrderCompany(shipmentOrderCompanyAfterCreation)
+                .hasCompanyId(companyId.value())
+                .hasData()
+                .dataContainsKey("types")
+                .dataCompanyTypesContains(CompanyType.SELLER)
+                .isActive();
+
+        companyFixture.updateCompany(companyId,
+                UpdateCompanyDTOBuilder.anUpdateCompanyDTO()
+                        .withName("Status Sync Test Company")
+                        .withTypes(CompanyType.SELLER, CompanyType.LOGISTICS_PROVIDER)
+                        .build());
+
+        final CompanyEntity updatedCompany = companyJpaRepository.findById(companyId.value()).orElseThrow();
+        assertThatCompany(updatedCompany)
+                .hasName("Status Sync Test Company")
+                .hasTypes(CompanyType.SELLER, CompanyType.LOGISTICS_PROVIDER)
+                .isActive();
+
+        final ShipmentOrderCompanyEntity shipmentOrderCompanyAfterUpdate = shipmentOrderCompanyJpaRepository
+                .findById(companyId.value())
+                .orElseThrow();
+        assertThatShipmentOrderCompany(shipmentOrderCompanyAfterUpdate)
+                .dataContainsKey("types")
+                .dataCompanyTypesContains(CompanyType.SELLER)
+                .dataCompanyTypesContains(CompanyType.LOGISTICS_PROVIDER)
+                .isActive();
+
+        companyFixture.deleteCompany(companyId);
+
+        final CompanyEntity deletedCompany = companyJpaRepository.findById(companyId.value()).orElseThrow();
+        assertThatCompany(deletedCompany)
+                .hasName("Status Sync Test Company")
+                .hasTypes(CompanyType.SELLER, CompanyType.LOGISTICS_PROVIDER)
+                .isDeleted();
+
+        final ShipmentOrderCompanyEntity shipmentOrderCompanyAfterDelete = shipmentOrderCompanyJpaRepository
+                .findById(companyId.value())
+                .orElseThrow();
+        assertThatShipmentOrderCompany(shipmentOrderCompanyAfterDelete)
+                .hasCompanyId(companyId.value())
+                .hasData()
+                .dataContainsKey("types")
+                .dataCompanyTypesContains(CompanyType.SELLER)
+                .dataCompanyTypesContains(CompanyType.LOGISTICS_PROVIDER)
+                .isDeleted();
+    }
 }

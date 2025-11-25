@@ -79,4 +79,36 @@ public class ShipmentOrderCompanyEntityAssert extends AbstractAssert<ShipmentOrd
                 .containsEntry("name", name);
         return this;
     }
+
+    public ShipmentOrderCompanyEntityAssert hasStatus(final Character status) {
+        isNotNull();
+        assertThat(actual.getStatus())
+                .as("ShipmentOrderCompany status")
+                .isEqualTo(status);
+        return this;
+    }
+
+    public ShipmentOrderCompanyEntityAssert isActive() {
+        isNotNull();
+        assertThat(actual.getStatus())
+                .as("ShipmentOrderCompany status")
+                .isEqualTo('A');
+        return this;
+    }
+
+    public ShipmentOrderCompanyEntityAssert isSuspended() {
+        isNotNull();
+        assertThat(actual.getStatus())
+                .as("ShipmentOrderCompany status")
+                .isEqualTo('S');
+        return this;
+    }
+
+    public ShipmentOrderCompanyEntityAssert isDeleted() {
+        isNotNull();
+        assertThat(actual.getStatus())
+                .as("ShipmentOrderCompany status")
+                .isEqualTo('D');
+        return this;
+    }
 }

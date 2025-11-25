@@ -32,8 +32,11 @@ public class CreateShipmentOrderUseCase implements UseCase<CreateShipmentOrderUs
             throw new ValidationException("ShipmentOrder already exists");
         }
 
-        if (!companyRepository.existsById(CompanyId.with(input.companyId))) {
-            throw new ValidationException("Company not found: " + input.companyId);
+        final Company company = companyRepository.findById(CompanyId.with(input.companyId))
+                .orElseThrow(() -> new ValidationException("Company not found: " + input.companyId));
+
+        if (company.getStatus().isInactive()) {
+            throw new ValidationException("Cannot create shipment order for an inactive company: " + input.companyId);
         }
 
         if (input.shipperId != null && !companyRepository.existsById(CompanyId.with(input.shipperId))) {

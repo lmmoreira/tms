@@ -2,6 +2,7 @@ package br.com.logistics.tms.company.domain;
 
 import br.com.logistics.tms.commons.domain.AbstractAggregateRoot;
 import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
+import br.com.logistics.tms.commons.domain.Status;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 
 import java.util.*;
@@ -14,6 +15,7 @@ public class Company extends AbstractAggregateRoot {
     private final CompanyTypes companyTypes;
     private final Configurations configurations;
     private final Set<Agreement> agreements;
+    private final Status status;
 
     public Company(final CompanyId companyId,
                    final String name,
@@ -21,6 +23,7 @@ public class Company extends AbstractAggregateRoot {
                    final CompanyTypes companyTypes,
                    final Configurations configurations,
                    final Set<Agreement> agreements,
+                   final Status status,
                    final Set<AbstractDomainEvent> domainEvents,
                    final Map<String, Object> persistentMetadata) {
         super(new HashSet<>(domainEvents), new HashMap<>(persistentMetadata));
@@ -31,6 +34,7 @@ public class Company extends AbstractAggregateRoot {
         if (companyTypes == null) throw new ValidationException("Invalid type for Company");
         if (configurations == null) throw new ValidationException("Invalid configuration for Company");
         if (agreements == null) throw new ValidationException("Invalid agreements for Company");
+        if (status == null) throw new ValidationException("Invalid status for Company");
 
         this.companyId = companyId;
         this.name = name;
@@ -38,6 +42,7 @@ public class Company extends AbstractAggregateRoot {
         this.companyTypes = companyTypes;
         this.configurations = configurations;
         this.agreements = agreements;
+        this.status = status;
     }
 
     public static Company createCompany(final String name,
@@ -50,6 +55,7 @@ public class Company extends AbstractAggregateRoot {
                 CompanyTypes.with(types),
                 Configurations.with(configuration),
                 new HashSet<>(),
+                Status.active(),
                 new HashSet<>(),
                 new HashMap<>());
         company.placeDomainEvent(new CompanyCreated(company.companyId.value(), company.name, company.companyTypes.getTypeNames()));
@@ -57,6 +63,7 @@ public class Company extends AbstractAggregateRoot {
     }
 
     public Company updateName(final String name) {
+        validateCanUpdate();
         if (this.name.equals(name))
             return this;
 
@@ -67,6 +74,7 @@ public class Company extends AbstractAggregateRoot {
                 this.companyTypes,
                 this.configurations,
                 this.agreements,
+                this.status,
                 this.getDomainEvents(),
                 this.getPersistentMetadata()
         );
@@ -76,6 +84,7 @@ public class Company extends AbstractAggregateRoot {
     }
 
     public Company updateCnpj(final String cnpj) {
+        validateCanUpdate();
         if (this.cnpj.value().equals(cnpj))
             return this;
 
@@ -86,6 +95,7 @@ public class Company extends AbstractAggregateRoot {
                 this.companyTypes,
                 this.configurations,
                 this.agreements,
+                this.status,
                 this.getDomainEvents(),
                 this.getPersistentMetadata()
         );
@@ -95,6 +105,7 @@ public class Company extends AbstractAggregateRoot {
     }
 
     public Company updateTypes(final Set<CompanyType> types) {
+        validateCanUpdate();
         if (this.companyTypes.equals(CompanyTypes.with(types)))
             return this;
 
@@ -105,6 +116,7 @@ public class Company extends AbstractAggregateRoot {
                 CompanyTypes.with(types),
                 this.configurations,
                 this.agreements,
+                this.status,
                 this.getDomainEvents(),
                 this.getPersistentMetadata()
         );
@@ -114,6 +126,7 @@ public class Company extends AbstractAggregateRoot {
     }
 
     public Company updateConfigurations(final Map<String, Object> configurations) {
+        validateCanUpdate();
         if (this.configurations.equals(Configurations.with(configurations)))
             return this;
 
@@ -124,6 +137,7 @@ public class Company extends AbstractAggregateRoot {
                 this.companyTypes,
                 Configurations.with(configurations),
                 this.agreements,
+                this.status,
                 this.getDomainEvents(),
                 this.getPersistentMetadata()
         );
@@ -139,8 +153,50 @@ public class Company extends AbstractAggregateRoot {
         return this.updateConfigurations(configuration);
     }
 
-    public void delete() {
-        placeDomainEvent(new CompanyDeleted(this.companyId.value(), this.toString()));
+    public Company suspend() {
+        if (this.status.isSuspended() || this.status.isDeleted()) {
+            return this;
+        }
+
+        return this.updateStatus(Status.suspended());
+    }
+
+    public Company delete() {
+        if (this.status.isDeleted()) {
+            return this;
+        }
+
+        return this.updateStatus(Status.deleted());
+    }
+
+    public Company updateStatus(final Status newStatus) {
+        if (this.status.equals(newStatus)) {
+            return this;
+        }
+
+        final Company updated = new Company(
+                this.companyId,
+                this.name,
+                this.cnpj,
+                this.companyTypes,
+                this.configurations,
+                this.agreements,
+                newStatus,
+                this.getDomainEvents(),
+                this.getPersistentMetadata()
+        );
+
+        updated.placeDomainEvent(new CompanyUpdated(updated.companyId.value(), "status", String.valueOf(this.status.value()), String.valueOf(newStatus.value())));
+        return updated;
+    }
+
+    private void validateCanUpdate() {
+        if (!this.status.isActive()) {
+            throw new ValidationException(
+                    String.format("Cannot update company in %s status", 
+                            this.status.isDeleted() ? "DELETED" : "SUSPENDED")
+            );
+        }
     }
 
     public Set<Agreement> getAgreements() {
@@ -188,6 +244,10 @@ public class Company extends AbstractAggregateRoot {
         return configurations;
     }
 
+    public Status getStatus() {
+        return status;
+    }
+
     @Override
     public String toString() {
         return Map.of(
@@ -196,6 +256,7 @@ public class Company extends AbstractAggregateRoot {
                 "cnpj", cnpj,
                 "companyTypes", companyTypes,
                 "configurations", configurations,
+                "status", status,
                 "agreements", agreements
         ).toString();
     }

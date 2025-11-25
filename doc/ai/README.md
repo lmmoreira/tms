@@ -107,6 +107,18 @@ Templates for creating new components:
   - Test data builders
   - **See also:** [INTEGRATION_TESTS.md](INTEGRATION_TESTS.md)
 
+### Features (`features/`)
+
+Implementation guides for specific features:
+
+- **[COMPANY-STATUS.md](features/COMPANY-STATUS.md)** ⭐ (NEW)
+  - Company status lifecycle (ACTIVE, SUSPENDED, DELETED)
+  - Soft delete pattern
+  - Event-driven synchronization across modules
+  - Status validation rules
+  - Test examples and assertion helpers
+  - **Related code:** `Status.java`, `Company.java`, `SynchronizeCompanyUseCase.java`
+
 ---
 
 ## 🎯 Most Common Tasks
@@ -118,6 +130,7 @@ Templates for creating new components:
 | **Create Aggregate** | [prompts/new-aggregate.md](prompts/new-aggregate.md) | [examples/complete-aggregate.md](examples/complete-aggregate.md) |
 | **Add Event Listener** | [prompts/new-event-listener.md](prompts/new-event-listener.md) | [examples/event-driven-communication.md](examples/event-driven-communication.md) |
 | **Create Integration Test** | [INTEGRATION_TESTS.md](INTEGRATION_TESTS.md) ⭐ | [prompts/new-integration-test.md](prompts/new-integration-test.md) |
+| **Add Status to Entity** | [features/COMPANY-STATUS.md](features/COMPANY-STATUS.md) ⭐ | [examples/complete-aggregate.md](examples/complete-aggregate.md) |
 | **Quick Pattern Lookup** | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | - |
 | **Review Code** | [QUICK_REFERENCE.md § Validation](QUICK_REFERENCE.md) | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | **Create ArchUnit Tests** | [ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md) | [ARCHUNIT_TEST_CATALOG.md](ARCHUNIT_TEST_CATALOG.md) |

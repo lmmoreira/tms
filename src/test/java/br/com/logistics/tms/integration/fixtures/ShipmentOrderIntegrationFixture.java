@@ -61,24 +61,20 @@ public class ShipmentOrderIntegrationFixture {
     private void waitForOutboxPublished(final ShipmentOrderId shipmentOrderId) {
         await().atMost(Duration.ofSeconds(30))
                 .pollInterval(Duration.ofMillis(200))
-                .untilAsserted(() -> {
-                    assertThat(shipmentOrderOutboxJpaRepository.findFirstByAggregateIdOrderByCreatedAtDesc(shipmentOrderId.value()))
-                            .isPresent()
-                            .get()
-                            .extracting(AbstractOutboxEntity::getStatus)
-                            .isEqualTo(br.com.logistics.tms.commons.infrastructure.gateways.outbox.OutboxStatus.PUBLISHED);
-                });
+                .untilAsserted(() -> assertThat(shipmentOrderOutboxJpaRepository.findFirstByAggregateIdOrderByCreatedAtDesc(shipmentOrderId.value()))
+                        .isPresent()
+                        .get()
+                        .extracting(AbstractOutboxEntity::getStatus)
+                        .isEqualTo(br.com.logistics.tms.commons.infrastructure.gateways.outbox.OutboxStatus.PUBLISHED));
     }
 
     private void waitForCompanyCounterIncremented(final java.util.UUID companyId) {
         await().atMost(Duration.ofSeconds(30))
                 .pollInterval(Duration.ofMillis(200))
-                .untilAsserted(() -> {
-                    assertThat(companyJpaRepository.findById(companyId))
-                            .isPresent()
-                            .get()
-                            .extracting(company -> company.getConfiguration().get("shipmentOrderNumber"))
-                            .isNotNull();
-                });
+                .untilAsserted(() -> assertThat(companyJpaRepository.findById(companyId))
+                        .isPresent()
+                        .get()
+                        .extracting(company -> company.getConfiguration().get("shipmentOrderNumber"))
+                        .isNotNull());
     }
 }

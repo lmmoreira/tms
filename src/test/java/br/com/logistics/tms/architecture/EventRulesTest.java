@@ -157,7 +157,8 @@ class EventRulesTest {
                 .that().resideInAPackage("..domain..")
                 .and().haveSimpleNameEndingWith("Deleted")
                 .should(matchSimpleNamePattern("^[A-Z][a-zA-Z]*Deleted$"))
-                .because("Deleted events should follow pattern: {Entity}Deleted");
+                .because("Deleted events should follow pattern: {Entity}Deleted")
+                .allowEmptyShould(true);
 
         rule.check(classes);
     }

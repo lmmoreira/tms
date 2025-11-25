@@ -1,7 +1,7 @@
 package br.com.logistics.tms.shipmentorder.domain;
 
 import br.com.logistics.tms.commons.domain.AbstractAggregateRoot;
-import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
+import br.com.logistics.tms.commons.domain.Status;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 
 import java.util.*;
@@ -10,26 +10,34 @@ public class Company extends AbstractAggregateRoot {
 
     private final CompanyId companyId;
     private final CompanyData data;
+    private final Status status;
 
-    private Company(CompanyId companyId,
-                    CompanyData data) {
+    private Company(final CompanyId companyId,
+                    final CompanyData data,
+                    final Status status) {
         super(new HashSet<>(), new HashMap<>());
 
         if (companyId == null) throw new ValidationException("Invalid companyId for Company");
         if (data == null) throw new ValidationException("Invalid data for Company");
+        if (status == null) throw new ValidationException("Invalid status for Company");
 
         this.companyId = companyId;
         this.data = data;
+        this.status = status;
     }
 
-    public static Company createCompany(UUID companyId, Map<String, Object> data) {
-        return new Company(CompanyId.with(companyId), CompanyData.with(data));
+    public static Company createCompany(final UUID companyId, final Map<String, Object> data) {
+        return new Company(CompanyId.with(companyId), CompanyData.with(data), Status.active());
     }
 
-    public Company updateData(Map<String, Object> newData) {
+    public Company updateData(final Map<String, Object> newData) {
         final Map<String, Object> mergedData = new HashMap<>(this.data.value());
         mergedData.putAll(newData);
-        return new Company(this.companyId, CompanyData.with(mergedData));
+        return new Company(this.companyId, CompanyData.with(mergedData), this.status);
+    }
+
+    public Company updateStatus(final Status newStatus) {
+        return new Company(this.companyId, this.data, newStatus);
     }
 
     public CompanyId getCompanyId() {
@@ -38,6 +46,10 @@ public class Company extends AbstractAggregateRoot {
 
     public CompanyData getData() {
         return data;
+    }
+
+    public Status getStatus() {
+        return status;
     }
 
     public Set<String> types() {

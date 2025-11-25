@@ -1,5 +1,6 @@
 package br.com.logistics.tms.shipmentorder.infrastructure.jpa.entities;
 
+import br.com.logistics.tms.commons.domain.Status;
 import br.com.logistics.tms.shipmentorder.domain.Company;
 import br.com.logistics.tms.shipmentorder.infrastructure.config.ShipmentOrderSchema;
 import jakarta.persistence.*;
@@ -29,17 +30,22 @@ public class ShipmentOrderCompanyEntity implements Serializable {
     @Column(name = "data", nullable = false)
     private Map<String, Object> data;
 
+    @Column(name = "status", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'A'")
+    private Character status;
+
     public static ShipmentOrderCompanyEntity of(final Company company) {
         return new ShipmentOrderCompanyEntity(
                 company.getCompanyId().value(),
-                company.getData().value()
+                company.getData().value(),
+                company.getStatus().value()
         );
     }
 
     public Company toDomain() {
-        return Company.createCompany(
+        final Company company = Company.createCompany(
                 this.companyId,
                 this.data != null ? new HashMap<>(this.data) : new HashMap<>()
         );
+        return company.updateStatus(Status.of(this.status));
     }
 }

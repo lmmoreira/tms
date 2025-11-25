@@ -1,5 +1,6 @@
 package br.com.logistics.tms.company.infrastructure.jpa.entities;
 
+import br.com.logistics.tms.commons.domain.Status;
 import br.com.logistics.tms.company.domain.*;
 import br.com.logistics.tms.company.infrastructure.config.CompanySchema;
 import jakarta.persistence.*;
@@ -30,6 +31,9 @@ public class CompanyEntity implements Serializable {
     @Column(name = "cnpj", nullable = false)
     private String cnpj;
 
+    @Column(name = "status", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'A'")
+    private Character status;
+
     @Version
     private Integer version;
 
@@ -54,6 +58,7 @@ public class CompanyEntity implements Serializable {
                 .cnpj(company.getCnpj().value())
                 .companyTypes(new HashSet<>(company.getCompanyTypes().value()))
                 .configuration(new HashMap<>(company.getConfigurations().value()))
+                .status(company.getStatus().value())
                 .version((Integer) company.getPersistentMetadata().getOrDefault("version", null))
                 .build();
     }
@@ -66,6 +71,7 @@ public class CompanyEntity implements Serializable {
                 CompanyTypes.with(this.companyTypes),
                 Configurations.with(this.configuration),
                 Collections.emptySet(),
+                Status.of(this.status),
                 Collections.emptySet(),
                 Map.of("version", this.version)
         );

@@ -112,4 +112,44 @@ public class CompanyAssert extends AbstractAssert<CompanyAssert, Company> {
                 .isEqualTo(expectedValue);
         return this;
     }
+
+    public CompanyAssert hasStatus(final Character status) {
+        isNotNull();
+        assertThat(actual.getStatus().value())
+                .as("Company status")
+                .isEqualTo(status);
+        return this;
+    }
+
+    public CompanyAssert isActive() {
+        isNotNull();
+        assertThat(actual.getStatus().isActive())
+                .as("Company is active")
+                .isTrue();
+        return this;
+    }
+
+    public CompanyAssert isSuspended() {
+        isNotNull();
+        assertThat(actual.getStatus().isSuspended())
+                .as("Company is suspended")
+                .isTrue();
+        return this;
+    }
+
+    public CompanyAssert isDeleted() {
+        isNotNull();
+        assertThat(actual.getStatus().isDeleted())
+                .as("Company is deleted")
+                .isTrue();
+        return this;
+    }
+
+    public CompanyAssert isInactive() {
+        isNotNull();
+        assertThat(actual.getStatus().isInactive())
+                .as("Company is inactive")
+                .isTrue();
+        return this;
+    }
 }

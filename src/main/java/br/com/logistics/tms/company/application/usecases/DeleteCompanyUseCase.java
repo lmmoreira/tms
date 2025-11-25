@@ -13,11 +13,11 @@ import java.util.UUID;
 
 @DomainService
 @Cqrs(DatabaseRole.WRITE)
-public class DeleteCompanyByIdUseCase implements UseCase<DeleteCompanyByIdUseCase.Input, DeleteCompanyByIdUseCase.Output> {
+public class DeleteCompanyUseCase implements UseCase<DeleteCompanyUseCase.Input, DeleteCompanyUseCase.Output> {
 
     private final CompanyRepository companyRepository;
 
-    public DeleteCompanyByIdUseCase(CompanyRepository companyRepository) {
+    public DeleteCompanyUseCase(CompanyRepository companyRepository) {
         this.companyRepository = companyRepository;
     }
 
@@ -25,8 +25,8 @@ public class DeleteCompanyByIdUseCase implements UseCase<DeleteCompanyByIdUseCas
         final Company company = companyRepository.getCompanyById(CompanyId.with(input.companyId()))
                 .orElseThrow(() -> new CompanyNotFoundException(String.format("Company not found for id: %s", input.companyId())));
 
-        company.delete();
-        companyRepository.delete(company);
+        final Company deleted = company.delete();
+        companyRepository.update(deleted);
 
         return new Output(true);
     }

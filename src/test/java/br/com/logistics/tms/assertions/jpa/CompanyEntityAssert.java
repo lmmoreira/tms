@@ -85,4 +85,36 @@ public class CompanyEntityAssert extends AbstractAssert<CompanyEntityAssert, Com
         
         return this;
     }
+
+    public CompanyEntityAssert hasStatus(final Character status) {
+        isNotNull();
+        assertThat(actual.getStatus())
+                .as("Company status")
+                .isEqualTo(status);
+        return this;
+    }
+
+    public CompanyEntityAssert isActive() {
+        isNotNull();
+        assertThat(actual.getStatus())
+                .as("Company status")
+                .isEqualTo('A');
+        return this;
+    }
+
+    public CompanyEntityAssert isSuspended() {
+        isNotNull();
+        assertThat(actual.getStatus())
+                .as("Company status")
+                .isEqualTo('S');
+        return this;
+    }
+
+    public CompanyEntityAssert isDeleted() {
+        isNotNull();
+        assertThat(actual.getStatus())
+                .as("Company status")
+                .isEqualTo('D');
+        return this;
+    }
 }
