@@ -45,12 +45,20 @@ services:
   tms-keycloak:
     image: quay.io/keycloak/keycloak:latest
     container_name: tms-keycloak
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     depends_on:
       - tms-keycloak-database
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: password
       KC_DB: postgres
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
       KC_DB_URL_HOST: tms-keycloak-database
       KC_DB_URL_PORT: "5434"
       KC_DB_URL_DATABASE: tms-keycloak
@@ -62,14 +70,10 @@ services:
     command:
       - start-dev
     volumes:
-      - ./infra/keycloak/realms:/opt/bitnami/keycloak/data/import
+      - ./infra/keycloak/realms:/opt/keycloak/data/import
     ports:
       - "8000:8000"
-    healthcheck:
-      test: [ "CMD", "curl", "-k", "-f", "http://localhost:8000/realms/tms-realm/.well-known/openid-configuration" ]
-      interval: 10s
-      timeout: 1s
-      retries: 10
+      - "9005:9000"
     networks:
       tms-network:
         aliases:
@@ -298,3 +302,8 @@ volumes:
 networks:
   tms-network:
     name: tms-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+          gateway: 172.25.0.1

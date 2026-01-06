@@ -7,7 +7,7 @@ Accept: application/json
 
 {
   "name": "Shein",
-  "cnpj": "50.617.696/0002-06",
+  "cnpj": "50.617.696/0002-08",
   "types": ["MARKETPLACE"],
   "configuration": {
     "notification": "true",
@@ -25,7 +25,7 @@ Accept: application/json
 
 {
   "name": "Loggi",
-  "cnpj": "13.895.286/0001-95",
+  "cnpj": "13.895.286/0001-96",
   "types": ["LOGISTICS_PROVIDER"],
   "configuration": {
     "notification": "true",
