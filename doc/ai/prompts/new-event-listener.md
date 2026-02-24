@@ -1,5 +1,14 @@
 # Prompt: Add Event Listener
 
+## ⚡ TL;DR
+
+- **When:** Module needs to react to events from another module
+- **Why:** Event-driven inter-module communication without direct coupling
+- **Pattern:** `@RabbitListener(queues = "integration.module.event") + VoidUseCaseExecutor`
+- **See:** Read on for complete template
+
+---
+
 ## Purpose
 Template for creating a new event listener that enables module-to-module communication.
 

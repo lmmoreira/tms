@@ -10,14 +10,7 @@ This example shows a complete aggregate implementation following TMS patterns.
 package br.com.logistics.tms.company.domain;
 
 import br.com.logistics.tms.commons.domain.AbstractAggregateRoot;
-import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
-import br.com.logistics.tms.commons.domain.Id;
-import br.com.logistics.tms.commons.exception.ValidationException;
-import br.com.logistics.tms.company.domain.events.CompanyCreated;
-import br.com.logistics.tms.company.domain.events.CompanyUpdated;
-import br.com.logistics.tms.company.domain.events.ConfigurationAdded;
-
-import java.util.*;
+// ... (other imports: AbstractDomainEvent, Id, ValidationException, events)
 
 /**
  * Company aggregate root representing a logistics company.
@@ -27,236 +20,95 @@ public class Company extends AbstractAggregateRoot {
 
     private final CompanyId companyId;
     private final String name;
-    private final Cnpj cnpj;
-    private final Set<CompanyType> types;
-    private final Map<String, Object> configuration;
-    private final Set<Agreement> agreements;
+    // ... (remaining fields: cnpj, types, configuration, agreements)
 
     // ========== PRIVATE CONSTRUCTOR ==========
-    private Company(CompanyId companyId, 
-                    String name, 
-                    Cnpj cnpj,
-                    Set<CompanyType> types,
-                    Map<String, Object> configuration,
-                    Set<Agreement> agreements,
-                    Set<AbstractDomainEvent> domainEvents,
+    private Company(CompanyId companyId, String name, Cnpj cnpj,
+                    Set<CompanyType> types, Map<String, Object> configuration,
+                    Set<Agreement> agreements, Set<AbstractDomainEvent> domainEvents,
                     Map<String, Object> persistentMetadata) {
         super(new HashSet<>(domainEvents), new HashMap<>(persistentMetadata));
         
-        // Validation
-        if (companyId == null) {
-            throw new ValidationException("CompanyId cannot be null");
-        }
-        if (name == null || name.isBlank()) {
-            throw new ValidationException("Company name cannot be null or blank");
-        }
-        if (cnpj == null) {
-            throw new ValidationException("CNPJ cannot be null");
-        }
-        if (types == null || types.isEmpty()) {
-            throw new ValidationException("Company must have at least one type");
-        }
+        // Validation: companyId, name, cnpj null checks; types not empty
+        if (companyId == null) throw new ValidationException("CompanyId cannot be null");
+        if (name == null || name.isBlank()) throw new ValidationException("Company name cannot be null or blank");
+        // ... (cnpj, types validation)
         
         this.companyId = companyId;
         this.name = name;
-        this.cnpj = cnpj;
-        this.types = Set.copyOf(types);
-        this.configuration = configuration != null ? Map.copyOf(configuration) : Map.of();
-        this.agreements = agreements != null ? Set.copyOf(agreements) : Set.of();
+        // ... (remaining field assignments with defensive copies)
     }
 
     // ========== FACTORY METHOD (CREATE) ==========
-    
-    /**
-     * Factory method to create a new Company.
-     * Places CompanyCreated event.
-     */
-    public static Company createCompany(String name, 
-                                       String cnpj, 
-                                       Set<CompanyType> types,
+    public static Company createCompany(String name, String cnpj, Set<CompanyType> types,
                                        Map<String, Object> configuration) {
-        Company company = new Company(
-            CompanyId.unique(),
-            name,
-            new Cnpj(cnpj),
-            types,
-            configuration,
-            new HashSet<>(),
-            new HashSet<>(),
-            new HashMap<>()
-        );
-        
-        // Place domain event
-        company.placeDomainEvent(new CompanyCreated(
-            company.getCompanyId().value(),
-            company.getName(),
-            company.getCnpj().value()
-        ));
-        
+        Company company = new Company(CompanyId.unique(), name, new Cnpj(cnpj), types,
+                                      configuration, new HashSet<>(), new HashSet<>(), new HashMap<>());
+        company.placeDomainEvent(new CompanyCreated(company.getCompanyId().value(),
+                                                     company.getName(), company.getCnpj().value()));
         return company;
     }
 
     // ========== RECONSTRUCTION (FROM DATABASE) ==========
-    
-    /**
-     * Reconstructs Company from persistence without placing events.
-     */
-    public static Company reconstruct(CompanyId companyId,
-                                     String name,
-                                     Cnpj cnpj,
-                                     Set<CompanyType> types,
-                                     Map<String, Object> configuration,
-                                     Set<Agreement> agreements,
-                                     Map<String, Object> persistentMetadata) {
-        return new Company(
-            companyId,
-            name,
-            cnpj,
-            types,
-            configuration,
-            agreements,
-            new HashSet<>(), // No events on reconstruction
-            persistentMetadata
-        );
+    public static Company reconstruct(CompanyId companyId, String name, Cnpj cnpj,
+                                     Set<CompanyType> types, Map<String, Object> configuration,
+                                     Set<Agreement> agreements, Map<String, Object> persistentMetadata) {
+        return new Company(companyId, name, cnpj, types, configuration, agreements,
+                          new HashSet<>(), persistentMetadata);
     }
 
     // ========== UPDATE METHODS (IMMUTABLE) ==========
-    
-    /**
-     * Updates company name.
-     * Returns NEW instance with event.
-     */
     public Company updateName(String newName) {
-        if (this.name.equals(newName)) {
-            return this; // No change needed
-        }
+        if (this.name.equals(newName)) return this;
         
-        Company updated = new Company(
-            this.companyId,
-            newName,
-            this.cnpj,
-            this.types,
-            this.configuration,
-            this.agreements,
-            this.getDomainEvents(),
-            this.getPersistentMetadata()
-        );
-        
-        updated.placeDomainEvent(new CompanyUpdated(
-            updated.getCompanyId().value(),
-            "name",
-            this.name,
-            newName
-        ));
-        
+        Company updated = new Company(this.companyId, newName, this.cnpj, this.types,
+                                     this.configuration, this.agreements, this.getDomainEvents(),
+                                     this.getPersistentMetadata());
+        updated.placeDomainEvent(new CompanyUpdated(updated.getCompanyId().value(),
+                                                     "name", this.name, newName));
         return updated;
     }
 
-    /**
-     * Adds configuration entry.
-     * Returns NEW instance with event.
-     */
     public Company addConfiguration(String key, Object value) {
         if (this.configuration.containsKey(key)) {
             throw new ValidationException("Configuration key already exists: " + key);
         }
-        
         Map<String, Object> newConfig = new HashMap<>(this.configuration);
         newConfig.put(key, value);
         
-        Company updated = new Company(
-            this.companyId,
-            this.name,
-            this.cnpj,
-            this.types,
-            newConfig,
-            this.agreements,
-            this.getDomainEvents(),
-            this.getPersistentMetadata()
-        );
-        
-        updated.placeDomainEvent(new ConfigurationAdded(
-            updated.getCompanyId().value(),
-            key,
-            value
-        ));
-        
+        Company updated = new Company(this.companyId, this.name, this.cnpj, this.types,
+                                     newConfig, this.agreements, this.getDomainEvents(),
+                                     this.getPersistentMetadata());
+        updated.placeDomainEvent(new ConfigurationAdded(updated.getCompanyId().value(), key, value));
         return updated;
     }
 
-    /**
-     * Adds an agreement.
-     * Returns NEW instance (no event in this example).
-     */
     public Company addAgreement(Agreement agreement) {
-        if (this.agreements.contains(agreement)) {
-            return this; // Already exists
-        }
-        
+        if (this.agreements.contains(agreement)) return this;
         Set<Agreement> newAgreements = new HashSet<>(this.agreements);
         newAgreements.add(agreement);
-        
-        return new Company(
-            this.companyId,
-            this.name,
-            this.cnpj,
-            this.types,
-            this.configuration,
-            newAgreements,
-            this.getDomainEvents(),
-            this.getPersistentMetadata()
-        );
+        return new Company(this.companyId, this.name, this.cnpj, this.types,
+                          this.configuration, newAgreements, this.getDomainEvents(),
+                          this.getPersistentMetadata());
     }
 
     // ========== BUSINESS LOGIC ==========
-    
-    /**
-     * Checks if company has a specific type.
-     */
-    public boolean hasType(CompanyType type) {
-        return this.types.contains(type);
-    }
-
-    /**
-     * Validates if company can create shipment orders.
-     */
+    public boolean hasType(CompanyType type) { return this.types.contains(type); }
     public boolean canCreateShipmentOrders() {
         return hasType(CompanyType.MARKETPLACE) || hasType(CompanyType.SHIPPER);
     }
 
     // ========== GETTERS ONLY ==========
-    
-    public CompanyId getCompanyId() {
-        return companyId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Cnpj getCnpj() {
-        return cnpj;
-    }
-
-    public Set<CompanyType> getTypes() {
-        return types; // Already immutable from constructor
-    }
-
-    public Map<String, Object> getConfiguration() {
-        return configuration; // Already immutable from constructor
-    }
-
-    public Set<Agreement> getAgreements() {
-        return agreements; // Already immutable from constructor
-    }
+    public CompanyId getCompanyId() { return companyId; }
+    public String getName() { return name; }
+    public Cnpj getCnpj() { return cnpj; }
+    public Set<CompanyType> getTypes() { return types; }
+    public Map<String, Object> getConfiguration() { return configuration; }
+    public Set<Agreement> getAgreements() { return agreements; }
 
     @Override
     public String toString() {
-        return "Company{" +
-                "companyId=" + companyId.value() +
-                ", name='" + name + '\'' +
-                ", cnpj=" + cnpj.value() +
-                '}';
+        return "Company{companyId=" + companyId.value() + ", name='" + name + "', cnpj=" + cnpj.value() + '}';
     }
 
     @Override
@@ -267,11 +119,11 @@ public class Company extends AbstractAggregateRoot {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(companyId);
-    }
+    public int hashCode() { return Objects.hash(companyId); }
 }
 ```
+
+**Full pattern details:** `.squad/skills/immutable-aggregate-update/SKILL.md`
 
 ## Key Points
 

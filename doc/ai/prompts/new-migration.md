@@ -1,5 +1,14 @@
 # Database Migration Template
 
+## ⚡ TL;DR
+
+- **When:** Adding/modifying database schema (tables, columns, indexes)
+- **Why:** Version-controlled, sequential schema evolution via Flyway
+- **Pattern:** `V{N}__{description}.sql` in `/infra/database/migration/`
+- **See:** Read on for SQL templates
+
+---
+
 ## Purpose
 Create a new database migration to modify the database schema.
 

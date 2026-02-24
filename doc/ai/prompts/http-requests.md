@@ -1,5 +1,14 @@
 # HTTP Request Files Guide
 
+## ⚡ TL;DR
+
+- **When:** Manual API testing during development
+- **Why:** Quick endpoint testing without Postman, version-controlled
+- **Pattern:** `src/main/resources/{module}/request.http` with variables and response handlers
+- **See:** Read on for complete structure
+
+---
+
 ## Purpose
 Create and maintain HTTP request files for manual API testing with IntelliJ HTTP Client.
 

@@ -1,5 +1,14 @@
 # Prompt: Create New Use Case
 
+## ⚡ TL;DR
+
+- **When:** Implementing a business operation (command or query)
+- **Why:** Application layer orchestration with CQRS separation
+- **Pattern:** `@DomainService @Cqrs(DatabaseRole.WRITE) class CreateCompanyUseCase implements UseCase<Input, Output>`
+- **See:** Read on for complete template
+
+---
+
 ## Purpose
 Template for creating a new use case operation in a TMS module.
 

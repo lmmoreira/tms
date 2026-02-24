@@ -1,5 +1,14 @@
 # Prompt: Create New Aggregate
 
+## ⚡ TL;DR
+
+- **When:** Creating a new business entity with identity and lifecycle
+- **Why:** DDD aggregate pattern with immutability and domain events
+- **Pattern:** Private constructor + factory methods, update returns new instance
+- **See:** Read on for complete template
+
+---
+
 ## Purpose
 Template for creating a new aggregate root in a TMS module.
 
@@ -61,126 +70,47 @@ Generate the following files:
 ### 1. Aggregate Root Class
 **Location:** `src/main/java/br/com/logistics/tms/{module}/domain/{Aggregate}.java`
 
-**Pattern:**
+**Pattern (TL;DR):**
 ```java
 public class {Aggregate} extends AbstractAggregateRoot {
-
     // All fields MUST be final (immutability)
     private final {Aggregate}Id {aggregate}Id;
-    private final String name;  // Example field
+    private final String name;
     private final {ValueObject} valueObject;
-    private final Set<{Entity}> entities;  // If aggregate contains entities
+    private final Set<{Entity}> entities;
 
     // Private constructor - forces use of factory methods
-    private {Aggregate}(
-            {Aggregate}Id {aggregate}Id,
-            String name,
-            {ValueObject} valueObject,
-            Set<{Entity}> entities,
-            Set<AbstractDomainEvent> domainEvents,
-            Map<String, Object> persistentMetadata) {
+    private {Aggregate}(/* all params */) {
         super(new HashSet<>(domainEvents), new HashMap<>(persistentMetadata));
-
         // Invariant validation
         if ({aggregate}Id == null) throw new ValidationException("Invalid {aggregate}Id");
-        if (name == null || name.isBlank()) throw new ValidationException("Invalid name");
-        if (valueObject == null) throw new ValidationException("Invalid {valueObject}");
-        if (entities == null) throw new ValidationException("Invalid {entities}");
-        // More validations...
-
         this.{aggregate}Id = {aggregate}Id;
         this.name = name;
-        this.valueObject = valueObject;
-        this.entities = entities;
+        // ... (other assignments)
     }
 
     // Factory method for creation
-    public static {Aggregate} create{Aggregate}(String name, {ValueObject} valueObject, ...) {
-        // Create new instance
-        {Aggregate} aggregate = new {Aggregate}(
-                {Aggregate}Id.unique(),  // Generate new ID
-                name,
-                valueObject,
-                new HashSet<>(),
-                new HashSet<>(),
-                new HashMap<>()
-        );
-
-        // Place domain event
-        aggregate.placeDomainEvent(
-                new {Aggregate}Created(aggregate.get{Aggregate}Id().value(), aggregate.toString())
-        );
-
+    public static {Aggregate} create{Aggregate}(...) {
+        {Aggregate} aggregate = new {Aggregate}({Aggregate}Id.unique(), ...);
+        aggregate.placeDomainEvent(new {Aggregate}Created(...));
         return aggregate;
     }
 
     // Update method - returns NEW instance (immutable)
     public {Aggregate} updateName(String name) {
-        if (this.name.equals(name)) return this;  // No change
-
-        {Aggregate} updated = new {Aggregate}(
-                this.{aggregate}Id,
-                name,  // Updated value
-                this.valueObject,
-                this.entities,
-                this.getDomainEvents(),
-                this.getPersistentMetadata()
-        );
-
-        updated.placeDomainEvent(
-                new {Aggregate}Updated(
-                        updated.get{Aggregate}Id().value(),
-                        "name",
-                        this.name,
-                        name
-                )
-        );
-
-        return updated;
-    }
-
-    // Business method example - add entity to aggregate
-    public {Aggregate} add{Entity}({Entity} entity) {
-        if (this.entities.contains(entity)) return this;
-
-        Set<{Entity}> updatedEntities = new HashSet<>(this.entities);
-        updatedEntities.add(entity);
-
-        {Aggregate} updated = new {Aggregate}(
-                this.{aggregate}Id,
-                this.name,
-                this.valueObject,
-                updatedEntities,  // Updated collection
-                this.getDomainEvents(),
-                this.getPersistentMetadata()
-        );
-
-        updated.placeDomainEvent(
-                new {Entity}AddedTo{Aggregate}(
-                        updated.get{Aggregate}Id().value(),
-                        entity.getId()
-                )
-        );
-
+        if (this.name.equals(name)) return this;
+        {Aggregate} updated = new {Aggregate}(this.{aggregate}Id, name, ...);
+        updated.placeDomainEvent(new {Aggregate}Updated(...));
         return updated;
     }
 
     // Getters only - NO SETTERS
     public {Aggregate}Id get{Aggregate}Id() { return {aggregate}Id; }
     public String getName() { return name; }
-    public {ValueObject} get{ValueObject}() { return valueObject; }
-    public Set<{Entity}> get{Entities}() { return Collections.unmodifiableSet(entities); }
-
-    @Override
-    public String toString() {
-        // Useful for logging and events
-        return "{Aggregate}{" +
-                "{aggregate}Id=" + {aggregate}Id +
-                ", name='" + name + '\'' +
-                ", valueObject=" + valueObject +
-                '}';
-    }
 }
+
+// Full implementation with all methods: doc/ai/examples/complete-aggregate.md
+// Pattern guide: .squad/skills/immutable-aggregate-update/SKILL.md
 ```
 
 ### 2. Aggregate Root ID (Value Object)

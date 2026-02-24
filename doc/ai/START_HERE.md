@@ -125,7 +125,7 @@ doc/ai/
 ├── GLOSSARY.md - Domain terminology
 ├── ARCHUNIT_GUIDELINES.md - ArchUnit testing guidelines
 ├── ARCHUNIT_TEST_CATALOG.md - Catalog of existing ArchUnit tests
-├── ARCHUNIT_CHEATSHEET.md - Quick ArchUnit reference
+
 ├── AI_DOCUMENTATION_REVIEW.md - Optimization analysis
 │
 ├── examples/ - Complete code examples

@@ -1,5 +1,20 @@
 # Eventual Consistency Guide
 
+> **⚠️ NOTE:** This prompt has been extracted as a skill for better reusability.  
+> **See:** `.squad/skills/eventual-consistency-pattern/SKILL.md` for the optimized pattern.  
+> **This file remains for historical reference and detailed examples.**
+
+---
+
+## ⚡ TL;DR
+
+- **When:** Module needs read-only access to another module's data
+- **Why:** Maintain module autonomy while validating cross-module references
+- **Pattern:** Event → Listener → SynchronizeUseCase → Local copy in target DB
+- **See:** `.squad/skills/eventual-consistency-pattern/SKILL.md`
+
+---
+
 ## Purpose
 Implement eventual consistency between modules using event-driven synchronization.
 

@@ -1,5 +1,20 @@
 # Fake Repository Pattern for Testing
 
+> **⚠️ NOTE:** This prompt has been extracted as a skill for better reusability.  
+> **See:** `.squad/skills/fake-repository-pattern/SKILL.md` for the optimized pattern.  
+> **This file remains for historical reference and detailed examples.**
+
+---
+
+## ⚡ TL;DR
+
+- **When:** Unit testing use cases without database or mocks
+- **Why:** Real behavior, no setup boilerplate, easier to maintain
+- **Pattern:** `class FakeCompanyRepository implements CompanyRepository { private final Map<CompanyId, Company> data = new HashMap<>(); }`
+- **See:** Read on for full template
+
+---
+
 **Pattern for creating in-memory fake repositories to test use cases without mocks.**
 
 ---

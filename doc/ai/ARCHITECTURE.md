@@ -230,49 +230,36 @@ public class CreateController {
 
 ```java
 public class Company extends AbstractAggregateRoot {
-
     private final CompanyId id;
     private final String name;
     private final Cnpj cnpj;
 
-    // Private constructor
-    private Company(CompanyId id, String name, Cnpj cnpj,
-                   Set<AbstractDomainEvent> events, 
-                   Map<String, Object> metadata) {
+    private Company(/* all params */) {
         super(new HashSet<>(events), new HashMap<>(metadata));
         // Validation
-        if (id == null) throw new ValidationException("Invalid id");
         this.id = id;
         this.name = name;
         this.cnpj = cnpj;
     }
 
-    // Factory method for creation
-    public static Company createCompany(String name, String cnpj, ...) {
-        Company company = new Company(
-            CompanyId.unique(), name, new Cnpj(cnpj), 
-            new HashSet<>(), new HashMap<>()
-        );
-        company.placeDomainEvent(new CompanyCreated(company.getId().value()));
+    public static Company createCompany(...) {
+        Company company = new Company(CompanyId.unique(), ...);
+        company.placeDomainEvent(new CompanyCreated(...));
         return company;
     }
 
-    // Update returns NEW instance
     public Company updateName(String name) {
         if (this.name.equals(name)) return this;
-        
-        Company updated = new Company(
-            this.id, name, this.cnpj,
-            this.getDomainEvents(), this.getPersistentMetadata()
-        );
-        updated.placeDomainEvent(new CompanyUpdated(updated.getId().value(), "name", this.name, name));
+        Company updated = new Company(this.id, name, ...);
+        updated.placeDomainEvent(new CompanyUpdated(...));
         return updated;
     }
 
-    // Getters only, NO setters
     public CompanyId getId() { return id; }
-    public String getName() { return name; }
 }
+
+// Full implementation: doc/ai/examples/complete-aggregate.md
+// Pattern guide: .squad/skills/immutable-aggregate-update/SKILL.md
 ```
 
 **Key Points:**

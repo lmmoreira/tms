@@ -1,5 +1,20 @@
 # Test Data Builders
 
+> **⚠️ NOTE:** This prompt has been extracted as a skill for better reusability.  
+> **See:** `.squad/skills/test-data-builder-pattern/SKILL.md` for the optimized pattern.  
+> **This file remains for historical reference and detailed examples.**
+
+---
+
+## ⚡ TL;DR
+
+- **When:** Creating domain aggregates or use case inputs in tests
+- **Why:** Reduce repetition, focus tests on what matters
+- **Pattern:** `Company company = new CompanyBuilder().withName("ACME").build();`
+- **See:** `.squad/skills/test-data-builder-pattern/SKILL.md`
+
+---
+
 **Pattern for creating test data builders to reduce repetition and improve test maintainability.**
 
 ---

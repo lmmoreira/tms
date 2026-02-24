@@ -1,5 +1,14 @@
 # Prompt: Add New Module
 
+## ⚡ TL;DR
+
+- **When:** Creating a new bounded context (delivery, invoice, quotation)
+- **Why:** Modular monolith with clear boundaries and hexagonal architecture
+- **Pattern:** `{module}/domain/` (pure Java) → `application/` (use cases) → `infrastructure/` (Spring, JPA, REST)
+- **See:** Read on for complete directory structure
+
+---
+
 ## Purpose
 Template for creating a complete new bounded context module in TMS.
 

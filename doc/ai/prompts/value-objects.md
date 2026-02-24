@@ -1,5 +1,14 @@
 # Value Objects Guide
 
+## ⚡ TL;DR
+
+- **When:** Primitives have domain meaning or validation rules
+- **Why:** Encapsulate validation, make domain language explicit
+- **Pattern:** `public record Cnpj(String value) { /* validation in compact constructor */ }`
+- **See:** Read on for multiple patterns
+
+---
+
 ## Purpose
 Create value objects to encapsulate and validate domain primitives.
 

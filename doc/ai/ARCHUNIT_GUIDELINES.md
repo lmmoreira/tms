@@ -1,20 +1,11 @@
 # ArchUnit Guidelines for TMS Project
 
-**Comprehensive guide for creating ArchUnit architecture tests**
+## ⚡ TL;DR
 
----
-
-## 🎯 Quick Navigation
-
-| Need | Go To |
-|------|-------|
-| First time? | [Quick Start Template](#quick-start-template) |
-| Utility classes? | [ArchUnit Utilities](#archunit-utilities) |
-| What can I check? | [Decision Tree](#decision-tree) |
-| Copy-paste patterns | [Common Patterns](#common-patterns) |
-| Custom conditions | [Custom Conditions Library](#custom-conditions-library) |
-| What to avoid | [Anti-Patterns](#anti-patterns) |
-| Not working? | [Troubleshooting](#troubleshooting) |
+- **When:** Writing architecture tests to enforce boundaries
+- **Why:** Reuse conditions, reduce duplication, maintain consistency
+- **Pattern:** `import static br.com.logistics.tms.architecture.ArchUnitConditions.*;`
+- **See:** `.squad/skills/archunit-condition-reuse/SKILL.md`
 
 ---
 
@@ -74,7 +65,33 @@ void eventsShouldFollowNamingPattern() {
 
 ---
 
-## ⚡ Quick Start Template
+## 🎯 Quick Navigation
+
+| Need | Go To |
+|------|-------|
+| First time? | [Quick Start Template](#quick-start-template) |
+| Utility classes? | [ArchUnit Utilities](#archunit-utilities) |
+| What can I check? | [Decision Tree](#decision-tree) |
+| Copy-paste patterns | [Common Patterns](#common-patterns) |
+| Custom conditions | [Custom Conditions Library](#custom-conditions-library) |
+| What to avoid | [Anti-Patterns](#anti-patterns) |
+| Not working? | [Troubleshooting](#troubleshooting) |
+
+---
+
+## ⚡ Quick Start
+
+### 📦 Import Statements
+
+```java
+// Import conditions (for .should() clauses)
+import static br.com.logistics.tms.architecture.ArchUnitConditions.*;
+
+// Import predicates (for .that() clauses)
+import static br.com.logistics.tms.architecture.ArchUnitPredicates.*;
+```
+
+### 🚀 Template
 
 ```java
 package br.com.logistics.tms.architecture;
@@ -112,12 +129,72 @@ class MyArchitectureTest {
     void myFirstTest() {
         final ArchRule rule = noClasses()
                 .that().resideInAPackage("..domain..")
-                .should().dependOnClassesThat().resideInAnyPackage("org.springframework..")
-                .because("domain layer must be framework-free");
+                .should(haveSetters())  // ✅ Use utility
+                .because("Clear reason here");
 
         rule.check(classes);
     }
 }
+```
+
+### 🔍 Finding the Right Utility
+
+**Need to Check...**
+
+| What | Use This | Type |
+|------|----------|------|
+| Setter methods exist | `haveSetters()` | Condition |
+| Static method exists | `haveStaticMethodNamed(name)` | Condition |
+| Instance method exists | `haveMethodNamed(name)` | Condition |
+| Field type (partial) | `haveFieldOfTypeContaining(fragments...)` | Condition |
+| Field type (exact) | `haveFieldOfTypeExactly(type)` | Condition |
+| Field has annotation | `haveFieldAnnotatedWith(annotation)` | Condition |
+| Name ends with options | `haveSimpleNameEndingWithAny(suffixes...)` | Condition |
+| Name matches regex | `matchSimpleNamePattern(regex)` | Condition or Predicate |
+| Method returns self | `returnTheSameClassAsDeclaring()` | Condition |
+
+**Need to Filter...**
+
+| What | Use This |
+|------|----------|
+| By name pattern | `matchSimpleNamePattern(regex)` (Predicate) |
+
+### 📋 Quick Examples
+
+**Check for Setters:**
+```java
+noClasses()
+    .that().resideInAPackage("..domain..")
+    .should(haveSetters())
+    .because("Domain must be immutable")
+    .check(classes);
+```
+
+**Check for Static Method:**
+```java
+classes()
+    .that().haveSimpleNameEndingWith("Id")
+    .should(haveStaticMethodNamed("unique"))
+    .because("ID value objects need unique() factory")
+    .check(classes);
+```
+
+**Check Field Type:**
+```java
+classes()
+    .that().haveSimpleNameEndingWith("Controller")
+    .should(haveFieldOfTypeContaining("RestUseCaseExecutor", "RestPresenter"))
+    .because("Controllers delegate to executors")
+    .check(classes);
+```
+
+**Filter by Name Pattern:**
+```java
+classes()
+    .that(matchSimpleNamePattern("^[A-Z][a-zA-Z]*Created$"))
+    .should().resideInAPackage("..domain..")
+    .because("Created events must be in domain")
+    .check(classes);
 ```
 
 ---

@@ -33,7 +33,7 @@ This directory contains comprehensive documentation for AI assistants working on
 - **[INTEGRATION_TESTS.md](INTEGRATION_TESTS.md)** ⭐ - Complete integration test guide
 - **[ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md)** ⭐ - Comprehensive ArchUnit testing guide
 - **[ARCHUNIT_TEST_CATALOG.md](ARCHUNIT_TEST_CATALOG.md)** ⭐ - Complete catalog of all ArchUnit tests
-- **[ARCHUNIT_CHEATSHEET.md](ARCHUNIT_CHEATSHEET.md)** ⭐ - Quick reference for utility classes
+
 
 ### Examples (`examples/`)
 
@@ -135,6 +135,61 @@ Implementation guides for specific features:
 | **Review Code** | [QUICK_REFERENCE.md § Validation](QUICK_REFERENCE.md) | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | **Create ArchUnit Tests** | [ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md) | [ARCHUNIT_TEST_CATALOG.md](ARCHUNIT_TEST_CATALOG.md) |
 | **Find Existing ArchUnit Tests** | [ARCHUNIT_TEST_CATALOG.md](ARCHUNIT_TEST_CATALOG.md) | [ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md) |
+
+---
+
+## 🎯 Reading Lists by Role
+
+**For AI agents — load only what you need for your role.**
+
+### Backend Developer
+**Essential:**
+- [ARCHITECTURE.md](ARCHITECTURE.md) — Layer boundaries, use case pattern
+- [QUICK_REFERENCE.md](QUICK_REFERENCE.md) — Code snippets
+- [prompts/new-use-case.md](prompts/new-use-case.md) — Use case creation guide
+
+**Skills:**
+- `.squad/skills/immutable-aggregate-update/` — Aggregate update pattern
+- `.squad/skills/json-singleton-usage/` — JSON parsing in listeners
+- `.squad/skills/eventual-consistency-pattern/` — Cross-module communication
+
+**Examples:**
+- [examples/complete-use-case.md](examples/complete-use-case.md)
+- [examples/repository-implementation.md](examples/repository-implementation.md)
+
+---
+
+### Tester
+**Essential:**
+- [TEST_STRUCTURE.md](TEST_STRUCTURE.md) — Test organization
+- [INTEGRATION_TESTS.md](INTEGRATION_TESTS.md) — Integration test guide
+- [ARCHUNIT_GUIDELINES.md](ARCHUNIT_GUIDELINES.md) — Architecture tests
+
+**Skills:**
+- `.squad/skills/fake-repository-pattern/` — In-memory test doubles
+- `.squad/skills/test-data-builder-pattern/` — Fluent test builders
+- `.squad/skills/archunit-condition-reuse/` — ArchUnit utilities
+
+**Examples:**
+- [examples/testing-patterns.md](examples/testing-patterns.md)
+- [prompts/new-integration-test.md](prompts/new-integration-test.md)
+
+---
+
+### Lead / Architect
+**Essential:**
+- [ARCHITECTURE.md](ARCHITECTURE.md) — Full architecture details
+- [CODEBASE_CONTEXT.md](CODEBASE_CONTEXT.md) — Project overview
+- [ARCHUNIT_TEST_CATALOG.md](ARCHUNIT_TEST_CATALOG.md) — Architecture enforcement
+
+**Skills:**
+- All skills (`.squad/skills/`) — Architectural overview
+
+**Examples:**
+- [examples/](examples/) — Complete patterns
+
+**Reference:**
+- `doc/design/` — Domain modeling reference (human reference only)
 
 ---
 

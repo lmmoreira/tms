@@ -82,36 +82,37 @@ public record {ValueObject}(Map<String, Object> value) {
 }
 ```
 
-### Create New Aggregate
+### Immutable Aggregate Pattern
 
 ```java
-public static {Aggregate} create{Aggregate}(params) {
-    final {Aggregate} aggregate = new {Aggregate}(
-        {Aggregate}Id.unique(),
-        {ValueObject}.with(param),
-        new HashSet<>(),
-        new HashMap<>()
-    );
-    aggregate.placeDomainEvent(new {Aggregate}Created(...));
-    return aggregate;
-}
-```
-
-### Update Aggregate (Immutable)
-
-```java
-public {Aggregate} updateField(NewValue newValue) {
-    if (this.field.equals(newValue)) return this;
+public class {Aggregate} extends AbstractAggregateRoot {
+    private final {Aggregate}Id id;
+    // ... (other final fields)
     
-    final {Aggregate} updated = new {Aggregate}(
-        this.id,
-        {ValueObject}.with(newValue),
-        this.getDomainEvents(),
-        this.getPersistentMetadata()
-    );
-    updated.placeDomainEvent(new {Aggregate}Updated(...));
-    return updated;
+    private {Aggregate}(/* all params */) {
+        super(new HashSet<>(events), new HashMap<>(metadata));
+        this.id = id;
+        // ... (assignments)
+    }
+    
+    public static {Aggregate} create{Aggregate}(params) {
+        {Aggregate} aggregate = new {Aggregate}({Aggregate}Id.unique(), ...);
+        aggregate.placeDomainEvent(new {Aggregate}Created(...));
+        return aggregate;
+    }
+    
+    public {Aggregate} updateField(NewValue newValue) {
+        if (this.field.equals(newValue)) return this;
+        {Aggregate} updated = new {Aggregate}(this.id, newValue, ...);
+        updated.placeDomainEvent(new {Aggregate}Updated(...));
+        return updated;
+    }
+    
+    public {Aggregate}Id getId() { return id; }
 }
+
+// Full implementation: doc/ai/examples/complete-aggregate.md
+// Pattern guide: .squad/skills/immutable-aggregate-update/SKILL.md
 ```
 
 ### Use Case Pattern

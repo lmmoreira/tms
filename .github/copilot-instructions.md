@@ -48,6 +48,23 @@ REVIEW code?
 
 ---
 
+## 🧠 Available Skills
+
+Squad has extracted reusable patterns as skills. Reference these before implementing:
+
+| Skill | When to Use | Confidence |
+|-------|-------------|------------|
+| `json-singleton-usage` | Parsing JSON in listeners, serializing events | 🟡 Low |
+| `eventual-consistency-pattern` | Cross-module data validation | 🟢 High |
+| `fake-repository-pattern` | Unit testing use cases | 🟡 Low |
+| `test-data-builder-pattern` | Creating test data with variations | 🟡 Low |
+| `immutable-aggregate-update` | Updating aggregates | 🟢 High |
+| `archunit-condition-reuse` | Writing ArchUnit tests | 🟡 Medium |
+
+**Location:** `.squad/skills/{name}/SKILL.md`
+
+---
+
 ## Essential Patterns
 
 ### 0. Coding Standards (CRITICAL)
@@ -141,6 +158,8 @@ public Listener(ObjectMapper objectMapper) {  // Don't do this
 ```
 
 ### 1. Use Case Pattern
+
+**WRITE Operation (with all required finals):**
 ```java
 @DomainService
 @Cqrs(DatabaseRole.WRITE)
@@ -148,25 +167,27 @@ public class CreateCompanyUseCase implements UseCase<CreateCompanyUseCase.Input,
     
     private final CompanyRepository companyRepository;
 
-    public CreateCompanyUseCase(CompanyRepository companyRepository) {
+    public CreateCompanyUseCase(final CompanyRepository companyRepository) {
         this.companyRepository = companyRepository;
     }
 
     @Override
-    public Output execute(Input input) {
+    public Output execute(final Input input) {
         // 1. Validation
         if (companyRepository.getCompanyByCnpj(new Cnpj(input.cnpj())).isPresent()) {
             throw new ValidationException("Company already exists");
         }
         
         // 2. Create via aggregate factory method
-        Company company = Company.createCompany(input.name(), input.cnpj(), input.types(), input.configuration());
+        final Company company = Company.createCompany(
+            input.name(), input.cnpj(), input.types(), input.configuration()
+        );
         
         // 3. Persist (repository handles event outbox)
-        company = companyRepository.create(company);
+        final Company saved = companyRepository.create(company);
         
         // 4. Return output
-        return new Output(company.getCompanyId().value(), company.getName());
+        return new Output(saved.getCompanyId().value(), saved.getName());
     }
 
     public record Input(String name, String cnpj, Set<CompanyType> types, Map<String, Object> configuration) {}
@@ -182,13 +203,13 @@ public class GetCompanyByIdUseCase implements UseCase<GetCompanyByIdUseCase.Inpu
     
     private final CompanyRepository companyRepository;
 
-    public GetCompanyByIdUseCase(CompanyRepository companyRepository) {
+    public GetCompanyByIdUseCase(final CompanyRepository companyRepository) {
         this.companyRepository = companyRepository;
     }
 
     @Override
-    public Output execute(Input input) {
-        Company company = companyRepository.getCompanyById(new CompanyId(input.companyId()))
+    public Output execute(final Input input) {
+        final Company company = companyRepository.getCompanyById(new CompanyId(input.companyId()))
                 .orElseThrow(() -> new NotFoundException("Company not found"));
 
         return new Output(company.getCompanyId().value(), company.getName(), company.getCnpj().value());
@@ -202,8 +223,10 @@ public class GetCompanyByIdUseCase implements UseCase<GetCompanyByIdUseCase.Inpu
 **Key Points:**
 - ✅ Annotate with `@DomainService` + `@Cqrs(DatabaseRole.WRITE or READ)`
 - ✅ Input/Output as nested records
-- ✅ Constructor injection only
+- ✅ Constructor injection only, ALL parameters and variables `final`
 - ✅ One operation per use case
+
+**Full details:** See `doc/ai/examples/complete-use-case.md` and `doc/ai/prompts/new-use-case.md`
 
 ---
 
@@ -219,16 +242,16 @@ public class CreateController {
     private final DefaultRestPresenter defaultRestPresenter;
     private final RestUseCaseExecutor restUseCaseExecutor;
 
-    public CreateController(CreateCompanyUseCase createCompanyUseCase,
-                           DefaultRestPresenter defaultRestPresenter,
-                           RestUseCaseExecutor restUseCaseExecutor) {
+    public CreateController(final CreateCompanyUseCase createCompanyUseCase,
+                           final DefaultRestPresenter defaultRestPresenter,
+                           final RestUseCaseExecutor restUseCaseExecutor) {
         this.createCompanyUseCase = createCompanyUseCase;
         this.defaultRestPresenter = defaultRestPresenter;
         this.restUseCaseExecutor = restUseCaseExecutor;
     }
 
     @PostMapping
-    public Object create(@RequestBody CreateCompanyDTO dto) {
+    public Object create(@RequestBody final CreateCompanyDTO dto) {
         return restUseCaseExecutor
                 .from(createCompanyUseCase)
                 .withInput(dto)
@@ -244,6 +267,9 @@ public class CreateController {
 - ✅ Use `RestUseCaseExecutor` for orchestration
 - ✅ DTOs for request/response
 - ✅ Must have `@Cqrs` annotation
+- ✅ ALL constructor parameters and method parameters must be `final`
+
+**Full details:** See `doc/ai/examples/complete-controller.md` and `doc/ai/prompts/new-controller.md`
 
 ---
 
@@ -251,46 +277,40 @@ public class CreateController {
 
 ```java
 public class Company extends AbstractAggregateRoot {
-
     private final CompanyId companyId;
     private final String name;
     private final Cnpj cnpj;
-
+    // ... (other fields)
+    
     // Private constructor
-    private Company(CompanyId companyId, String name, Cnpj cnpj,
-                   Set<AbstractDomainEvent> domainEvents, 
-                   Map<String, Object> persistentMetadata) {
+    private Company(/* all params final */) {
         super(new HashSet<>(domainEvents), new HashMap<>(persistentMetadata));
-        
-        if (companyId == null) throw new ValidationException("Invalid companyId");
-        if (name == null || name.isBlank()) throw new ValidationException("Invalid name");
-        
+        // Validation...
         this.companyId = companyId;
-        this.name = name;
-        this.cnpj = cnpj;
+        // ... (field assignments)
     }
-
+    
     // Factory method
-    public static Company createCompany(String name, String cnpj, Set<CompanyType> types, Map<String, Object> config) {
-        Company company = new Company(CompanyId.unique(), name, new Cnpj(cnpj), new HashSet<>(), new HashMap<>());
-        company.placeDomainEvent(new CompanyCreated(company.getCompanyId().value(), company.toString()));
+    public static Company createCompany(...) {
+        Company company = new Company(CompanyId.unique(), ...);
+        company.placeDomainEvent(new CompanyCreated(...));
         return company;
     }
-
+    
     // Update returns NEW instance
     public Company updateName(String name) {
         if (this.name.equals(name)) return this;
-        
-        Company updated = new Company(this.companyId, name, this.cnpj, this.getDomainEvents(), this.getPersistentMetadata());
-        updated.placeDomainEvent(new CompanyUpdated(updated.getCompanyId().value(), "name", this.name, name));
+        Company updated = new Company(this.companyId, name, ...);
+        updated.placeDomainEvent(new CompanyUpdated(...));
         return updated;
     }
-
+    
     // Getters only
     public CompanyId getCompanyId() { return companyId; }
-    public String getName() { return name; }
-    public Cnpj getCnpj() { return cnpj; }
 }
+
+// Full implementation: doc/ai/examples/complete-aggregate.md
+// Pattern guide: .squad/skills/immutable-aggregate-update/SKILL.md
 ```
 
 **Key Points:**
@@ -298,11 +318,15 @@ public class Company extends AbstractAggregateRoot {
 - ✅ Private constructor + public factory methods
 - ✅ Domain events placed HERE, not in use cases
 - ✅ Getters only, NO setters
+- ✅ ALL parameters must be `final`
+
+**Full details:** See `.squad/skills/immutable-aggregate-update/SKILL.md` and `doc/ai/examples/complete-aggregate.md`
 
 ---
 
 ### 4. Value Object Pattern
 
+**Simple validated value object:**
 ```java
 public record Cnpj(String value) {
     public Cnpj {
@@ -311,8 +335,27 @@ public record Cnpj(String value) {
         }
     }
     
-    private static boolean isValid(String cnpj) {
+    private static boolean isValid(final String cnpj) {
         return cnpj != null && cnpj.matches("\\d{14}");
+    }
+}
+```
+
+**ID value object (typical pattern):**
+```java
+public record CompanyId(UUID value) {
+    public CompanyId {
+        if (value == null) {
+            throw new ValidationException("CompanyId cannot be null");
+        }
+    }
+    
+    public static CompanyId unique() {
+        return new CompanyId(Id.unique());  // UUID v7
+    }
+    
+    public static CompanyId with(final UUID value) {
+        return new CompanyId(value);
     }
 }
 ```
@@ -321,6 +364,9 @@ public record Cnpj(String value) {
 - ✅ Use Java `record`
 - ✅ Validation in compact constructor
 - ✅ Immutable by nature
+- ✅ ID value objects use `Id.unique()` for UUID v7 generation
+
+**Full details:** See `doc/ai/prompts/value-objects.md`
 
 ---
 
@@ -331,7 +377,7 @@ public class CompanyCreated extends AbstractDomainEvent {
     private final UUID aggregateId;
     private final String payload;
 
-    public CompanyCreated(UUID aggregateId, String payload) {
+    public CompanyCreated(final UUID aggregateId, final String payload) {
         super(Id.unique(), aggregateId, Instant.now());
         this.aggregateId = aggregateId;
         this.payload = payload;
@@ -346,6 +392,10 @@ public class CompanyCreated extends AbstractDomainEvent {
 - ✅ Past tense naming (Created, Updated, Deleted)
 - ✅ Always include aggregateId
 - ✅ Place in aggregate methods via `placeDomainEvent()`
+- ✅ Use `Id.unique()` for event ID (UUID v7)
+- ✅ ALL constructor parameters must be `final`
+
+**Full details:** See `doc/ai/examples/event-driven-communication.md`
 
 ---
 
@@ -360,14 +410,16 @@ public class IncrementShipmentOrderListener {
     private final VoidUseCaseExecutor voidUseCaseExecutor;
     private final IncrementShipmentOrderUseCase incrementShipmentOrderUseCase;
 
-    public IncrementShipmentOrderListener(VoidUseCaseExecutor voidUseCaseExecutor,
-                                         IncrementShipmentOrderUseCase incrementShipmentOrderUseCase) {
+    public IncrementShipmentOrderListener(final VoidUseCaseExecutor voidUseCaseExecutor,
+                                         final IncrementShipmentOrderUseCase incrementShipmentOrderUseCase) {
         this.voidUseCaseExecutor = voidUseCaseExecutor;
         this.incrementShipmentOrderUseCase = incrementShipmentOrderUseCase;
     }
 
     @RabbitListener(queues = "integration.company.shipmentorder.created")
-    public void handle(ShipmentOrderCreatedDTO dto, Message message, Channel channel) {
+    public void handle(final ShipmentOrderCreatedDTO dto, 
+                      final Message message, 
+                      final Channel channel) {
         voidUseCaseExecutor
                 .from(incrementShipmentOrderUseCase)
                 .withInput(new IncrementShipmentOrderUseCase.Input(dto.companyId()))
@@ -380,6 +432,10 @@ public class IncrementShipmentOrderListener {
 - ✅ Modules communicate ONLY via events
 - ✅ Use `@RabbitListener` for inter-module events
 - ✅ Never call other module's repositories directly
+- ✅ ALL constructor and method parameters must be `final`
+- ✅ Use `VoidUseCaseExecutor` for use cases with no output
+
+**Full details:** See `.squad/skills/eventual-consistency-pattern/SKILL.md`, `doc/ai/prompts/new-event-listener.md`, and `doc/ai/examples/event-driven-communication.md`
 
 ---
 
