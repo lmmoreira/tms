@@ -51,8 +51,11 @@ public class CompanyEntity implements Serializable {
     @Column(name = "configuration")
     private Map<String, Object> configuration;
 
+    @OneToMany(mappedBy = "from", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<AgreementEntity> agreements = new HashSet<>();
+
     public static CompanyEntity of(final Company company) {
-        return CompanyEntity.builder()
+        final CompanyEntity entity = CompanyEntity.builder()
                 .id(company.getCompanyId().value())
                 .name(company.getName())
                 .cnpj(company.getCnpj().value())
@@ -61,16 +64,28 @@ public class CompanyEntity implements Serializable {
                 .status(company.getStatus().value())
                 .version((Integer) company.getPersistentMetadata().getOrDefault("version", null))
                 .build();
+
+        final Set<AgreementEntity> agreementEntities = company.getAgreements().stream()
+                .map(agreement -> AgreementEntity.of(agreement, entity))
+                .collect(java.util.stream.Collectors.toSet());
+        entity.setAgreements(agreementEntities);
+
+        return entity;
     }
 
     public Company toCompany() {
+        final Set<Agreement> agreements = this.agreements == null ? Collections.emptySet() :
+                this.agreements.stream()
+                        .map(AgreementEntity::toAgreement)
+                        .collect(java.util.stream.Collectors.toSet());
+
         return new Company(
                 CompanyId.with(this.id),
                 this.name,
                 Cnpj.with(this.cnpj),
                 CompanyTypes.with(this.companyTypes),
                 Configurations.with(this.configuration),
-                Collections.emptySet(),
+                agreements,
                 Status.of(this.status),
                 Collections.emptySet(),
                 Map.of("version", this.version)

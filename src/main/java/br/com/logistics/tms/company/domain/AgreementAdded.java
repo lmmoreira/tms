@@ -1,0 +1,41 @@
+package br.com.logistics.tms.company.domain;
+
+import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
+import br.com.logistics.tms.commons.domain.Id;
+
+import java.time.Instant;
+import java.util.UUID;
+
+public class AgreementAdded extends AbstractDomainEvent {
+    private final UUID sourceCompanyId;
+    private final UUID agreementId;
+    private final UUID destinationCompanyId;
+    private final String agreementType;
+
+    public AgreementAdded(final UUID sourceCompanyId,
+                         final UUID agreementId,
+                         final UUID destinationCompanyId,
+                         final String agreementType) {
+        super(Id.unique(), sourceCompanyId, Instant.now());
+        this.sourceCompanyId = sourceCompanyId;
+        this.agreementId = agreementId;
+        this.destinationCompanyId = destinationCompanyId;
+        this.agreementType = agreementType;
+    }
+
+    public UUID getSourceCompanyId() {
+        return sourceCompanyId;
+    }
+
+    public UUID getAgreementId() {
+        return agreementId;
+    }
+
+    public UUID getDestinationCompanyId() {
+        return destinationCompanyId;
+    }
+
+    public String getAgreementType() {
+        return agreementType;
+    }
+}

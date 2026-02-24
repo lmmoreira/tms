@@ -5,6 +5,7 @@ import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public record Agreement(AgreementId agreementId,
@@ -84,6 +85,76 @@ public record Agreement(AgreementId agreementId,
 
     public boolean isBetween(CompanyId from, CompanyId to) {
         return this.from.equals(from) && this.to.equals(to);
+    }
+
+    public static Agreement createAgreement(final CompanyId from,
+                                           final CompanyId to,
+                                           final AgreementType type,
+                                           final Map<String, Object> configuration,
+                                           final Set<AgreementCondition> conditions,
+                                           final Instant validFrom,
+                                           final Instant validTo) {
+        if (from.equals(to)) {
+            throw new ValidationException("Agreement source and destination must be different");
+        }
+
+        return new Agreement(
+                AgreementId.unique(),
+                from,
+                to,
+                type,
+                Configurations.with(configuration),
+                conditions,
+                validFrom,
+                validTo
+        );
+    }
+
+    public Agreement updateValidTo(final Instant newValidTo) {
+        if (newValidTo != null && newValidTo.isBefore(this.validFrom)) {
+            throw new ValidationException("Valid to must be after valid from");
+        }
+
+        return new Agreement(
+                this.agreementId,
+                this.from,
+                this.to,
+                this.type,
+                this.configurations,
+                this.conditions,
+                this.validFrom,
+                newValidTo
+        );
+    }
+
+    public Agreement updateConditions(final Set<AgreementCondition> newConditions) {
+        if (newConditions == null || newConditions.isEmpty()) {
+            throw new ValidationException("Agreement must have at least one condition");
+        }
+
+        return new Agreement(
+                this.agreementId,
+                this.from,
+                this.to,
+                this.type,
+                this.configurations,
+                newConditions,
+                this.validFrom,
+                this.validTo
+        );
+    }
+
+    public boolean overlapsWith(final Agreement other) {
+        if (!this.to.equals(other.to) || !this.type.equals(other.type)) {
+            return false;
+        }
+
+        final Instant thisStart = this.validFrom;
+        final Instant thisEnd = this.validTo != null ? this.validTo : Instant.MAX;
+        final Instant otherStart = other.validFrom;
+        final Instant otherEnd = other.validTo != null ? other.validTo : Instant.MAX;
+
+        return thisStart.isBefore(otherEnd) && otherStart.isBefore(thisEnd);
     }
 
 }

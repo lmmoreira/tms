@@ -1,17 +1,28 @@
 package br.com.logistics.tms.company.infrastructure.jpa.entities;
 
+import br.com.logistics.tms.company.domain.*;
 import br.com.logistics.tms.company.infrastructure.config.CompanySchema;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.time.Instant;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "agreement", schema = CompanySchema.COMPANY_SCHEMA)
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AgreementEntity {
 
     @Id
@@ -40,4 +51,44 @@ public class AgreementEntity {
 
     @OneToMany(mappedBy = "agreement", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<AgreementConditionEntity> conditions;
+
+    public static AgreementEntity of(final Agreement agreement, final CompanyEntity fromEntity) {
+        final AgreementEntity entity = AgreementEntity.builder()
+                .id(agreement.agreementId().value())
+                .from(fromEntity)
+                .relationType(agreement.type().name())
+                .configuration(new HashMap<>(agreement.configurations().value()))
+                .validFrom(agreement.validFrom())
+                .validTo(agreement.validTo())
+                .build();
+
+        final CompanyEntity destinationRef = new CompanyEntity();
+        destinationRef.setId(agreement.to().value());
+        entity.setTo(destinationRef);
+
+        final Set<AgreementConditionEntity> conditionEntities = agreement.conditions().stream()
+                .map(condition -> AgreementConditionEntity.of(condition, entity))
+                .collect(Collectors.toSet());
+        entity.setConditions(conditionEntities);
+
+        return entity;
+    }
+
+    public Agreement toAgreement() {
+        final Set<AgreementCondition> conditions = this.conditions == null ? Set.of() :
+                this.conditions.stream()
+                        .map(AgreementConditionEntity::toAgreementCondition)
+                        .collect(Collectors.toSet());
+
+        return new Agreement(
+                AgreementId.with(this.id),
+                CompanyId.with(this.from.getId()),
+                CompanyId.with(this.to.getId()),
+                AgreementType.valueOf(this.relationType),
+                Configurations.with(this.configuration),
+                conditions,
+                this.validFrom,
+                this.validTo
+        );
+    }
 }

@@ -203,20 +203,130 @@ public class Company extends AbstractAggregateRoot {
         return Collections.unmodifiableSet(agreements);
     }
 
-    public void addAgreement(final Agreement agreement) {
+    public Company addAgreement(final Agreement agreement) {
         if (agreements.contains(agreement)) {
             throw new ValidationException("Agreement already exists for this company");
         }
 
-        agreements.add(agreement);
-    }
-
-    public void removeAgreement(final Agreement agreement) {
-        if (!agreements.contains(agreement)) {
-            throw new ValidationException("Agreement not found for this company");
+        if (!agreement.from().equals(this.companyId)) {
+            throw new ValidationException("Agreement source must match company");
         }
 
-        agreements.remove(agreement);
+        final boolean overlappingExists = agreements.stream()
+                .filter(Agreement::isActive)
+                .anyMatch(a -> a.overlapsWith(agreement));
+        if (overlappingExists) {
+            throw new ValidationException("Overlapping active agreement exists");
+        }
+
+        final Set<Agreement> updatedAgreements = new HashSet<>(this.agreements);
+        updatedAgreements.add(agreement);
+
+        final Company updated = new Company(
+                this.companyId,
+                this.name,
+                this.cnpj,
+                this.companyTypes,
+                this.configurations,
+                updatedAgreements,
+                this.status,
+                this.getDomainEvents(),
+                this.getPersistentMetadata()
+        );
+
+        updated.placeDomainEvent(new AgreementAdded(
+                this.companyId.value(),
+                agreement.agreementId().value(),
+                agreement.to().value(),
+                agreement.type().name()
+        ));
+
+        return updated;
+    }
+
+    public Company removeAgreement(final AgreementId agreementId) {
+        final Agreement agreementToRemove = agreements.stream()
+                .filter(a -> a.agreementId().equals(agreementId))
+                .findFirst()
+                .orElseThrow(() -> new ValidationException("Agreement not found"));
+
+        final Set<Agreement> updatedAgreements = new HashSet<>(this.agreements);
+        updatedAgreements.remove(agreementToRemove);
+
+        final Company updated = new Company(
+                this.companyId,
+                this.name,
+                this.cnpj,
+                this.companyTypes,
+                this.configurations,
+                updatedAgreements,
+                this.status,
+                this.getDomainEvents(),
+                this.getPersistentMetadata()
+        );
+
+        updated.placeDomainEvent(new AgreementRemoved(
+                this.companyId.value(),
+                agreementToRemove.agreementId().value(),
+                agreementToRemove.to().value()
+        ));
+
+        return updated;
+    }
+
+    public Company updateAgreement(final AgreementId agreementId, final Agreement updatedAgreement) {
+        final Agreement existingAgreement = agreements.stream()
+                .filter(a -> a.agreementId().equals(agreementId))
+                .findFirst()
+                .orElseThrow(() -> new ValidationException("Agreement not found"));
+
+        final boolean overlappingExists = agreements.stream()
+                .filter(a -> !a.agreementId().equals(agreementId))
+                .filter(Agreement::isActive)
+                .anyMatch(a -> a.overlapsWith(updatedAgreement));
+        if (overlappingExists) {
+            throw new ValidationException("Update would create overlapping agreement");
+        }
+
+        final Set<Agreement> updatedAgreements = new HashSet<>(this.agreements);
+        updatedAgreements.remove(existingAgreement);
+        updatedAgreements.add(updatedAgreement);
+
+        final Company updated = new Company(
+                this.companyId,
+                this.name,
+                this.cnpj,
+                this.companyTypes,
+                this.configurations,
+                updatedAgreements,
+                this.status,
+                this.getDomainEvents(),
+                this.getPersistentMetadata()
+        );
+
+        String fieldChanged = "unknown";
+        String oldValue = "";
+        String newValue = "";
+
+        if (!existingAgreement.validTo().equals(updatedAgreement.validTo())) {
+            fieldChanged = "validTo";
+            oldValue = existingAgreement.validTo() != null ? existingAgreement.validTo().toString() : "null";
+            newValue = updatedAgreement.validTo() != null ? updatedAgreement.validTo().toString() : "null";
+        } else if (!existingAgreement.conditions().equals(updatedAgreement.conditions())) {
+            fieldChanged = "conditions";
+            oldValue = String.valueOf(existingAgreement.conditions().size());
+            newValue = String.valueOf(updatedAgreement.conditions().size());
+        }
+
+        updated.placeDomainEvent(new AgreementUpdated(
+                this.companyId.value(),
+                agreementId.value(),
+                fieldChanged,
+                oldValue,
+                newValue
+        ));
+
+        return updated;
     }
 
     public boolean hasAgreementWith(final CompanyId other, final AgreementType type) {

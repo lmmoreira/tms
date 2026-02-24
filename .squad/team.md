@@ -15,6 +15,9 @@
 | Neo | Context Architect | Token optimization | 🧠 |
 | Cypher | Validator | Retrieval testing | 🧪 |
 | Tank | Automation | Git ops, measurements | ⚙️ |
+| Switch | Java/DDD Architect | Aggregate boundaries, immutability | 🏛️ |
+| Apoc | Business Analyst | Domain semantics, validation | 📊 |
+| Mouse | Database/JPA Expert | Relationships, cascade, indexing | 🗄️ |
 | Scribe | Session Logger | Memory, decisions | 📋 |
 | Ralph | Work Monitor | Work queue, keep-alive | 🔄 |
 

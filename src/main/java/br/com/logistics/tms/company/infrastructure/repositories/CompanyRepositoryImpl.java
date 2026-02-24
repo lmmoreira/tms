@@ -2,6 +2,7 @@ package br.com.logistics.tms.company.infrastructure.repositories;
 
 import br.com.logistics.tms.commons.infrastructure.gateways.outbox.OutboxGateway;
 import br.com.logistics.tms.company.application.repositories.CompanyRepository;
+import br.com.logistics.tms.company.domain.AgreementId;
 import br.com.logistics.tms.company.domain.Cnpj;
 import br.com.logistics.tms.company.domain.Company;
 import br.com.logistics.tms.company.domain.CompanyId;
@@ -30,6 +31,12 @@ public class CompanyRepositoryImpl implements CompanyRepository {
     @Override
     public Optional<Company> getCompanyByCnpj(Cnpj cnpj) {
         return companyJpaRepository.findByCnpj(cnpj.value())
+                .map(CompanyEntity::toCompany);
+    }
+
+    @Override
+    public Optional<Company> findCompanyByAgreementId(final AgreementId agreementId) {
+        return companyJpaRepository.findByAgreementsId(agreementId.value())
                 .map(CompanyEntity::toCompany);
     }
 
