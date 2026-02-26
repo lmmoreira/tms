@@ -475,3 +475,96 @@ class CompanyAgreementStoryTest {
 
 **Files Modified:**
 - `.github/copilot-instructions.md` — Testing Approach section expanded from 15 lines to ~180 lines
+
+
+### 2026-02-26: AgreementEntity JPA Mapping — Both UUID Strategy
+
+**Requested by:** Leonardo Moreira
+**Context:** Refactoring AgreementEntity mapping where `from` was @ManyToOne but `destination` was UUID
+
+**Analysis from DDD Perspective:**
+
+**1. Aggregate Boundary Violation:**
+- Agreement references TWO Company aggregates (`from` and `to`)
+- @ManyToOne creates a **hard dependency** on CompanyEntity in the infrastructure layer
+- This couples AgreementEntity to CompanyEntity's **persistence lifecycle**
+- Violates the principle: "Reference other aggregates by ID only, not by object reference"
+
+**2. Domain Purity:**
+- Domain model Agreement is **symmetric**: both `from` and `to` are `CompanyId` value objects
+- Infrastructure asymmetry (`@ManyToOne` vs `UUID`) creates **conceptual mismatch**
+- Hexagonal architecture principle: infrastructure should **mirror domain structure** where possible
+
+**3. Infrastructure Layer Principle:**
+- JPA adapters should use **IDs for inter-aggregate references**
+- @ManyToOne forces Hibernate to manage Company entity lifecycle within Agreement persistence context
+- This creates **implicit joins** and **lazy loading dependencies** that don't exist in the domain
+- Eventual consistency pattern (already used in TMS) assumes **loose coupling via IDs**
+
+**4. Hexagonal Architecture:**
+- @ManyToOne **leaks persistence concerns** into what should be a pure mapping
+- Domain says: "Agreement knows Company IDs", not "Agreement owns Company references"
+- Infrastructure should be a **thin translation layer**, not add new relationships
+
+**Decision:** ✅ **Both should be UUIDs**
+
+**Rationale:**
+1. **Consistency with domain model** — Both are CompanyId in domain, both UUID in JPA
+2. **Respects aggregate boundaries** — No cross-aggregate object references
+3. **Follows TMS eventual consistency pattern** — Other modules use UUID references (e.g., ShipmentOrder references Company by UUID)
+4. **Simpler transaction management** — No cascade concerns, no lazy loading surprises
+5. **Explicit over implicit** — Repository methods handle FK lookups explicitly when needed
+
+**Recommended Refactoring:**
+
+```java
+@Entity
+@Table(name = "agreement", schema = CompanySchema.COMPANY_SCHEMA)
+public class AgreementEntity {
+    @Id
+    private UUID id;
+
+    @Column(name = "source", nullable = false)
+    private UUID fromCompanyId;  // ✅ Changed from @ManyToOne
+
+    @Column(name = "destination", nullable = false)
+    private UUID toCompanyId;     // ✅ Already UUID, just rename for symmetry
+
+    // ... other fields ...
+
+    public Agreement toAgreement() {
+        return new Agreement(
+            AgreementId.with(this.id),
+            CompanyId.with(this.fromCompanyId),  // ✅ Symmetric mapping
+            CompanyId.with(this.toCompanyId),    // ✅ Symmetric mapping
+            // ... other fields ...
+        );
+    }
+}
+```
+
+**Impact on CompanyEntity:**
+- Remove `@OneToMany(mappedBy = "from")` — no longer valid
+- Use `@OneToMany(cascade = ALL, orphanRemoval = true)` with **join column** strategy
+- CompanyEntity owns the relationship via `@JoinColumn(name = "source")`
+
+**Trade-offs Accepted:**
+- ⚠️ Queries like "find all agreements where this company is destination" require explicit JOIN
+- ✅ This is acceptable — it's a **repository concern**, not a domain concern
+- ✅ Repository layer can provide helper methods if needed
+
+**Alignment with TMS Patterns:**
+- ✅ Matches ShipmentOrder → Company reference pattern (UUID, not @ManyToOne)
+- ✅ Consistent with eventual consistency approach
+- ✅ Respects hexagonal architecture boundaries
+- ✅ Keeps aggregates loosely coupled
+
+**Related Decisions:**
+- 2026-02-24T18:52:00Z: Agreement remains part of Company aggregate (NOT separate root)
+- 2026-02-26: Functional dependency injection for entity reference resolution
+- 2026-02-26T14:09:00Z: JPA Entity Equals/HashCode Best Practice
+
+**Files to Update:**
+- AgreementEntity.java — Change `@ManyToOne CompanyEntity from` → `UUID fromCompanyId`
+- CompanyEntity.java — Update `@OneToMany` mapping strategy
+- CompanyRepositoryImpl.java — Adjust factory method resolver logic if needed

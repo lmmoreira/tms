@@ -2,6 +2,72 @@
 
 ## Active Decisions
 
+### 2026-02-26T18:52:00Z: UUID Adapter Initialization in Unit Tests
+
+**By:** Cypher (Validator)
+**Requested by:** Leonardo Moreira
+
+**What:** Unit tests require explicit UuidAdapter initialization. Created `UnitTestBase` abstract class with `@BeforeAll` setup.
+
+**Why:** After AgreementEntity UUID refactor, 60 out of 61 unit tests failed with "UuidAdapter not initialized" error because unit tests don't load Spring context (unlike integration tests).
+
+**Root Cause:**
+- Domain layer uses `Id.unique()` → delegates to `DomainUuidProvider.getUuidAdapter()`
+- `UuidAdapterImpl` is a Spring `@Component` that initializes the static provider in its constructor
+- Integration tests (`@SpringBootTest`) load Spring → adapter auto-initialized
+- Unit tests (pure JUnit) → NO Spring → adapter NEVER initialized → exception thrown
+
+**Solution Applied:**
+All unit tests must extend `UnitTestBase` abstract class, which initializes the UUID adapter before tests run:
+
+```java
+public abstract class UnitTestBase {
+    @BeforeAll
+    static void initializeUuidAdapter() {
+        DomainUuidProvider.setUuidAdapter(new UuidAdapterImpl());
+    }
+}
+```
+
+**Pattern:** For TMS, ALL unit tests that instantiate domain objects (which call `Id.unique()`) MUST extend `UnitTestBase`. Integration tests don't need this — Spring context handles initialization.
+
+**Impact:**
+- Fixes 60 failing unit tests
+- Established pattern for all future unit tests
+- Centralized initialization (no per-class setup needed)
+
+---
+
+### 2026-02-26T18:46:00Z: Agreement Entity Symmetric UUID Mapping
+
+**By:** Mouse (Database/JPA Expert) + Switch (Java/DDD Architect)
+**Requested by:** Leonardo Moreira
+
+**What:** Refactored `AgreementEntity` to use UUID for both `source` and `destination` fields instead of `@ManyToOne` relationship for source.
+
+**Why:**
+1. **DDD Aggregate Boundary:** Agreement references TWO Company aggregates. DDD principle: "Reference other aggregates by ID only." @ManyToOne creates hard object dependency, violating this.
+2. **Domain Symmetry:** Domain `Agreement` has `CompanyId from` and `CompanyId to` (both value objects). Infrastructure should mirror this symmetry.
+3. **Hexagonal Architecture:** Infrastructure layer should be thin translation. @ManyToOne leaks persistence concerns (lazy loading, cascade, joins) into mapping.
+4. **Consistency with TMS:** Cross-module references are ALWAYS by ID (ShipmentOrder → Company uses UUID, not @ManyToOne).
+5. **Prevents N+1 bugs:** Forces explicit joins, making query costs visible.
+
+**Implementation:**
+- Changed `AgreementEntity.from` (was `@ManyToOne CompanyEntity`) → `sourceId` (`@Column UUID`)
+- `CompanyEntity.agreements` changed from `mappedBy = "from"` to explicit `@JoinColumn(name = "source")`
+- No database schema changes required (column already existed as FK)
+- Simplified `AgreementEntity.of()` — no longer needs CompanyEntity parameter
+
+**Pattern:** For value-object relationships in domain (e.g., CompanyId), prefer UUID columns in JPA rather than navigable `@ManyToOne` relationships. Aggregate ownership maintained via `@OneToMany` with `@JoinColumn` on aggregate root.
+
+**Trade-offs:**
+- ✅ Cleaner aggregate boundaries, simpler mapping
+- ✅ Prevents accidental N+1 queries
+- ✅ Aligned with domain model and TMS patterns
+- ⚠️ Requires explicit joins when loading Company data with agreements (acceptable — repository concern, not domain concern)
+
+---
+
 ### 2026-02-26T15:18:49Z: Test Infrastructure Patterns Skill Extracted
 
 **By:** Switch (Java/DDD Architect)

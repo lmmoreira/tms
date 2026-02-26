@@ -145,3 +145,145 @@ For ALL JPA entities with relationships (especially bidirectional):
 - `src/test/java/br/com/logistics/tms/builders/dto/CreateAgreementDTOBuilder.java` (93 lines)
 
 **Compilation:** ✅ SUCCESS (`mvn test-compile` passed)
+
+### 2026-02-26: Analysis of symmetric UUID mapping for Agreement source/destination
+
+**Question:** Should both `source` and `destination` in `AgreementEntity` be UUIDs instead of having `source` as `@ManyToOne` relationship?
+
+**Current State:**
+- `AgreementEntity.from` → `@ManyToOne(fetch = FetchType.LAZY)` with `@JoinColumn(name = "source")`
+- `AgreementEntity.destinationId` → `@Column(name = "destination", nullable = false)` (UUID)
+- Domain `Agreement` → symmetric: both `from` and `to` are `CompanyId` value objects
+
+**Database Schema:**
+```sql
+CREATE TABLE company.agreement (
+    source UUID NOT NULL REFERENCES company.company(id),
+    destination UUID NOT NULL REFERENCES company.company(id)
+);
+-- Both have foreign key constraints with ON DELETE RESTRICT
+-- Both have indexes (idx_agreement_source, idx_agreement_destination)
+```
+
+**Analysis:**
+
+**1. Consistency:**
+- ✅ **Domain is symmetric** — `Agreement(from: CompanyId, to: CompanyId)` treats both sides equally
+- ❌ **JPA is asymmetric** — source is navigable relationship, destination is raw UUID
+- This mismatch creates cognitive overhead: developers must remember which side has navigation vs which is just an ID
+
+**2. Coupling:**
+- ❌ **@ManyToOne introduces bidirectional coupling:**
+  - `AgreementEntity` → requires `CompanyEntity` reference for source
+  - `CompanyEntity.agreements` → `@OneToMany(mappedBy = "from")` owns the relationship
+  - Cascade behavior flows from Company → Agreement (line 54 in CompanyEntity)
+  - This is correct for the aggregate pattern: Company is the aggregate root, Agreement is part of it
+- ✅ **UUID-only would be one-way:**
+  - Agreement table only stores UUIDs
+  - No JPA-level navigation from Agreement → Company
+  - Cascade still works via `@OneToMany` on CompanyEntity side
+  - Referential integrity enforced at database level (foreign keys)
+
+**3. Query Implications:**
+- **N+1 Risk:** 
+  - Current: When loading agreements and accessing `from.getName()`, triggers lazy-load SELECT per agreement
+  - UUID-only: No lazy-load risk — you must explicitly join if you need Company data
+- **Index Usage:**
+  - Both approaches use the same indexes (idx_agreement_source, idx_agreement_destination)
+  - Query patterns remain identical at SQL level
+- **Performance:**
+  - Current: Slight overhead from proxy management, potential N+1 if not careful
+  - UUID-only: Leaner — no proxy overhead, forces explicit joins
+
+**4. Cascade Impact:**
+- **Critical:** `CompanyEntity.agreements` uses `@OneToMany(mappedBy = "from")` 
+  - `mappedBy` references the Java field name in `AgreementEntity`, NOT the column name
+  - If we change `from` field to `sourceId` (UUID), we MUST update `mappedBy`:
+    ```java
+    // Before: @OneToMany(mappedBy = "from", ...)
+    // After:  @OneToMany(mappedBy = "agreement", ...) ← NO! Can't map to non-relationship
+    ```
+- **JPA Constraint:** `mappedBy` MUST reference a `@ManyToOne` or `@OneToOne` field. It cannot reference a plain UUID column.
+- **Workaround:** Use `@JoinColumn` on the owning side:
+  ```java
+  @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  @JoinColumn(name = "source", referencedColumnName = "id")
+  private Set<AgreementEntity> agreements;
+  ```
+  This maintains unidirectional mapping: Company owns the relationship, Agreement doesn't navigate back.
+
+**5. Recommendation:**
+
+**✅ REFACTOR to symmetric UUIDs** for the following reasons:
+
+**Pros:**
+1. **Domain alignment** — JPA mirrors domain structure (both sides are IDs)
+2. **Simpler mental model** — no need to remember which side is navigable
+3. **Prevents N+1 bugs** — forces explicit joins, making query costs visible
+4. **Cleaner entity mapping** — Agreement doesn't need CompanyEntity reference
+5. **Testability** — `AgreementEntity.of()` doesn't need resolver function or entity parameters
+6. **Current cascade already works** — `CompanyEntity.agreements` with `@JoinColumn` maintains ownership
+
+**Cons:**
+1. **Requires `@JoinColumn` change** — must shift from `mappedBy` to explicit `@JoinColumn` in `CompanyEntity`
+2. **No navigation from Agreement** — if you need source Company data, must join explicitly
+3. **Slight API change** — `AgreementEntity.of()` signature changes (no longer needs `fromEntity` parameter)
+
+**Action Items:**
+1. Change `AgreementEntity.from` from `@ManyToOne CompanyEntity` to `@Column private UUID sourceId`
+2. Update `CompanyEntity.agreements` from `mappedBy = "from"` to `@JoinColumn(name = "source")`
+3. Update `AgreementEntity.of()` to accept only `Agreement` (remove `fromEntity` parameter)
+4. Update `AgreementEntity.toAgreement()` to use `sourceId` directly (line 81)
+5. Verify cascade behavior with tests (should be unchanged)
+
+**Pattern Established:** For value-object relationships in domain (e.g., CompanyId), use UUID columns in JPA rather than navigable relationships, unless navigation is actually needed for business queries. Aggregate ownership is maintained via `@OneToMany` with `@JoinColumn` on the parent side.
+
+
+### 2026-02-26: Refactored AgreementEntity to symmetric UUID mapping
+
+**What Changed:**
+1. `AgreementEntity.from` (`@ManyToOne CompanyEntity`) → `sourceId` (`@Column UUID`)
+2. Both source and destination are now plain UUID columns
+3. Updated `CompanyEntity.agreements` cascade from `mappedBy = "from"` to `@JoinColumn(name = "source")`
+4. Modified `AgreementEntity.of()` signature from `(Agreement, CompanyEntity)` → `(Agreement, UUID)` 
+5. Updated `AgreementEntity.toAgreement()` to construct domain Agreement with `CompanyId.with(sourceId)` instead of `CompanyId.with(from.getId())`
+6. Fixed `AgreementEntityAssert.hasFrom()` to check `sourceId` directly instead of navigating through entity reference
+7. Removed `from` field from `@ToString` exclude list (no longer exists)
+
+**Why This Matters:**
+- ✅ **Domain alignment** — JPA now mirrors domain symmetry (both source and destination are CompanyId value objects)
+- ✅ **Prevents N+1 queries** — no lazy-loaded Company reference means no accidental proxy triggers
+- ✅ **Simpler mapping** — `AgreementEntity.of()` no longer needs entity parameter, just the source UUID
+- ✅ **Cascade still works** — `@OneToMany` with explicit `@JoinColumn` maintains Company → Agreement ownership
+- ✅ **Cleaner assertions** — test code doesn't need to check entity presence, just UUID equality
+
+**Technical Details:**
+- **Cascade pattern change:** From bidirectional `mappedBy` to unidirectional `@JoinColumn`
+  ```java
+  // Before:
+  @OneToMany(mappedBy = "from", cascade = CascadeType.ALL, ...)
+  
+  // After:
+  @OneToMany(cascade = CascadeType.ALL, ...)
+  @JoinColumn(name = "source", nullable = false)
+  ```
+- **Why this works:** JPA allows `@OneToMany` to own the relationship via `@JoinColumn` on the parent side. The child (`AgreementEntity`) doesn't need a back-reference field — the foreign key in the database is sufficient for cascade operations.
+
+**Database Schema:**
+No changes required — both `source` and `destination` columns already existed as UUID with foreign key constraints. The refactor only changed the JPA mapping layer.
+
+**Impact:**
+- `AgreementEntity` no longer depends on `CompanyEntity` class (only UUID)
+- Query patterns unchanged — indexes on `source` and `destination` still used
+- Cascade delete/orphan removal still works (tested with compilation)
+- Test infrastructure updated (AgreementEntityAssert now checks `sourceId` field)
+
+**Files Modified:**
+- `AgreementEntity.java` — Changed field type, updated mapping methods, removed from @ToString exclude
+- `CompanyEntity.java` — Changed `@OneToMany` from `mappedBy` to `@JoinColumn`
+- `AgreementEntityAssert.java` — Updated `hasFrom()` to check `sourceId` directly
+
+**Compilation:** ✅ SUCCESS (`mvn clean compile` passed)
+
+**Pattern Learned:** When domain uses value objects for relationships (e.g., CompanyId), prefer UUID columns in JPA entities over navigable `@ManyToOne` relationships. Aggregate ownership is maintained via `@OneToMany` with explicit `@JoinColumn` on the parent side, avoiding bidirectional coupling while preserving cascade behavior.
+
