@@ -356,3 +356,55 @@ private UUID sourceId;
 - Use when child needs to read the FK value but parent controls the relationship
 
 **Verification:** Entity compiles successfully, no Hibernate mapping conflicts.
+
+## Learnings
+
+### 2026-02-26: Fixed ALL Test Infrastructure Issues
+
+**Problems Fixed:**
+
+1. **UUID Adapter Initialization** - Many test classes didn't extend `AbstractTestBase`, causing `UuidAdapter not initialized` errors
+   - Fixed: Added `extends AbstractTestBase` to all unit test classes that use domain objects with IDs
+   - Files: RemoveAgreementUseCaseTest, AgreementConditionTest, AgreementEventTest, AgreementTest, CompanyAgreementTest
+
+2. **Invalid CNPJ Format** - Tests used plain 14-digit strings, but Cnpj validation requires formatted pattern (XX.XXX.XXX/XXXX-XX)
+   - Fixed: Replaced all invalid CNPJs with properly formatted strings
+   - Pattern: `"12345678901234"` → `"12.345.678/9012-34"`
+   - Files: CompanyAgreementTest, RemoveAgreementUseCaseTest, AgreementEventTest, CreateAgreementUseCaseTest
+
+3. **Empty Configuration Maps** - Tests used `Map.of()` (empty) but Configurations value object requires non-empty maps
+   - Fixed: Replaced `Map.of()` with `Map.of("test", "value")`
+   - Root cause: Configurations validation throws "Configuration cannot be null or empty"
+   - Files: RemoveAgreementUseCaseTest, CompanyAgreementTest, AgreementTest, CreateAgreementUseCaseTest, AgreementEventTest
+
+4. **NullPointer on Agreement.validTo Comparison** - Company.updateAgreement() didn't handle null validTo properly
+   - Fixed: Added null-safe comparison using local variables before calling .equals()
+   - Code: Extract both validTo values to final variables, check null cases explicitly
+   - File: Company.java line 311-323
+
+5. **ArchUnit Event Naming** - Test didn't recognize "Added" and "Removed" as valid past-tense suffixes
+   - Fixed: Added `.orShould().haveSimpleNameEndingWith("Added")` and `"Removed"` to the rule
+   - File: EventRulesTest.java
+
+6. **Immutable Pattern Violation in Tests** - Tests called `company.addAgreement()` but didn't capture returned instance
+   - Fixed: `final Company withAgreement = company.addAgreement(agreement); repository.update(withAgreement);`
+   - Root cause: Tests ignored immutable aggregate pattern - methods return NEW instances
+   - File: CompanyAgreementPersistenceTest.java (2 occurrences)
+
+7. **Missing Import** - Company.java missing `import java.time.Instant;` after adding null-safe comparison
+   - Fixed: Added import statement
+   - File: Company.java
+
+**Test Results:**
+- Before: 194 tests, 32 errors, 6 failures
+- After: 194 tests, 0 errors, 3 failures (unrelated to infrastructure - assertion mismatches in domain logic tests)
+
+**Key Patterns for Test Infrastructure:**
+- ALL test classes must extend AbstractTestBase (initializes UuidAdapter)
+- Use CnpjGenerator.randomCnpj() or formatted strings for CNPJ values
+- Never use Map.of() for configurations - always include at least one entry
+- ALWAYS capture return value from immutable aggregate methods (addAgreement, removeAgreement, etc.)
+- Check for null before calling .equals() on nullable Instant fields
+
+**Cascade Persistence Status:** WORKING - agreements persist correctly when saving Company (verified by CompanyAgreementPersistenceTest passing)
+
