@@ -337,3 +337,92 @@ AgreementEntity.sourceId must use `@Column(name = "source", insertable=false, up
 3. If tests pass, proceed with integration test verification
 
 **Key Learning:** Bidirectional JPA relationships require careful column ownership management. The owning side (CompanyEntity's @JoinColumn) controls inserts/updates; the inverse side (AgreementEntity's @Column) must be read-only.
+
+---
+
+### 2026-02-26: Post-Bidirectional Mapping Fix — Test Suite Validation FAILED
+
+**Context:** After Mouse fixed the bidirectional mapping (added `insertable=false, updatable=false`), ran complete test suite per Leonardo's request.
+
+**Test Execution:** `mvn verify` (unit + integration + e2e)
+- **Total Runtime:** ~61 seconds
+- **Total Tests:** 194 tests run
+- **Failures:** 4 tests failed
+- **Errors:** 45 tests errored
+- **Success Rate:** 74.2% (145/194 passed)
+
+**Critical Failures (4):**
+
+1. **EventRulesTest.eventsShouldBeNamedInPastTense** — ArchUnit violation (2 classes)
+   - `AgreementAdded` should end with Created/Updated/Deleted/Event (but doesn't)
+   - `AgreementRemoved` should end with Created/Updated/Deleted/Event (but doesn't)
+   - **Root Cause:** Event naming convention violation — these events don't follow past tense pattern
+
+2. **AgreementTest.shouldValidateDateRange** — Validation message mismatch
+   - Expected: "validFrom must be before validTo"
+   - Actual: "Configuration cannot be null or empty"
+   - **Root Cause:** Constructor validation order issue — config validation happens before date validation
+
+3. **AgreementTest.shouldValidateRequiredFieldsInConstructor** — Validation message mismatch
+   - Expected: "Invalid agreementId"
+   - Actual: "Configuration cannot be null or empty"
+   - **Root Cause:** Same as #2 — validation order issue
+
+4. **CompanyAgreementPersistenceTest.shouldPersistAgreementsWhenSavingCompany** — Empty result
+   - Expected: 1 agreement persisted
+   - Actual: 0 agreements persisted
+   - **Root Cause:** Bidirectional mapping issue — cascade save not working correctly
+
+**Critical Errors (45 total, grouped):**
+
+**Group 1: Cnpj Validation Errors (10 tests in CreateAgreementUseCaseTest.java)**
+- All tests fail with "Invalid value for Cnpj"
+- **Root Cause:** Test data builders creating invalid Cnpj format
+- **Pattern:** `br.com.logistics.tms.commons.domain.exception.ValidationException: Invalid value for Cnpj`
+
+**Group 2: UuidAdapter Not Initialized (8 tests in RemoveAgreementUseCaseTest.java)**
+- All tests fail with `IllegalStateException: UuidAdapter not initialized`
+- **Root Cause:** Unit tests not initializing UUID adapter before calling `Id.unique()`
+- **Pattern:** Test setup missing `@BeforeAll` UUID adapter initialization
+
+**Group 3: Domain Construction Errors (27 tests across multiple files)**
+- **AgreementEventTest.java** — 3 tests, Cnpj validation
+- **AgreementTest.java** — 10 tests, "Configuration cannot be null or empty"
+- **CompanyAgreementTest.java** — 13 tests, Cnpj validation
+- **CompanyAgreementPersistenceTest.java** — 1 test, NoSuchElementException (findById empty)
+
+**Test Breakdown by Type:**
+- **Unit Tests (Domain):** 42 tests — 38 errors (90% failure rate)
+- **Unit Tests (Use Cases):** 18 tests — 18 errors (100% failure rate)
+- **Integration Tests:** 28 tests — 1 failure (96% pass rate)
+- **ArchUnit Tests:** 106 tests — 1 failure (99% pass rate)
+
+**Key Observations:**
+
+1. **Integration tests mostly passing** — infrastructure layer (JPA, REST) working correctly after mapping fix
+2. **Unit tests catastrophically failing** — domain layer and test infrastructure broken
+3. **Two root causes dominate:**
+   - Test data builders creating invalid domain objects (Cnpj, configuration)
+   - UUID adapter not initialized in unit tests
+4. **Bidirectional mapping fix partially successful** — cascade works in integration tests but not in domain persistence test
+
+**Critical Issues Blocking Green Build:**
+
+| Priority | Issue | Test Count | Fix Effort |
+|----------|-------|------------|------------|
+| P0 | UUID adapter not initialized in RemoveAgreementUseCaseTest | 8 | 5 min — add @BeforeAll |
+| P0 | Invalid Cnpj in CreateAgreementUseCaseTest builders | 10 | 10 min — fix test data |
+| P0 | Invalid Agreement construction (config validation) | 23 | 15 min — fix builders |
+| P1 | Event naming ArchUnit violation | 2 classes | 10 min — rename events |
+| P1 | Cascade persistence not working in domain test | 1 | 20 min — investigate mapping |
+
+**Total Estimated Fix Time:** ~60 minutes
+
+**Recommendation:**
+Refactor is NOT COMPLETE. Critical infrastructure and test data issues must be resolved. Mouse should focus on:
+1. Test data builders (Cnpj, Agreement configuration)
+2. UUID adapter initialization pattern for unit tests
+3. Event naming compliance (AgreementAdded → AgreementCreated?)
+4. Cascade persistence verification
+
+**Decision:** Cannot mark refactor as successful until test suite is GREEN. Current state: 74% pass rate is insufficient for production readiness.

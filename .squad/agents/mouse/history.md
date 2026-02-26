@@ -327,3 +327,32 @@ public abstract class AbstractTestBase {
 - Works seamlessly with Spring tests (they inherit the initialization)
 - No Spring dependencies in `AbstractTestBase` - pure JUnit 5
 - UUID v7 (time-based) generation ensures deterministic ordering in tests
+
+### 2026-02-26: Fixed bidirectional JPA mapping conflict in AgreementEntity
+
+**Problem:** The `source` column was claimed by BOTH:
+- CompanyEntity's `@OneToMany` with `@JoinColumn(name = "source")` — parent owns the foreign key
+- AgreementEntity's `@Column(name = "source") private UUID sourceId` — child declares it as a basic column
+
+**Consequence:** Hibernate throws mapping exception at startup: "Column 'source' is specified twice."
+
+**Root Cause:** In a unidirectional `@OneToMany` with `@JoinColumn`, the PARENT entity owns the foreign key column. The child entity should NOT redeclare it as a writable column.
+
+**Solution Applied:** Mark AgreementEntity.sourceId as read-only:
+```java
+@Column(name = "source", nullable = false, insertable = false, updatable = false)
+private UUID sourceId;
+```
+
+**Why This Works:**
+- `insertable = false, updatable = false` tells Hibernate: "This field is for reading only. Don't write to this column."
+- CompanyEntity's `@JoinColumn(name = "source")` owns writes to the `source` column
+- AgreementEntity can still read the sourceId value (needed for `toAgreement()` mapping)
+- Referential integrity is maintained — parent controls the relationship
+
+**Pattern:** Unidirectional @OneToMany + read-only FK field in child
+- Parent: `@OneToMany + @JoinColumn(name = "fk_column")`
+- Child: `@Column(name = "fk_column", insertable = false, updatable = false)`
+- Use when child needs to read the FK value but parent controls the relationship
+
+**Verification:** Entity compiles successfully, no Hibernate mapping conflicts.
