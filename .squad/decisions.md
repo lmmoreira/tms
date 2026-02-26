@@ -2,6 +2,163 @@
 
 ## Active Decisions
 
+### 2026-02-26T15:12:08Z: Agreement Domain Test Infrastructure Created
+
+**By:** Switch (Java/DDD Architect)
+**Requested by:** Leonardo Moreira
+
+**What:** Created comprehensive test infrastructure for Agreement domain model:
+- AgreementAssert — Custom AssertJ assertion class with 20+ fluent assertion methods
+- AgreementBuilder — Test data builder with sensible defaults and fluent withers
+
+**Why:** 
+- Enables readable, maintainable tests for Agreement domain logic
+- Provides consistent test data creation across domain and integration tests
+- Follows established TMS test patterns (CompanyAssert/CompanyBuilder)
+- Supports all Agreement-specific behaviors (isActive, isValidOn, overlapsWith, isBetween)
+
+**Pattern Applied:**
+```java
+// Builder usage
+Agreement agreement = AgreementBuilder.anAgreement()
+    .withFrom(sourceCompanyId)
+    .withTo(destCompanyId)
+    .withType(AgreementType.DELIVERS_WITH)
+    .withConfigurationEntry("discountPercent", 10)
+    .build();
+
+// Assertion usage
+assertThatAgreement(agreement)
+    .hasFrom(sourceCompanyId)
+    .hasTo(destCompanyId)
+    .isActive()
+    .hasConfigurationEntry("discountPercent", 10);
+```
+
+**Key Design Decisions:**
+1. **Builder defaults:** DELIVERS_WITH type, validFrom = now, validTo = null (open-ended), minimal configuration
+2. **Dual overloads:** Accept both CompanyId and UUID for from/to relationships (convenience)
+3. **All finals:** Every variable (parameters, locals) declared final per TMS coding standards
+4. **Factory method:** Uses Agreement.createAgreement() (not constructor) to respect domain factory pattern
+5. **Domain-aware assertions:** Dedicated methods for isActive(), isValidOn(), overlapsWith(), isBetween()
+
+**Impact:**
+- Existing Agreement tests can be refactored to use these utilities
+- Future test creation becomes faster and more consistent
+- Test readability improves significantly
+- Reduces duplication in test setup code
+
+**Compilation:** ✅ SUCCESS (mvn test-compile passed)
+
+**Related Patterns:**
+- Test data builder pattern (doc/ai/prompts/test-data-builders.md)
+- AssertJ custom assertions (existing CompanyAssert/CompanyBuilder)
+- Domain factory methods (Agreement.createAgreement)
+
+---
+
+### 2026-02-26T14:09:00Z: JPA Entity Equals/HashCode Best Practice
+
+**By:** Mouse (Database/JPA Expert)
+**Requested by:** Leonardo Moreira
+
+**What:** Standard pattern for equals/hashCode/toString in JPA entities to prevent circular reference issues
+
+**Decision:**
+ALL JPA entities with relationships MUST follow this Lombok pattern:
+```java
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(of = "id")           // ✅ ID only
+@ToString(exclude = {"relationshipFields"})  // ✅ Exclude relationships
+public class MyEntity {
+    @Id
+    private UUID id;
+    
+    @ManyToOne
+    private RelatedEntity related;  // Excluded from toString
+}
+```
+
+**NEVER use @Data on JPA entities** — it includes ALL fields in equals/hashCode/toString, causing:
+1. StackOverflowError in bidirectional relationships
+2. LazyInitializationException when lazy collections are accessed during equals/hashCode
+3. Database queries triggered by equals/hashCode (performance issue)
+
+**Why:**
+- Prevents infinite loops in bidirectional relationships (CompanyEntity ↔ AgreementEntity)
+- Keeps equals/hashCode fast and side-effect-free (no database queries)
+- Maintains lazy loading behavior (relationships not touched)
+- Follows JPA best practice: entity identity = database ID
+
+**Applied To:**
+- CompanyEntity (bidirectional with AgreementEntity)
+- AgreementEntity (bidirectional with CompanyEntity and AgreementConditionEntity)
+- AgreementConditionEntity (bidirectional with AgreementEntity)
+
+**Impact:**
+This is now the TMS standard for ALL JPA entities. New entities MUST follow this pattern. Existing entities with relationships should be reviewed and fixed if using @Data.
+
+---
+
+### 2026-02-26: Functional dependency injection for entity reference resolution
+
+**By:** Mouse (Database/JPA Expert)
+**Requested by:** Leonardo Moreira
+
+**What:** Use function parameters to inject repository lookups into entity factory methods when building JPA relationships
+
+**Why:** 
+- Avoids creating detached entities that cause `TransientPropertyValueException`
+- Keeps entity classes clean (no repository dependencies)
+- Maintains testability (function can be mocked)
+- Preserves immutable aggregate pattern
+
+**Pattern:**
+```java
+// Entity factory method accepts resolver function
+public static CompanyEntity of(Company company, Function<UUID, CompanyEntity> destinationResolver) {
+    // ... build entity ...
+    
+    // Use function to resolve related entities
+    company.getAgreements().stream()
+        .map(agreement -> {
+            CompanyEntity destination = destinationResolver.apply(agreement.to().value());
+            return AgreementEntity.of(agreement, entity, destination);
+        })
+        .collect(toSet());
+}
+
+// Repository passes method reference
+CompanyEntity.of(company, this::resolveDestinationCompany);
+
+private CompanyEntity resolveDestinationCompany(UUID id) {
+    return jpaRepository.findById(id)
+        .orElseThrow(() -> new IllegalStateException("Not found: " + id));
+}
+```
+
+**When to Apply:**
+- JPA entity factories need to reference other entities by ID
+- Referenced entities must be attached to persistence context
+- Entity classes should not depend on repositories directly
+- Cascade persistence is required
+
+**Trade-offs:**
+- ✅ Clean architecture (entities don't know about repositories)
+- ✅ Testable (function parameter can be mocked)
+- ✅ Type-safe (compile-time checking)
+- ⚠️ Additional DB queries (one per referenced entity)
+- ⚠️ Method signature complexity increases
+
+**Alternative:** EntityManager.getReference() — but requires EntityManager injection into entity, breaking hexagonal architecture
+
+---
+
 ### 2026-02-24: Documentation baseline captured before optimization
 **By:** Tank (Automation Specialist)
 **What:** AI docs baseline before moving DDD to doc/design/

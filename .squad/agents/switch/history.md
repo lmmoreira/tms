@@ -136,3 +136,155 @@
 - Use cases depend on findCompanyByAgreementId() repository method from Phase 1
 - Controllers are ready to receive HTTP requests once persistence layer is implemented
 - All code compiles successfully and follows immutability patterns
+
+
+### 2026-02-26: E2E Testing Skill Extracted
+
+**Created Skill:**
+- `.squad/skills/e2e-testing-tms/SKILL.md` — Generalized E2E REST API testing patterns for TMS
+
+**Skill Metadata:**
+- **Confidence:** Medium (validated through agreement E2E session, multiple bugs found and fixed)
+- **Domain:** REST API testing, JPA relationships, Spring Boot
+- **Title:** "E2E Testing in TMS"
+
+**Patterns Extracted:**
+
+1. **Environment Setup**
+   - `make start-tms` runs PostgreSQL + RabbitMQ + app (port 8080)
+   - Minimal vs full stack decision criteria
+   - Health check verification commands
+
+2. **HTTP Test File Structure**
+   - Location pattern: `src/main/resources/{module}/{feature}-e2e-{variant}.http`
+   - Template with phases: dependency setup, CRUD operations, negative cases
+   - IntelliJ HTTP Client format with variable capture
+
+3. **Value Object Formatting**
+   - CNPJ: `"##.###.###/####-##"` (14 digits with formatting)
+   - UUID: standard v4/v7 format
+   - Instant: ISO 8601 UTC (`"yyyy-MM-ddTHH:mm:ssZ"`)
+
+4. **DTO Field Validation Patterns**
+   - Required vs optional field handling
+   - Enum string-to-enum conversion and validation
+   - Configuration map patterns (`Map<String, Object>`)
+
+5. **JPA Bidirectional Relationship Patterns** (CRITICAL)
+   - **Transient Entity Bug → Resolver Function Pattern**: Map domain IDs to JPA entities BEFORE save
+   - **Circular hashCode → ID-Only equals/hashCode**: Use only ID field in equals/hashCode for bidirectional entities
+   - **Lombok @Data Dangers**: Never use on JPA entities — generates circular hashCode
+   - Recommended: `@Getter + @Setter + @NoArgsConstructor + @EqualsAndHashCode(onlyExplicitlyIncluded = true)`
+
+6. **REST Controller Routing**
+   - Nested resource path pattern: `/{parent}/{parentId}/{child}/{childId?}`
+   - `@PathVariable` extraction from nested routes
+   - Controller passes parent ID into use case input
+
+7. **E2E Test Flow Template**
+   - Phase 1: Create ALL dependencies first
+   - Phase 2: CRUD operations (Create → List → Get → Update → Verify → Delete → Verify)
+   - Phase 3: Negative cases (duplicate, self-reference, missing FK, invalid ranges, enum mismatch)
+
+8. **Common Gotchas**
+   - Empty configuration validation
+   - Early enum validation in use cases
+   - Path variable name matching
+   - Transient entity exceptions
+   - Circular hashCode in bidirectional relationships
+
+**Why This Skill is Reusable:**
+- NOT specific to agreements — applies to ANY TMS entity CRUD flow
+- Resolver pattern works for ANY ManyToOne FK scenario
+- ID-only equals/hashCode applies to ALL JPA bidirectional entities
+- HTTP test template is entity-agnostic
+- Debugging section covers common TMS error patterns
+
+**Session Context (Today's Validation):**
+- Fixed transient entity bug in agreement creation via resolver pattern
+- Fixed circular hashCode in AgreementJpaEntity
+- Validated full agreement E2E flow (create, list, get, update, delete)
+- Tested negative cases (duplicate, self-reference, missing FK, invalid dates)
+- All patterns documented in `agreement-e2e-simple.http`
+
+**Related Skills:**
+- `.squad/skills/immutable-aggregate-update/SKILL.md` — Domain immutability patterns
+- `.squad/skills/fake-repository-pattern/SKILL.md` — Unit testing
+- `.squad/skills/test-data-builder-pattern/SKILL.md` — Test data creation
+
+**Future Applications:**
+- When creating E2E tests for ShipmentOrder, Driver, Vehicle, Route entities
+- When debugging JPA relationship issues in any module
+- When onboarding new team members to TMS testing patterns
+- When reviewing HTTP test files for consistency
+
+
+### 2026-02-26: Agreement Domain Test Infrastructure Created
+
+**Created Files:**
+- `AgreementAssert.java` — Custom AssertJ assertion at `/src/test/java/br/com/logistics/tms/assertions/domain/company/AgreementAssert.java`
+- `AgreementBuilder.java` — Test data builder at `/src/test/java/br/com/logistics/tms/builders/domain/company/AgreementBuilder.java`
+
+**AgreementAssert Fluent Assertions:**
+- Identity: `hasAgreementId(UUID)`
+- Relationships: `hasFrom(CompanyId/UUID)`, `hasTo(CompanyId/UUID)`, `isBetween(from, to)`
+- Type: `hasType(AgreementType)`
+- Configurations: `hasConfigurationEntry(key, value)`, `hasConfigurationKey(key)`, `doesNotHaveConfigurationKey(key)`
+- Conditions: `hasConditionsCount(int)`, `hasCondition(condition)`, `hasEmptyConditions()`
+- Validity: `hasValidFrom(Instant)`, `hasValidTo(Instant)`, `hasNoValidTo()`
+- Status: `isActive()`, `isNotActive()`, `isValidOn(date)`, `isNotValidOn(date)`
+- Overlaps: `overlapsWith(other)`, `doesNotOverlapWith(other)`
+
+**AgreementBuilder Fluent Withers:**
+- Identity: `withFrom(CompanyId/UUID)`, `withTo(CompanyId/UUID)`
+- Type: `withType(AgreementType)`
+- Configuration: `withConfiguration(Map)`, `withConfigurationEntry(key, value)`
+- Conditions: `withConditions(Set)`, `withCondition(condition)`
+- Validity: `withValidFrom(Instant)`, `withValidTo(Instant)`, `withNoValidTo()`
+- Factory: `anAgreement()` static factory method
+- Build: `build()` calls `Agreement.createAgreement()` with sensible defaults
+
+**Patterns Applied:**
+- All variables declared final (constructor parameters, method parameters, local variables)
+- Followed CompanyAssert/CompanyBuilder patterns EXACTLY
+- AssertJ fluent assertion chain pattern
+- Builder pattern with fluent withers
+- Default configuration (`{"default": true}`) when empty
+- Default type: `DELIVERS_WITH`
+- Default validFrom: `Instant.now()`
+- Default validTo: `null` (open-ended agreement)
+- Two source company IDs: `CompanyId` (value object) and `UUID` (primitive) overloads
+
+**Key Assertions for Agreement-Specific Behavior:**
+- `isActive()` / `isNotActive()` — Tests Agreement.isActive() method
+- `isValidOn(date)` / `isNotValidOn(date)` — Tests Agreement.isValidOn(date) method
+- `isBetween(from, to)` / `isNotBetween(from, to)` — Tests Agreement.isBetween(from, to) method
+- `overlapsWith(other)` / `doesNotOverlapWith(other)` — Tests Agreement.overlapsWith(other) method
+
+**Compilation Status:** ✅ SUCCESS (mvn test-compile passed)
+
+**Usage Examples:**
+```java
+// Builder
+Agreement agreement = AgreementBuilder.anAgreement()
+    .withFrom(sourceCompanyId)
+    .withTo(destCompanyId)
+    .withType(AgreementType.DELIVERS_WITH)
+    .withConfigurationEntry("discountPercent", 10)
+    .withValidFrom(Instant.now())
+    .withValidTo(Instant.now().plus(365, ChronoUnit.DAYS))
+    .build();
+
+// Assertion
+assertThatAgreement(agreement)
+    .hasFrom(sourceCompanyId)
+    .hasTo(destCompanyId)
+    .hasType(AgreementType.DELIVERS_WITH)
+    .hasConfigurationEntry("discountPercent", 10)
+    .isActive();
+```
+
+**Related Test Infrastructure:**
+- CompanyAssert/CompanyBuilder for Company aggregate testing
+- Existing domain tests can now use these utilities for Agreement scenarios
+- Integration tests can use builder for test data setup

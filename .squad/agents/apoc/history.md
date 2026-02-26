@@ -9,6 +9,34 @@
 
 ## Learnings
 
+### 2026-02-26: Created Agreement use case tests with FakeCompanyRepository
+
+**What:** Created comprehensive unit tests for CreateAgreementUseCase and RemoveAgreementUseCase following the SynchronizeCompanyUseCaseTest pattern
+
+**Files created:**
+1. `FakeCompanyRepository.java` — In-memory fake implementation of CompanyRepository for testing
+2. `CreateAgreementUseCaseTest.java` — 10 test cases covering happy path and validation failures
+3. `RemoveAgreementUseCaseTest.java` — 8 test cases covering removal scenarios
+
+**Key patterns applied:**
+- NO Spring context — pure unit tests using FakeCompanyRepository
+- All variables declared final throughout
+- Used existing AgreementBuilder and AgreementAssert from Switch/Mouse work
+- Followed exact structure of SynchronizeCompanyUseCaseTest reference
+
+**Technical details:**
+- FakeCompanyRepository uses HashMap-based storage with CompanyId as key
+- Implements all 3 CompanyRepository query methods (getCompanyById, getCompanyByCnpj, findCompanyByAgreementId)
+- Tests validate: self-reference rejection, duplicate prevention, overlapping detection, missing company handling
+- AgreementCondition requires 3 parameters: AgreementConditionId, AgreementConditionType, Conditions (not just 2)
+- CompanyType enum has: MARKETPLACE, SELLER, PUDO, CROSS_DOCKING, LOGISTICS_PROVIDER (no CARRIER)
+
+**Coverage:**
+- CreateAgreement: success path, without conditions, source/destination not found, self-reference, duplicate, overlapping, multiple conditions, open-ended, future start
+- RemoveAgreement: success path, not found, selective removal, expired/future agreements, recreation, with conditions, multiple removals
+
+**Compilation:** ✅ SUCCESS via `mvn test-compile`
+
 ### 2026-02-24: Phase 3 Database Migrations Created
 **Context:** Implemented Phase 3 of Plan 002 - Database Migrations for Company Agreement feature
 **What I learned:**
