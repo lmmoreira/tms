@@ -1,5 +1,6 @@
 package br.com.logistics.tms.company.domain;
 
+import br.com.logistics.tms.AbstractTestBase;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,7 +10,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("AgreementCondition Domain Tests")
-class AgreementConditionTest {
+class AgreementConditionTest extends AbstractTestBase {
 
     @Test
     @DisplayName("Should create valid agreement condition")

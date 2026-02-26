@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("agreements")
+@RequestMapping("companies/{companyId}/agreements")
 @Cqrs(DatabaseRole.WRITE)
 public class RemoveAgreementController {
 
@@ -31,7 +31,7 @@ public class RemoveAgreementController {
     }
 
     @DeleteMapping("/{agreementId}")
-    public Object remove(@PathVariable final UUID agreementId) {
+    public Object remove(@PathVariable final UUID companyId, @PathVariable final UUID agreementId) {
         return restUseCaseExecutor
                 .from(removeAgreementUseCase)
                 .withInput(new RemoveAgreementUseCase.Input(agreementId))

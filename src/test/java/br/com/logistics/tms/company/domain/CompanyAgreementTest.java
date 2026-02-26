@@ -1,5 +1,6 @@
 package br.com.logistics.tms.company.domain;
 
+import br.com.logistics.tms.AbstractTestBase;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,21 +13,21 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("Company Agreement Management Tests")
-class CompanyAgreementTest {
+class CompanyAgreementTest extends AbstractTestBase {
 
     @Test
     @DisplayName("Should add agreement and return new Company instance")
     void shouldAddAgreementImmutably() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "12345678901234",
+                "12.345.678/9012-34",
                 Set.of(CompanyType.MARKETPLACE),
                 Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "98765432109876",
+                "98.765.432/1098-76",
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
                 Map.of("test", "value")
         );
@@ -54,23 +55,23 @@ class CompanyAgreementTest {
     void shouldPlaceAgreementAddedEvent() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "11111111111111",
+                "11.111.111/1111-11",
                 Set.of(CompanyType.MARKETPLACE),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "22222222222222",
+                "22.222.222/2222-22",
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Agreement agreement = Agreement.createAgreement(
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 Instant.now().truncatedTo(ChronoUnit.SECONDS),
                 null
@@ -98,23 +99,23 @@ class CompanyAgreementTest {
     void shouldRejectDuplicateAgreement() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "33333333333333",
+                "33.333.333/3333-33",
                 Set.of(CompanyType.MARKETPLACE),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "44444444444444",
+                "44.444.444/4444-44",
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Agreement agreement = Agreement.createAgreement(
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 Instant.now().truncatedTo(ChronoUnit.SECONDS),
                 null
@@ -132,16 +133,16 @@ class CompanyAgreementTest {
     void shouldRejectMismatchedSourceCompany() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "55555555555555",
+                "55.555.555/5555-55",
                 Set.of(CompanyType.MARKETPLACE),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "66666666666666",
+                "66.666.666/6666-66",
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final CompanyId wrongSource = CompanyId.unique();
@@ -150,7 +151,7 @@ class CompanyAgreementTest {
                 wrongSource,
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 Instant.now().truncatedTo(ChronoUnit.SECONDS),
                 null
@@ -166,16 +167,16 @@ class CompanyAgreementTest {
     void shouldRejectOverlappingAgreement() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "77777777777777",
+                "77.777.777/7777-77",
                 Set.of(CompanyType.MARKETPLACE),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "88888888888888",
+                "88.888.888/8888-88",
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Instant baseDate = Instant.parse("2026-01-01T00:00:00Z");
@@ -184,7 +185,7 @@ class CompanyAgreementTest {
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 baseDate,
                 baseDate.plus(30, ChronoUnit.DAYS)
@@ -196,7 +197,7 @@ class CompanyAgreementTest {
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 baseDate.plus(15, ChronoUnit.DAYS),
                 baseDate.plus(45, ChronoUnit.DAYS)
@@ -212,23 +213,23 @@ class CompanyAgreementTest {
     void shouldRemoveAgreementImmutably() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "99999999999999",
+                "99.999.999/9999-99",
                 Set.of(CompanyType.MARKETPLACE),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "10101010101010",
+                "10.101.010/1010-10",
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Agreement agreement = Agreement.createAgreement(
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 Instant.now().truncatedTo(ChronoUnit.SECONDS),
                 null
@@ -247,23 +248,23 @@ class CompanyAgreementTest {
     void shouldPlaceAgreementRemovedEvent() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "11223344556677",
+                "11.223.344/5566-77",
                 Set.of(CompanyType.MARKETPLACE),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "77665544332211",
+                "77.665.544/3322-11",
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Agreement agreement = Agreement.createAgreement(
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 Instant.now().truncatedTo(ChronoUnit.SECONDS),
                 null
@@ -290,9 +291,9 @@ class CompanyAgreementTest {
     void shouldRejectRemovingNonExistentAgreement() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "13579135791357",
+                "13.579.135/7913-57",
                 Set.of(CompanyType.MARKETPLACE),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final AgreementId nonExistentId = AgreementId.unique();
@@ -307,16 +308,16 @@ class CompanyAgreementTest {
     void shouldUpdateAgreementImmutably() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "24680246802468",
+                "24.680.246/8024-68",
                 Set.of(CompanyType.MARKETPLACE),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "86420864208642",
+                "86.420.864/2086-42",
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Instant validFrom = Instant.now().truncatedTo(ChronoUnit.SECONDS);
@@ -324,7 +325,7 @@ class CompanyAgreementTest {
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 validFrom,
                 null
@@ -348,16 +349,16 @@ class CompanyAgreementTest {
     void shouldPlaceAgreementUpdatedEvent() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "11112222333344",
+                "11.112.222/3333-44",
                 Set.of(CompanyType.MARKETPLACE),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "44443333222211",
+                "44.443.333/2222-11",
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Instant validFrom = Instant.now().truncatedTo(ChronoUnit.SECONDS);
@@ -365,7 +366,7 @@ class CompanyAgreementTest {
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 validFrom,
                 null
@@ -396,23 +397,23 @@ class CompanyAgreementTest {
     void shouldRejectUpdatingNonExistentAgreement() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "55556666777788",
+                "55.556.666/7777-88",
                 Set.of(CompanyType.MARKETPLACE),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "88887777666655",
+                "88.887.777/6666-55",
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Agreement nonExistentAgreement = Agreement.createAgreement(
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 Instant.now().truncatedTo(ChronoUnit.SECONDS),
                 null
@@ -428,16 +429,16 @@ class CompanyAgreementTest {
     void shouldRejectUpdateCreatingOverlap() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "99998888777766",
+                "99.998.888/7777-66",
                 Set.of(CompanyType.MARKETPLACE),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "66677778888999",
+                "66.677.778/8889-99",
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Instant baseDate = Instant.parse("2026-01-01T00:00:00Z");
@@ -446,7 +447,7 @@ class CompanyAgreementTest {
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 baseDate,
                 baseDate.plus(30, ChronoUnit.DAYS)
@@ -456,7 +457,7 @@ class CompanyAgreementTest {
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 baseDate.plus(60, ChronoUnit.DAYS),
                 baseDate.plus(90, ChronoUnit.DAYS)
@@ -478,23 +479,23 @@ class CompanyAgreementTest {
     void shouldCheckHasAgreementWith() {
         final Company company = Company.createCompany(
                 "Source Company",
-                "10203040506070",
+                "10.203.040/5060-70",
                 Set.of(CompanyType.MARKETPLACE),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "70605040302010",
+                "70.605.040/3020-10",
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
-                Map.of()
+                Map.of("test", "value")
         );
 
         final Agreement agreement = Agreement.createAgreement(
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 Instant.now().truncatedTo(ChronoUnit.SECONDS),
                 null

@@ -3,10 +3,7 @@ package br.com.logistics.tms.company.infrastructure.jpa.entities;
 import br.com.logistics.tms.company.domain.*;
 import br.com.logistics.tms.company.infrastructure.config.CompanySchema;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -19,22 +16,23 @@ import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "agreement", schema = CompanySchema.COMPANY_SCHEMA)
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(of = "id")
+@ToString(exclude = {"conditions"})
 public class AgreementEntity {
 
     @Id
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "source", nullable = false)
-    private CompanyEntity from;
+    @Column(name = "source", nullable = false, insertable = false, updatable = false)
+    private UUID sourceId;
 
-    @ManyToOne
-    @JoinColumn(name = "destination", nullable = false)
-    private CompanyEntity to;
+    @Column(name = "destination", nullable = false)
+    private UUID destinationId;
 
     @Column(name = "relation_type", nullable = false)
     private String relationType;
@@ -52,19 +50,16 @@ public class AgreementEntity {
     @OneToMany(mappedBy = "agreement", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<AgreementConditionEntity> conditions;
 
-    public static AgreementEntity of(final Agreement agreement, final CompanyEntity fromEntity) {
+    public static AgreementEntity of(final Agreement agreement, final UUID sourceCompanyId) {
         final AgreementEntity entity = AgreementEntity.builder()
                 .id(agreement.agreementId().value())
-                .from(fromEntity)
+                .sourceId(sourceCompanyId)
+                .destinationId(agreement.to().value())
                 .relationType(agreement.type().name())
                 .configuration(new HashMap<>(agreement.configurations().value()))
                 .validFrom(agreement.validFrom())
                 .validTo(agreement.validTo())
                 .build();
-
-        final CompanyEntity destinationRef = new CompanyEntity();
-        destinationRef.setId(agreement.to().value());
-        entity.setTo(destinationRef);
 
         final Set<AgreementConditionEntity> conditionEntities = agreement.conditions().stream()
                 .map(condition -> AgreementConditionEntity.of(condition, entity))
@@ -82,8 +77,8 @@ public class AgreementEntity {
 
         return new Agreement(
                 AgreementId.with(this.id),
-                CompanyId.with(this.from.getId()),
-                CompanyId.with(this.to.getId()),
+                CompanyId.with(this.sourceId),
+                CompanyId.with(this.destinationId),
                 AgreementType.valueOf(this.relationType),
                 Configurations.with(this.configuration),
                 conditions,

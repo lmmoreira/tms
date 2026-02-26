@@ -1,5 +1,6 @@
 package br.com.logistics.tms.company.domain;
 
+import br.com.logistics.tms.AbstractTestBase;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,7 +14,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("Agreement Domain Tests")
-class AgreementTest {
+class AgreementTest extends AbstractTestBase {
 
     @Test
     @DisplayName("Should create agreement via factory method")
@@ -52,7 +53,7 @@ class AgreementTest {
     @DisplayName("Should reject self-reference in factory method")
     void shouldRejectSelfReferenceInFactory() {
         final CompanyId companyId = CompanyId.unique();
-        final Map<String, Object> config = Map.of();
+        final Map<String, Object> config = Map.of("test", "value");
         final Instant validFrom = Instant.now();
 
         assertThatThrownBy(() -> Agreement.createAgreement(
@@ -80,7 +81,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Configurations.with(Map.of()),
+                Configurations.with(Map.of("test", "value")),
                 Set.of(),
                 validFrom,
                 null
@@ -93,7 +94,7 @@ class AgreementTest {
                 null,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Configurations.with(Map.of()),
+                Configurations.with(Map.of("test", "value")),
                 Set.of(),
                 validFrom,
                 null
@@ -106,7 +107,7 @@ class AgreementTest {
                 from,
                 null,
                 AgreementType.DELIVERS_WITH,
-                Configurations.with(Map.of()),
+                Configurations.with(Map.of("test", "value")),
                 Set.of(),
                 validFrom,
                 null
@@ -128,7 +129,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Configurations.with(Map.of()),
+                Configurations.with(Map.of("test", "value")),
                 Set.of(),
                 validFrom,
                 validTo
@@ -147,7 +148,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 validFrom,
                 null
@@ -172,7 +173,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 validFrom,
                 null
@@ -200,7 +201,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(oldCondition),
                 validFrom,
                 null
@@ -230,7 +231,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 validFrom,
                 null
@@ -252,7 +253,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 baseDate,
                 baseDate.plus(30, ChronoUnit.DAYS)
@@ -262,7 +263,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 baseDate.plus(15, ChronoUnit.DAYS),
                 baseDate.plus(45, ChronoUnit.DAYS)
@@ -284,7 +285,7 @@ class AgreementTest {
                 from,
                 to1,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 baseDate,
                 baseDate.plus(30, ChronoUnit.DAYS)
@@ -294,7 +295,7 @@ class AgreementTest {
                 from,
                 to2,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 baseDate.plus(15, ChronoUnit.DAYS),
                 baseDate.plus(45, ChronoUnit.DAYS)
@@ -314,7 +315,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 baseDate,
                 baseDate.plus(30, ChronoUnit.DAYS)
@@ -324,7 +325,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.OPERATES,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 baseDate.plus(15, ChronoUnit.DAYS),
                 baseDate.plus(45, ChronoUnit.DAYS)
@@ -344,7 +345,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 baseDate,
                 null
@@ -354,7 +355,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 baseDate.plus(100, ChronoUnit.DAYS),
                 baseDate.plus(200, ChronoUnit.DAYS)
@@ -375,7 +376,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 past,
                 future
@@ -387,7 +388,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 past.minus(20, ChronoUnit.DAYS),
                 past.minus(1, ChronoUnit.DAYS)
@@ -408,7 +409,7 @@ class AgreementTest {
                 from,
                 to,
                 AgreementType.DELIVERS_WITH,
-                Map.of(),
+                Map.of("test", "value"),
                 Set.of(),
                 start,
                 end

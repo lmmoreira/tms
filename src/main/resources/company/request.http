@@ -1,24 +1,49 @@
 @server = http://localhost:8080
 
-### Create company (Shein - Marketplace)
+### ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+### 📖 COMPANY MODULE E2E STORY
+### ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+###
+### BUSINESS SCENARIO:
+### Three companies enter the TMS ecosystem:
+###   • Shoppe (marketplace) needs logistics providers
+###   • Loggi (logistics provider) serves multiple clients
+###   • Biquelo (seller) ships through logistics providers
+###
+### COMPLETE STORY:
+###   1. Company CRUD: Create companies, query, update, delete
+###   2. Agreements: Shoppe → Loggi, Biquelo → Loggi
+###   3. Queries: List agreements, get by ID
+###   4. Updates: Extend validity periods
+###   5. Cleanup: Remove agreements
+###   6. Negative cases: Validations and business rules
+###
+### ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+### ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+### 🏢 PART 1: COMPANY CRUD OPERATIONS
+### ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### ━━━ STEP 1: CREATE SHOPPE (MARKETPLACE) ━━━
 POST {{server}}/companies
 Content-Type: application/json
 Accept: application/json
 
 {
-  "name": "Shein",
-  "cnpj": "50.617.696/0002-08",
+  "name": "Shoppe",
+  "cnpj": "42.123.456/0001-78",
   "types": ["MARKETPLACE"],
   "configuration": {
     "notification": "true",
-    "webhook": "http://shein.com.br/logistics/callback"
+    "webhook": "https://api.shoppe.com.br/webhooks/tms"
   }
 }
 
-> {% client.global.set("companyId", response.body.companyId) %}
+> {% client.global.set("shoppeId", response.body.companyId) %}
 
 
-### Create shipper (Loggi - Logistics Provider)
+### ━━━ STEP 2: CREATE LOGGI (LOGISTICS PROVIDER) ━━━
 POST {{server}}/companies
 Content-Type: application/json
 Accept: application/json
@@ -29,42 +54,245 @@ Accept: application/json
   "types": ["LOGISTICS_PROVIDER"],
   "configuration": {
     "notification": "true",
-    "webhook": "http://loggi.com.br/logistics/callback"
+    "webhook": "https://api.loggi.com/webhooks/partners",
+    "coverage": "nationwide"
   }
 }
 
-> {% client.global.set("shipper", response.body.companyId) %}
+> {% client.global.set("loggiId", response.body.companyId) %}
 
 
-### Get company
-GET {{server}}/companies/{{companyId}}
-Accept: application/json
-
-### Get company - CLI Presenter
-GET {{server}}/companies/{{companyId}}
-Accept: application/json
-cli: true
-
-### Get company - Mobile Presenter
-GET {{server}}/companies/{{companyId}}
-Accept: application/json
-mobile: true
-
-### Update company
-PUT {{server}}/companies/{{companyId}}
+### ━━━ STEP 3: CREATE BIQUELO (SELLER) ━━━
+POST {{server}}/companies
 Content-Type: application/json
 Accept: application/json
 
 {
-  "name": "Shein - Brasil",
-  "cnpj": "50.617.696/0001-79",
-  "types": ["MARKETPLACE", "SELLER"],
+  "name": "Biquelo Comércio Eletrônico",
+  "cnpj": "28.765.432/0001-91",
+  "types": ["SELLER"],
   "configuration": {
-    "notification": "false",
-    "webhook": "http://shein.com.br/logistics/callback"
+    "notification": "true",
+    "webhook": "https://biquelo.com.br/api/logistics/callback",
+    "shippingRegions": ["SP", "RJ", "MG"]
   }
 }
 
-### Delete company
-DELETE {{server}}/companies/{{companyId}}
+> {% client.global.set("biqueloId", response.body.companyId) %}
+
+
+### ━━━ STEP 4: GET SHOPPE BY ID ━━━
+GET {{server}}/companies/{{shoppeId}}
+Accept: application/json
+
+
+### ━━━ STEP 5: GET SHOPPE (CLI PRESENTER) ━━━
+GET {{server}}/companies/{{shoppeId}}
+Accept: application/json
+cli: true
+
+
+### ━━━ STEP 6: GET SHOPPE (MOBILE PRESENTER) ━━━
+GET {{server}}/companies/{{shoppeId}}
+Accept: application/json
+mobile: true
+
+
+### ━━━ STEP 7: UPDATE SHOPPE — ADD SELLER TYPE ━━━
+PUT {{server}}/companies/{{shoppeId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Shoppe Brasil",
+  "cnpj": "42.123.456/0001-78",
+  "types": ["MARKETPLACE", "SELLER"],
+  "configuration": {
+    "notification": "false",
+    "webhook": "https://api.shoppe.com.br/webhooks/tms",
+    "directShipping": "enabled"
+  }
+}
+
+
+### ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+### �� PART 2: AGREEMENT OPERATIONS
+### ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### ━━━ STEP 8: CREATE AGREEMENT — SHOPPE → LOGGI (10% DISCOUNT) ━━━
+POST {{server}}/companies/{{shoppeId}}/agreements
+Content-Type: application/json
+Accept: application/json
+
+{
+  "destinationCompanyId": "{{loggiId}}",
+  "type": "DELIVERS_WITH",
+  "configuration": {
+    "contractNumber": "AGR-2026-001",
+    "note": "Bulk discount for marketplace volume"
+  },
+  "conditions": [],
+  "validFrom": "2026-02-24T00:00:00Z",
+  "validTo": "2026-12-31T23:59:59Z"
+}
+
+> {% client.global.set("shoppeLoggiAgreementId", response.body.agreementId) %}
+
+
+### ━━━ STEP 9: CREATE AGREEMENT — BIQUELO → LOGGI (30% DISCOUNT + SLA) ━━━
+POST {{server}}/companies/{{biqueloId}}/agreements
+Content-Type: application/json
+Accept: application/json
+
+{
+  "destinationCompanyId": "{{loggiId}}",
+  "type": "DELIVERS_WITH",
+  "configuration": {
+    "contractNumber": "AGR-2026-002",
+    "note": "Premium terms - 30% discount + Day+1 SLA"
+  },
+  "conditions": [],
+  "validFrom": "2026-02-24T00:00:00Z",
+  "validTo": "2027-02-23T23:59:59Z"
+}
+
+> {% client.global.set("biqueloLoggiAgreementId", response.body.agreementId) %}
+
+
+### ━━━ STEP 10: LIST SHOPPE'S AGREEMENTS ━━━
+GET {{server}}/companies/{{shoppeId}}/agreements
+Accept: application/json
+
+
+### ━━━ STEP 11: LIST LOGGI'S AGREEMENTS ━━━
+GET {{server}}/companies/{{loggiId}}/agreements
+Accept: application/json
+
+
+### ━━━ STEP 12: GET SHOPPE → LOGGI AGREEMENT BY ID ━━━
+GET {{server}}/companies/{{shoppeId}}/agreements/{{shoppeLoggiAgreementId}}
+Accept: application/json
+
+
+### ━━━ STEP 13: UPDATE SHOPPE → LOGGI — EXTEND VALIDITY ━━━
+PUT {{server}}/companies/{{shoppeId}}/agreements/{{shoppeLoggiAgreementId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "validTo": "2027-12-31T23:59:59Z"
+}
+
+
+### ━━━ STEP 14: EXTEND BIQUELO → LOGGI VALIDITY ━━━
+PUT {{server}}/companies/{{biqueloId}}/agreements/{{biqueloLoggiAgreementId}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "validTo": "2028-02-23T23:59:59Z"
+}
+
+
+### ━━━ STEP 15: REMOVE SHOPPE → LOGGI AGREEMENT ━━━
+DELETE {{server}}/companies/{{shoppeId}}/agreements/{{shoppeLoggiAgreementId}}
+Accept: application/json
+
+
+### ━━━ STEP 16: VERIFY SHOPPE AGREEMENTS (SHOULD BE EMPTY) ━━━
+GET {{server}}/companies/{{shoppeId}}/agreements
+Accept: application/json
+
+
+### ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+### ❌ PART 3: NEGATIVE TEST SCENARIOS
+### ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### ━━━ NEGATIVE 1: DUPLICATE CNPJ (SHOULD FAIL) ━━━
+POST {{server}}/companies
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Shoppe Clone",
+  "cnpj": "42.123.456/0001-78",
+  "types": ["MARKETPLACE"],
+  "configuration": {}
+}
+
+
+### ━━━ NEGATIVE 2: DUPLICATE AGREEMENT (SHOULD FAIL) ━━━
+POST {{server}}/companies/{{biqueloId}}/agreements
+Content-Type: application/json
+Accept: application/json
+
+{
+  "destinationCompanyId": "{{loggiId}}",
+  "type": "DELIVERS_WITH",
+  "configuration": {},
+  "conditions": [],
+  "validFrom": "2026-02-24T00:00:00Z",
+  "validTo": "2027-02-23T23:59:59Z"
+}
+
+
+### ━━━ NEGATIVE 3: SELF-REFERENCE AGREEMENT (SHOULD FAIL) ━━━
+POST {{server}}/companies/{{biqueloId}}/agreements
+Content-Type: application/json
+Accept: application/json
+
+{
+  "destinationCompanyId": "{{biqueloId}}",
+  "type": "DELIVERS_WITH",
+  "configuration": {},
+  "conditions": [],
+  "validFrom": "2026-02-24T00:00:00Z",
+  "validTo": "2026-12-31T23:59:59Z"
+}
+
+
+### ━━━ NEGATIVE 4: EXPIRED AGREEMENT (SHOULD FAIL) ━━━
+POST {{server}}/companies/{{shoppeId}}/agreements
+Content-Type: application/json
+Accept: application/json
+
+{
+  "destinationCompanyId": "{{loggiId}}",
+  "type": "DELIVERS_WITH",
+  "configuration": {},
+  "conditions": [],
+  "validFrom": "2026-12-31T00:00:00Z",
+  "validTo": "2026-01-01T23:59:59Z"
+}
+
+
+### ━━━ NEGATIVE 5: MISSING TARGET COMPANY (SHOULD FAIL) ━━━
+POST {{server}}/companies/{{shoppeId}}/agreements
+Content-Type: application/json
+Accept: application/json
+
+{
+  "destinationCompanyId": "00000000-0000-0000-0000-000000000000",
+  "type": "DELIVERS_WITH",
+  "configuration": {},
+  "conditions": [],
+  "validFrom": "2026-02-24T00:00:00Z",
+  "validTo": "2026-12-31T23:59:59Z"
+}
+
+
+### ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+### 🧹 CLEANUP
+### ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### ━━━ FINAL: DELETE ALL TEST COMPANIES ━━━
+DELETE {{server}}/companies/{{shoppeId}}
+Accept: application/json
+
+###
+DELETE {{server}}/companies/{{loggiId}}
+Accept: application/json
+
+###
+DELETE {{server}}/companies/{{biqueloId}}
 Accept: application/json

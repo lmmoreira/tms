@@ -5,6 +5,7 @@ import br.com.logistics.tms.commons.domain.AbstractDomainEvent;
 import br.com.logistics.tms.commons.domain.Status;
 import br.com.logistics.tms.commons.domain.exception.ValidationException;
 
+import java.time.Instant;
 import java.util.*;
 
 public class Company extends AbstractAggregateRoot {
@@ -216,7 +217,7 @@ public class Company extends AbstractAggregateRoot {
                 .filter(Agreement::isActive)
                 .anyMatch(a -> a.overlapsWith(agreement));
         if (overlappingExists) {
-            throw new ValidationException("Overlapping active agreement exists");
+            throw new ValidationException("Overlapping active agreement already exists");
         }
 
         final Set<Agreement> updatedAgreements = new HashSet<>(this.agreements);
@@ -308,10 +309,14 @@ public class Company extends AbstractAggregateRoot {
         String oldValue = "";
         String newValue = "";
 
-        if (!existingAgreement.validTo().equals(updatedAgreement.validTo())) {
+        final Instant existingValidTo = existingAgreement.validTo();
+        final Instant updatedValidTo = updatedAgreement.validTo();
+        
+        if ((existingValidTo == null && updatedValidTo != null) || 
+            (existingValidTo != null && !existingValidTo.equals(updatedValidTo))) {
             fieldChanged = "validTo";
-            oldValue = existingAgreement.validTo() != null ? existingAgreement.validTo().toString() : "null";
-            newValue = updatedAgreement.validTo() != null ? updatedAgreement.validTo().toString() : "null";
+            oldValue = existingValidTo != null ? existingValidTo.toString() : "null";
+            newValue = updatedValidTo != null ? updatedValidTo.toString() : "null";
         } else if (!existingAgreement.conditions().equals(updatedAgreement.conditions())) {
             fieldChanged = "conditions";
             oldValue = String.valueOf(existingAgreement.conditions().size());

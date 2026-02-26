@@ -2,6 +2,7 @@ package br.com.logistics.tms;
 
 import br.com.logistics.tms.company.infrastructure.jpa.repositories.CompanyJpaRepository;
 import br.com.logistics.tms.company.infrastructure.jpa.repositories.CompanyOutboxJpaRepository;
+import br.com.logistics.tms.integration.fixtures.AgreementIntegrationFixture;
 import br.com.logistics.tms.integration.fixtures.CompanyIntegrationFixture;
 import br.com.logistics.tms.integration.fixtures.ShipmentOrderIntegrationFixture;
 import br.com.logistics.tms.shipmentorder.infrastructure.jpa.repositories.ShipmentOrderCompanyJpaRepository;
@@ -24,7 +25,7 @@ import org.testcontainers.containers.RabbitMQContainer;
 @TestPropertySource(locations = "classpath:env-test")
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-public abstract class AbstractIntegrationTest {
+public abstract class AbstractIntegrationTest extends AbstractTestBase {
 
     private static final TestContainersManager containers = TestContainersManager.getInstance();
 
@@ -68,6 +69,7 @@ public abstract class AbstractIntegrationTest {
 
     protected CompanyIntegrationFixture companyFixture;
     protected ShipmentOrderIntegrationFixture shipmentOrderFixture;
+    protected AgreementIntegrationFixture agreementFixture;
 
     @BeforeEach
     void setUp() {
@@ -83,6 +85,11 @@ public abstract class AbstractIntegrationTest {
                 objectMapper,
                 shipmentOrderOutboxJpaRepository,
                 companyJpaRepository
+        );
+
+        agreementFixture = new AgreementIntegrationFixture(
+                mockMvc,
+                objectMapper
         );
     }
 

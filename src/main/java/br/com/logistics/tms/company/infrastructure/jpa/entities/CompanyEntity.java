@@ -4,10 +4,7 @@ import br.com.logistics.tms.commons.domain.Status;
 import br.com.logistics.tms.company.domain.*;
 import br.com.logistics.tms.company.infrastructure.config.CompanySchema;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -16,10 +13,13 @@ import java.util.*;
 
 @Entity
 @Table(name = "company", schema = CompanySchema.COMPANY_SCHEMA)
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(of = "id")
+@ToString(exclude = {"agreements"})
 public class CompanyEntity implements Serializable {
 
     @Id
@@ -51,7 +51,8 @@ public class CompanyEntity implements Serializable {
     @Column(name = "configuration")
     private Map<String, Object> configuration;
 
-    @OneToMany(mappedBy = "from", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "source", nullable = false)
     private Set<AgreementEntity> agreements = new HashSet<>();
 
     public static CompanyEntity of(final Company company) {
@@ -66,7 +67,7 @@ public class CompanyEntity implements Serializable {
                 .build();
 
         final Set<AgreementEntity> agreementEntities = company.getAgreements().stream()
-                .map(agreement -> AgreementEntity.of(agreement, entity))
+                .map(agreement -> AgreementEntity.of(agreement, entity.getId()))
                 .collect(java.util.stream.Collectors.toSet());
         entity.setAgreements(agreementEntities);
 

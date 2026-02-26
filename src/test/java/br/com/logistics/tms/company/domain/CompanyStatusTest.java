@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
 
-class CompanyStatusTest {
+class CompanyStatusTest extends br.com.logistics.tms.AbstractTestBase {
 
     @Test
     void shouldCreateActiveStatus() {

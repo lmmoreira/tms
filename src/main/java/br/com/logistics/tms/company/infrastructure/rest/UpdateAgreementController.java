@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("agreements")
+@RequestMapping("companies/{companyId}/agreements")
 @Cqrs(DatabaseRole.WRITE)
 public class UpdateAgreementController {
 
@@ -34,7 +34,7 @@ public class UpdateAgreementController {
     }
 
     @PutMapping("/{agreementId}")
-    public Object update(@PathVariable final UUID agreementId, @RequestBody final UpdateAgreementDTO dto) {
+    public Object update(@PathVariable final UUID companyId, @PathVariable final UUID agreementId, @RequestBody final UpdateAgreementDTO dto) {
         return restUseCaseExecutor
                 .from(updateAgreementUseCase)
                 .withInput(dto.toInput(agreementId))

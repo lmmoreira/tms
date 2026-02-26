@@ -46,6 +46,8 @@ class EventRulesTest {
                 .orShould().haveSimpleNameEndingWith("Updated")
                 .orShould().haveSimpleNameEndingWith("Retrieved")
                 .orShould().haveSimpleNameEndingWith("Deleted")
+                .orShould().haveSimpleNameEndingWith("Added")
+                .orShould().haveSimpleNameEndingWith("Removed")
                 .orShould().haveSimpleNameEndingWith("Event")
                 .because("Domain events should be named in past tense");
 

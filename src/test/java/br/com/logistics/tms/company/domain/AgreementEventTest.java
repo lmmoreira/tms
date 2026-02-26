@@ -1,5 +1,6 @@
 package br.com.logistics.tms.company.domain;
 
+import br.com.logistics.tms.AbstractTestBase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -8,7 +9,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("Agreement Domain Event Tests")
-class AgreementEventTest {
+class AgreementEventTest extends AbstractTestBase {
 
     @Test
     @DisplayName("Should create AgreementAdded event with correct data")
@@ -87,23 +88,23 @@ class AgreementEventTest {
     void shouldVerifyAgreementAddedEventInAggregate() {
         final Company company = Company.createCompany(
                 "Test Company",
-                "12345678901234",
+                "12.345.678/9012-34",
                 java.util.Set.of(CompanyType.MARKETPLACE),
-                java.util.Map.of()
+                java.util.Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "98765432109876",
+                "98.765.432/1098-76",
                 java.util.Set.of(CompanyType.LOGISTICS_PROVIDER),
-                java.util.Map.of()
+                java.util.Map.of("test", "value")
         );
 
         final Agreement agreement = Agreement.createAgreement(
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                java.util.Map.of(),
+                java.util.Map.of("test", "value"),
                 java.util.Set.of(),
                 java.time.Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS),
                 null
@@ -121,23 +122,23 @@ class AgreementEventTest {
     void shouldVerifyAgreementRemovedEventInAggregate() {
         final Company company = Company.createCompany(
                 "Test Company",
-                "11111111111111",
+                "11.111.111/1111-11",
                 java.util.Set.of(CompanyType.MARKETPLACE),
-                java.util.Map.of()
+                java.util.Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "22222222222222",
+                "22.222.222/2222-22",
                 java.util.Set.of(CompanyType.LOGISTICS_PROVIDER),
-                java.util.Map.of()
+                java.util.Map.of("test", "value")
         );
 
         final Agreement agreement = Agreement.createAgreement(
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                java.util.Map.of(),
+                java.util.Map.of("test", "value"),
                 java.util.Set.of(),
                 java.time.Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS),
                 null
@@ -155,16 +156,16 @@ class AgreementEventTest {
     void shouldVerifyAgreementUpdatedEventInAggregate() {
         final Company company = Company.createCompany(
                 "Test Company",
-                "33333333333333",
+                "33.333.333/3333-33",
                 java.util.Set.of(CompanyType.MARKETPLACE),
-                java.util.Map.of()
+                java.util.Map.of("test", "value")
         );
 
         final Company destination = Company.createCompany(
                 "Destination Company",
-                "44444444444444",
+                "44.444.444/4444-44",
                 java.util.Set.of(CompanyType.LOGISTICS_PROVIDER),
-                java.util.Map.of()
+                java.util.Map.of("test", "value")
         );
 
         final java.time.Instant validFrom = java.time.Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
@@ -172,7 +173,7 @@ class AgreementEventTest {
                 company.getCompanyId(),
                 destination.getCompanyId(),
                 AgreementType.DELIVERS_WITH,
-                java.util.Map.of(),
+                java.util.Map.of("test", "value"),
                 java.util.Set.of(),
                 validFrom,
                 null

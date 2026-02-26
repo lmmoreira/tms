@@ -4,6 +4,7 @@ import br.com.logistics.tms.AbstractIntegrationTest;
 import br.com.logistics.tms.company.application.repositories.CompanyRepository;
 import br.com.logistics.tms.company.domain.*;
 import br.com.logistics.tms.company.infrastructure.jpa.entities.CompanyEntity;
+import br.com.logistics.tms.utils.CnpjGenerator;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ class CompanyAgreementPersistenceTest extends AbstractIntegrationTest {
     void shouldPersistAgreementsWhenSavingCompany() {
         final Company sourceCompany = Company.createCompany(
                 "Source Company",
-                "12345678901234",
+                CnpjGenerator.randomCnpj(),
                 Set.of(CompanyType.MARKETPLACE),
                 Map.of("test", "source")
         );
@@ -38,7 +39,7 @@ class CompanyAgreementPersistenceTest extends AbstractIntegrationTest {
 
         final Company destinationCompany = Company.createCompany(
                 "Destination Company",
-                "98765432109876",
+                CnpjGenerator.randomCnpj(),
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
                 Map.of("test", "destination")
         );
@@ -63,8 +64,8 @@ class CompanyAgreementPersistenceTest extends AbstractIntegrationTest {
                 null
         );
 
-        savedSource.addAgreement(agreement);
-        companyRepository.update(savedSource);
+        final Company withAgreement = savedSource.addAgreement(agreement);
+        companyRepository.update(withAgreement);
 
         entityManager.flush();
         entityManager.clear();
@@ -90,7 +91,7 @@ class CompanyAgreementPersistenceTest extends AbstractIntegrationTest {
     void shouldCascadeDeleteAgreementsWhenRemovingFromCompany() {
         final Company sourceCompany = Company.createCompany(
                 "Source Company",
-                "11111111111111",
+                CnpjGenerator.randomCnpj(),
                 Set.of(CompanyType.MARKETPLACE),
                 Map.of("test", "source")
         );
@@ -98,7 +99,7 @@ class CompanyAgreementPersistenceTest extends AbstractIntegrationTest {
 
         final Company destinationCompany = Company.createCompany(
                 "Destination Company",
-                "22222222222222",
+                CnpjGenerator.randomCnpj(),
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
                 Map.of("test", "destination")
         );
@@ -151,7 +152,7 @@ class CompanyAgreementPersistenceTest extends AbstractIntegrationTest {
     void shouldFindCompanyByAgreementId() {
         final Company sourceCompany = Company.createCompany(
                 "Findable Company",
-                "33333333333333",
+                CnpjGenerator.randomCnpj(),
                 Set.of(CompanyType.MARKETPLACE),
                 Map.of("test", "findable")
         );
@@ -159,7 +160,7 @@ class CompanyAgreementPersistenceTest extends AbstractIntegrationTest {
 
         final Company destinationCompany = Company.createCompany(
                 "Target Company",
-                "44444444444444",
+                CnpjGenerator.randomCnpj(),
                 Set.of(CompanyType.LOGISTICS_PROVIDER),
                 Map.of("test", "target")
         );
@@ -184,8 +185,8 @@ class CompanyAgreementPersistenceTest extends AbstractIntegrationTest {
                 null
         );
 
-        savedSource.addAgreement(agreement);
-        companyRepository.update(savedSource);
+        final Company withAgreement = savedSource.addAgreement(agreement);
+        companyRepository.update(withAgreement);
 
         entityManager.flush();
         entityManager.clear();

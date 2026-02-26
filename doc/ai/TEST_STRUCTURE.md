@@ -72,9 +72,66 @@ src/test/java/br/com/logistics/tms/
 ├── architecture/                            # Architecture rules (*Test.java)
 │   └── {ArchUnit tests}
 │
+├── AbstractTestBase.java                    # Base for ALL tests (UUID initialization)
 ├── AbstractIntegrationTest.java             # Base class for IT tests
 └── TestContainersManager.java               # Singleton container manager
 ```
+
+---
+
+## Critical: Test Base Class Pattern
+
+**ALL test classes MUST extend `AbstractTestBase`.**
+
+### AbstractTestBase
+
+**Location:** `br.com.logistics.tms.AbstractTestBase`
+
+**Purpose:** Initializes the `DomainUuidProvider` with a test-specific `UuidAdapter` before any test runs.
+
+**Why Required:** The domain layer uses `Id.unique()` to generate UUID v7 identifiers. Without initialization, tests will fail with `IllegalStateException: UuidAdapter not initialized`.
+
+**How It Works:**
+```java
+@BeforeAll
+static void initializeUuidAdapter() {
+    DomainUuidProvider.setUuidAdapter(new TestUuidAdapter());
+}
+```
+
+The `@BeforeAll` annotation ensures this runs once per test class before any `@Test` or `@BeforeEach` methods.
+
+**Pattern:**
+```java
+// Unit test - NO Spring
+class MyDomainTest extends AbstractTestBase {
+    @Test
+    void shouldWork() {
+        final UUID id = Id.unique();  // ✅ Works - adapter is initialized
+        // ...
+    }
+}
+
+// Integration test - WITH Spring
+class MyIT extends AbstractIntegrationTest {  // which extends AbstractTestBase
+    @Test
+    void shouldWork() {
+        final UUID id = Id.unique();  // ✅ Works - adapter is initialized
+        // ...
+    }
+}
+```
+
+**Key Points:**
+- ✅ Works for unit tests (no Spring context)
+- ✅ Works for integration tests (full Spring context via `AbstractIntegrationTest`)
+- ✅ Works for any test type
+- ✅ One initialization per test class
+- ❌ Never override `initializeUuidAdapter()` - it's final
+
+**Test Infrastructure:**
+- **`TestUuidAdapter`** - Test implementation of `UuidAdapter` using UUID v7 generation
+- Location: `br.com.logistics.tms.commons.infrastructure.uuid.TestUuidAdapter`
 
 ---
 

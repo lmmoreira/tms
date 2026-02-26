@@ -7,10 +7,7 @@ import br.com.logistics.tms.company.domain.AgreementConditionType;
 import br.com.logistics.tms.company.domain.Conditions;
 import br.com.logistics.tms.company.infrastructure.config.CompanySchema;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -20,10 +17,13 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "agreement_condition", schema = CompanySchema.COMPANY_SCHEMA)
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(of = "id")
+@ToString(exclude = {"agreement"})
 public class AgreementConditionEntity {
 
     @Id

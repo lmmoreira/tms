@@ -10,6 +10,7 @@ import br.com.logistics.tms.company.infrastructure.config.CompanySchema;
 import br.com.logistics.tms.company.infrastructure.jpa.entities.CompanyEntity;
 import br.com.logistics.tms.company.infrastructure.jpa.entities.CompanyOutboxEntity;
 import br.com.logistics.tms.company.infrastructure.jpa.repositories.CompanyJpaRepository;
+import jakarta.persistence.EntityManager;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,7 @@ import java.util.Optional;
 public class CompanyRepositoryImpl implements CompanyRepository {
 
     private final CompanyJpaRepository companyJpaRepository;
+    private final EntityManager entityManager;
     private final OutboxGateway outboxGateway;
 
     @Override
@@ -51,7 +53,7 @@ public class CompanyRepositoryImpl implements CompanyRepository {
     @Override
     public Company update(Company company) {
         final CompanyEntity companyEntity = CompanyEntity.of(company);
-        companyJpaRepository.save(companyEntity);
+        entityManager.merge(companyEntity);
         outboxGateway.save(CompanySchema.COMPANY_SCHEMA, company.getDomainEvents(), CompanyOutboxEntity.class);
         return company;
     }

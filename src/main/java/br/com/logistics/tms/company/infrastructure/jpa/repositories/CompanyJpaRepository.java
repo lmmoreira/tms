@@ -14,7 +14,7 @@ import java.util.UUID;
 @Repository
 public interface CompanyJpaRepository extends CustomJpaRepository<CompanyEntity, UUID> {
 
-    @EntityGraph(attributePaths = {"companyTypes"})
+    @EntityGraph(attributePaths = {"companyTypes", "agreements"})
     Optional<CompanyEntity> findById(UUID id);
 
     Optional<CompanyEntity> findByCnpj(String cnpj);
