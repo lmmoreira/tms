@@ -298,3 +298,42 @@ Cannot proceed with integration tests until unit test infrastructure is fixed. T
 **Next Action:**
 Must fix UUID adapter initialization in test infrastructure before validating the refactor. Recommend creating a base test class or JUnit extension to handle this automatically.
 
+
+## Learnings
+
+### 2026-02-26: Post-UUID Adapter Test Suite Validation
+
+**Test Execution:** After Mouse's UUID adapter fix, ran full test suite validation.
+
+**Results:**
+- **Unit Tests:** 194 tests run, 3 failures, 47 errors
+- **Root Cause:** Hibernate mapping error in AgreementEntity
+- **Error:** `Column 'source' is duplicated in mapping for entity 'br.com.logistics.tms.company.infrastructure.jpa.entities.AgreementEntity'`
+
+**Technical Analysis:**
+The UUID adapter fix was successful and code compiles correctly. However, a **pre-existing JPA mapping issue** emerged:
+
+1. **CompanyEntity** declares:
+   ```java
+   @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+   @JoinColumn(name = "source", nullable = false)
+   private Set<AgreementEntity> agreements = new HashSet<>();
+   ```
+
+2. **AgreementEntity** declares:
+   ```java
+   @Column(name = "source", nullable = false)
+   private UUID sourceId;
+   ```
+
+3. **Conflict:** Both entities try to control the same database column 'source', causing Hibernate to reject the mapping.
+
+**Fix Required:**
+AgreementEntity.sourceId must use `@Column(name = "source", insertable=false, updatable=false)` to indicate it's a read-only reference managed by the CompanyEntity relationship.
+
+**Recommended Next Steps:**
+1. Mouse should update AgreementEntity to fix the duplicate column mapping
+2. Re-run test suite after fix
+3. If tests pass, proceed with integration test verification
+
+**Key Learning:** Bidirectional JPA relationships require careful column ownership management. The owning side (CompanyEntity's @JoinColumn) controls inserts/updates; the inverse side (AgreementEntity's @Column) must be read-only.

@@ -287,3 +287,43 @@ No changes required — both `source` and `destination` columns already existed 
 
 **Pattern Learned:** When domain uses value objects for relationships (e.g., CompanyId), prefer UUID columns in JPA entities over navigable `@ManyToOne` relationships. Aggregate ownership is maintained via `@OneToMany` with explicit `@JoinColumn` on the parent side, avoiding bidirectional coupling while preserving cascade behavior.
 
+
+## Learnings
+
+### 2026-02-26: UUID Adapter Test Infrastructure Pattern
+
+**What:** Created `AbstractTestBase` as the universal base class for ALL test types (unit, integration, e2e). This class initializes the `DomainUuidProvider` with `TestUuidAdapter` via `@BeforeAll`.
+
+**Why:** The domain layer's `Id.unique()` requires a `UuidAdapter` to be initialized. In production, `UuidAdapterImpl` (Spring `@Component`) handles this. In tests (especially pure unit tests without Spring), initialization was missing, causing `IllegalStateException`.
+
+**Pattern:**
+```java
+public abstract class AbstractTestBase {
+    @BeforeAll
+    static void initializeUuidAdapter() {
+        DomainUuidProvider.setUuidAdapter(new TestUuidAdapter());
+    }
+}
+```
+
+**Test Hierarchy:**
+- `AbstractTestBase` - Root (UUID initialization)
+- `AbstractIntegrationTest extends AbstractTestBase` - Integration tests (adds Spring, testcontainers)
+- Unit tests extend `AbstractTestBase` directly
+
+**Files Created:**
+- `AbstractTestBase.java` - Root base class
+- `TestUuidAdapter.java` - Test implementation using UUID v7 generation
+- `IdTest.java` - Verification test
+
+**Files Updated:**
+- `AbstractIntegrationTest.java` - Now extends `AbstractTestBase`
+- `CreateAgreementUseCaseTest.java` - Updated to extend `AbstractTestBase`
+- `CompanyStatusTest.java` - Updated to extend `AbstractTestBase`
+- `TEST_STRUCTURE.md` - Documented the pattern
+
+**Key Insights:**
+- `@BeforeAll` runs once per test class before any `@Test` or `@BeforeEach`
+- Works seamlessly with Spring tests (they inherit the initialization)
+- No Spring dependencies in `AbstractTestBase` - pure JUnit 5
+- UUID v7 (time-based) generation ensures deterministic ordering in tests

@@ -2,39 +2,42 @@
 
 ## Active Decisions
 
-### 2026-02-26T18:52:00Z: UUID Adapter Initialization in Unit Tests
+### 2026-02-26: UUID Adapter Test Infrastructure
 
-**By:** Cypher (Validator)
-**Requested by:** Leonardo Moreira
+**By:** Mouse (Database/JPA Expert) — Requested by Leonardo Moreira
 
-**What:** Unit tests require explicit UuidAdapter initialization. Created `UnitTestBase` abstract class with `@BeforeAll` setup.
+**What:** Established `AbstractTestBase` as the mandatory base class for ALL test types. Initializes `DomainUuidProvider` with `TestUuidAdapter` via `@BeforeAll` static method.
 
-**Why:** After AgreementEntity UUID refactor, 60 out of 61 unit tests failed with "UuidAdapter not initialized" error because unit tests don't load Spring context (unlike integration tests).
+**Why:** Domain layer's `Id.unique()` requires initialized `UuidAdapter`. Production uses Spring-managed `UuidAdapterImpl`. Tests (especially pure unit tests) need explicit initialization before domain objects can generate IDs.
 
-**Root Cause:**
-- Domain layer uses `Id.unique()` → delegates to `DomainUuidProvider.getUuidAdapter()`
-- `UuidAdapterImpl` is a Spring `@Component` that initializes the static provider in its constructor
-- Integration tests (`@SpringBootTest`) load Spring → adapter auto-initialized
-- Unit tests (pure JUnit) → NO Spring → adapter NEVER initialized → exception thrown
-
-**Solution Applied:**
-All unit tests must extend `UnitTestBase` abstract class, which initializes the UUID adapter before tests run:
-
+**Pattern:**
 ```java
-public abstract class UnitTestBase {
+public abstract class AbstractTestBase {
     @BeforeAll
     static void initializeUuidAdapter() {
-        DomainUuidProvider.setUuidAdapter(new UuidAdapterImpl());
+        DomainUuidProvider.setUuidAdapter(new TestUuidAdapter());
     }
 }
 ```
 
-**Pattern:** For TMS, ALL unit tests that instantiate domain objects (which call `Id.unique()`) MUST extend `UnitTestBase`. Integration tests don't need this — Spring context handles initialization.
+**Test Hierarchy:**
+- `AbstractTestBase` (root) → All unit tests extend this directly
+- `AbstractIntegrationTest extends AbstractTestBase` → All integration tests use this
 
-**Impact:**
-- Fixes 60 failing unit tests
-- Established pattern for all future unit tests
-- Centralized initialization (no per-class setup needed)
+**Files Created:**
+- `src/test/java/.../AbstractTestBase.java` - Universal test base
+- `src/test/java/.../commons/infrastructure/uuid/TestUuidAdapter.java` - Test UUID adapter impl
+- `src/test/java/.../commons/domain/IdTest.java` - Pattern verification test
+
+**Enforcement:**
+- All new tests MUST extend `AbstractTestBase` (or a subclass like `AbstractIntegrationTest`)
+- Documented in `doc/ai/TEST_STRUCTURE.md`
+
+**Trade-offs:**
+- ✅ Single initialization point (DRY principle)
+- ✅ Works with and without Spring context
+- ✅ UUID v7 time-based generation ensures test ordering
+- ⚠️ Requires team discipline (extend the base class)
 
 ---
 
