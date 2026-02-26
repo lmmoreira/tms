@@ -179,7 +179,7 @@ class CompanyAgreementTest extends AbstractTestBase {
                 Map.of("test", "value")
         );
 
-        final Instant baseDate = Instant.parse("2026-01-01T00:00:00Z");
+        final Instant baseDate = Instant.now();
 
         final Agreement agreement1 = Agreement.createAgreement(
                 company.getCompanyId(),
@@ -199,13 +199,13 @@ class CompanyAgreementTest extends AbstractTestBase {
                 AgreementType.DELIVERS_WITH,
                 Map.of("test", "value"),
                 Set.of(),
-                baseDate.plus(15, ChronoUnit.DAYS),
-                baseDate.plus(45, ChronoUnit.DAYS)
+                baseDate.plus(1, ChronoUnit.DAYS),
+                baseDate.plus(5, ChronoUnit.DAYS)
         );
 
         assertThatThrownBy(() -> withAgreement.addAgreement(overlappingAgreement))
                 .isInstanceOf(ValidationException.class)
-                .hasMessageContaining("Overlapping active agreement exists");
+                .hasMessageContaining("Overlapping active agreement already exists");
     }
 
     @Test
@@ -459,17 +459,17 @@ class CompanyAgreementTest extends AbstractTestBase {
                 AgreementType.DELIVERS_WITH,
                 Map.of("test", "value"),
                 Set.of(),
-                baseDate.plus(60, ChronoUnit.DAYS),
+                baseDate.plus(2, ChronoUnit.DAYS),
                 baseDate.plus(90, ChronoUnit.DAYS)
         );
 
         Company withAgreements = company.addAgreement(agreement1);
         withAgreements = withAgreements.addAgreement(agreement2);
 
-        final Agreement extendedAgreement = agreement2.updateValidTo(baseDate.plus(120, ChronoUnit.DAYS));
+        final Agreement extendedAgreement = agreement1.updateValidTo(baseDate.plus(80, ChronoUnit.DAYS));
 
         final Company finalWithAgreements = withAgreements;
-        assertThatThrownBy(() -> finalWithAgreements.updateAgreement(agreement2.agreementId(), extendedAgreement))
+        assertThatThrownBy(() -> finalWithAgreements.updateAgreement(agreement1.agreementId(), extendedAgreement))
                 .isInstanceOf(ValidationException.class)
                 .hasMessageContaining("Update would create overlapping agreement");
     }

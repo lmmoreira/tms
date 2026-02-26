@@ -57,3 +57,6 @@ build/
 .vscode/
 
 tmp/
+
+
+.squad/
