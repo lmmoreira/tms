@@ -530,6 +530,351 @@ void setUp() {
 
 ---
 
+## Custom AssertJ Assertions
+
+Custom assertions provide fluent, domain-specific validation that's easier to read and maintain than raw AssertJ.
+
+### Pattern Structure
+
+```java
+package br.com.logistics.tms.assertions.jpa;
+
+import org.assertj.core.api.AbstractAssert;
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class CompanyAssert extends AbstractAssert<CompanyAssert, Company> {
+
+    private CompanyAssert(final Company actual) {
+        super(actual, CompanyAssert.class);
+    }
+
+    public static CompanyAssert assertThatCompany(final Company actual) {
+        return new CompanyAssert(actual);
+    }
+
+    public CompanyAssert hasCompanyId(final CompanyId expected) {
+        isNotNull();
+        assertThat(actual.getCompanyId())
+                .as("Company companyId")
+                .isEqualTo(expected);
+        return this;
+    }
+
+    public CompanyAssert hasName(final String expected) {
+        isNotNull();
+        assertThat(actual.getName())
+                .as("Company name")
+                .isEqualTo(expected);
+        return this;
+    }
+
+    public CompanyAssert hasTypes(final CompanyType... expected) {
+        isNotNull();
+        assertThat(actual.getCompanyTypes())
+                .as("Company types")
+                .containsExactlyInAnyOrder(expected);
+        return this;
+    }
+}
+```
+
+### Usage
+
+```java
+import static br.com.logistics.tms.assertions.jpa.CompanyAssert.assertThatCompany;
+
+@Test
+void shouldCreateCompanyWithCorrectAttributes() {
+    final Company company = Company.createCompany("Test", "12345678901234", types, config);
+    
+    assertThatCompany(company)
+        .hasCompanyId(expectedId)
+        .hasName("Test")
+        .hasTypes(CompanyType.SELLER);
+}
+```
+
+### Key Design Points
+
+- ✅ Extends `AbstractAssert<{Name}Assert, {Type}>`
+- ✅ Static factory method `assertThat{Entity}(entity)`
+- ✅ Each assertion method returns `this` for chaining
+- ✅ Use `.as("description")` for clear failure messages
+- ✅ All parameters declared `final`
+
+**Location:** `assertions/{domain|jpa|outbox}/`
+
+**See Also:** Existing examples in `assertions/jpa/` (CompanyEntityAssert, AgreementAssert)
+
+---
+
+## Test Data Builders
+
+Builders reduce boilerplate and provide sensible defaults for test object creation.
+
+### Pattern Structure
+
+```java
+package br.com.logistics.tms.builders.domain.company;
+
+public class CompanyBuilder {
+    
+    private CompanyId companyId = CompanyId.unique();
+    private String name = "Default Company";
+    private Cnpj cnpj = new Cnpj("12345678901234");
+    private Set<CompanyType> types = Set.of(CompanyType.SELLER);
+    private Map<String, Object> configuration = Map.of();
+    private Set<Agreement> agreements = Set.of();
+
+    private CompanyBuilder() {}
+
+    public static CompanyBuilder aCompany() {
+        return new CompanyBuilder();
+    }
+
+    public CompanyBuilder withCompanyId(final CompanyId companyId) {
+        this.companyId = companyId;
+        return this;
+    }
+
+    public CompanyBuilder withName(final String name) {
+        this.name = name;
+        return this;
+    }
+
+    public CompanyBuilder withTypes(final CompanyType... types) {
+        this.types = Set.of(types);
+        return this;
+    }
+
+    public Company build() {
+        return Company.createCompany(name, cnpj.value(), types, configuration);
+    }
+}
+```
+
+### Usage
+
+```java
+import static br.com.logistics.tms.builders.domain.company.CompanyBuilder.aCompany;
+
+@Test
+void myTest() {
+    final Company company = aCompany()
+        .withName("Test Company")
+        .withTypes(CompanyType.SELLER, CompanyType.MARKETPLACE)
+        .build();
+    
+    // Test uses company...
+}
+```
+
+### Key Design Points
+
+- ✅ Static factory method `a{Entity}()` or `an{Entity}()`
+- ✅ Private constructor
+- ✅ Sensible defaults for all fields
+- ✅ Fluent `with{Field}()` methods returning `this`
+- ✅ `build()` uses domain factory methods (NOT constructors)
+- ✅ All parameters declared `final`
+- ✅ Varargs for collections (`withTypes(CompanyType...)`)
+
+**Location:** `builders/{dto|input|domain}/`
+
+**Builder Suffix:** Use `Builder` (NOT `DataBuilder`)
+
+**See Also:** `/doc/ai/prompts/test-data-builders.md`
+
+---
+
+## Fake Repositories
+
+Fake repositories provide in-memory implementations for unit testing use cases without database dependencies.
+
+### Pattern Structure
+
+```java
+package br.com.logistics.tms.company.application.repositories;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class FakeCompanyRepository implements CompanyRepository {
+    
+    private final Map<UUID, Company> companies = new ConcurrentHashMap<>();
+
+    @Override
+    public Company create(final Company company) {
+        companies.put(company.getCompanyId().value(), company);
+        return company;
+    }
+
+    @Override
+    public Optional<Company> getCompanyById(final CompanyId id) {
+        return Optional.ofNullable(companies.get(id.value()));
+    }
+
+    @Override
+    public Optional<Company> getCompanyByCnpj(final Cnpj cnpj) {
+        return companies.values().stream()
+            .filter(c -> c.getCnpj().equals(cnpj))
+            .findFirst();
+    }
+
+    @Override
+    public Company update(final Company company) {
+        companies.put(company.getCompanyId().value(), company);
+        return company;
+    }
+
+    public void clear() {
+        companies.clear();
+    }
+}
+```
+
+### Usage
+
+```java
+class CreateCompanyUseCaseTest {
+    
+    private FakeCompanyRepository companyRepository;
+    private CreateCompanyUseCase useCase;
+
+    @BeforeEach
+    void setUp() {
+        companyRepository = new FakeCompanyRepository();
+        useCase = new CreateCompanyUseCase(companyRepository);
+    }
+
+    @Test
+    void shouldCreateCompany() {
+        final Input input = new Input("Test", "12345678901234", types, config);
+        
+        final Output output = useCase.execute(input);
+        
+        assertThat(output.companyId()).isNotNull();
+        assertThat(companyRepository.getCompanyById(new CompanyId(output.companyId())))
+            .isPresent();
+    }
+}
+```
+
+### Key Design Points
+
+- ✅ Implements repository interface from application layer
+- ✅ Uses `ConcurrentHashMap` for thread-safety
+- ✅ All CRUD operations in-memory
+- ✅ `clear()` method for test cleanup
+- ✅ Query methods match production repository
+- ✅ All parameters declared `final`
+
+**Location:** `{module}/application/repositories/Fake{Entity}Repository.java`
+
+**See Also:** `/doc/ai/prompts/fake-repositories.md`
+
+---
+
+## Integration Fixtures
+
+Fixtures encapsulate repetitive REST operations and waiting logic in integration tests.
+
+### Pattern Structure
+
+```java
+package br.com.logistics.tms.integration.fixtures;
+
+import org.springframework.test.web.servlet.MockMvc;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+public class CompanyIntegrationFixture {
+    
+    private final MockMvc mockMvc;
+    private final ObjectMapper objectMapper;
+    private final CompanyOutboxJpaRepository outboxRepository;
+    private final ShipmentOrderCompanyJpaRepository syncRepository;
+
+    public CompanyIntegrationFixture(final MockMvc mockMvc,
+                                    final ObjectMapper objectMapper,
+                                    final CompanyOutboxJpaRepository outboxRepository,
+                                    final ShipmentOrderCompanyJpaRepository syncRepository) {
+        this.mockMvc = mockMvc;
+        this.objectMapper = objectMapper;
+        this.outboxRepository = outboxRepository;
+        this.syncRepository = syncRepository;
+    }
+
+    public CompanyId createCompany(final CreateCompanyDTO dto) throws Exception {
+        // 1. POST to REST endpoint
+        final String responseJson = mockMvc.perform(post("/companies")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isCreated())
+            .andReturn().getResponse().getContentAsString();
+
+        final CreateCompanyResponseDTO response = objectMapper.readValue(
+            responseJson, CreateCompanyResponseDTO.class
+        );
+        final CompanyId companyId = new CompanyId(response.companyId());
+
+        // 2. Wait for outbox published
+        await().atMost(30, TimeUnit.SECONDS)
+            .until(() -> outboxRepository
+                .findFirstByAggregateIdOrderByCreatedAtDesc(companyId.value())
+                .map(outbox -> outbox.getStatus() == OutboxStatus.PUBLISHED)
+                .orElse(false)
+            );
+
+        // 3. Wait for sync to other schema
+        await().atMost(30, TimeUnit.SECONDS)
+            .until(() -> syncRepository.existsById(companyId.value()));
+
+        return companyId;
+    }
+}
+```
+
+### Usage
+
+```java
+class MyIntegrationTest extends AbstractIntegrationTest {
+    
+    @Test
+    void myTest() throws Exception {
+        // companyFixture already available from AbstractIntegrationTest
+        
+        final CompanyId id = companyFixture.createCompany(
+            CreateCompanyDTOBuilder.aCreateCompanyDTO()
+                .withName("Test")
+                .build()
+        );
+        
+        // Fixture handled: REST call + wait for outbox + wait for sync
+        // Test can immediately assert the results
+        assertThatCompany(companyJpaRepository.findById(id.value()).orElseThrow())
+            .hasName("Test");
+    }
+}
+```
+
+### Key Design Points
+
+- ✅ Encapsulates REST call + response parsing + waiting logic
+- ✅ Returns typed domain IDs (NOT raw UUIDs)
+- ✅ Uses Awaitility for async validation
+- ✅ Default 30-second timeout for async operations
+- ✅ NOT a `@Component` - manually instantiated per test
+- ✅ All parameters declared `final`
+- ✅ Throws `Exception` (test methods already declare it)
+
+**Location:** `integration/fixtures/{Entity}IntegrationFixture.java`
+
+**Key Principle:** One fixture method = one complete business operation (REST + events + sync)
+
+---
+
 ## References
 
 - **Integration Tests Guide:** [/doc/ai/INTEGRATION_TESTS.md](/doc/ai/INTEGRATION_TESTS.md)

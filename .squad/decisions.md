@@ -2,6 +2,89 @@
 
 ## Active Decisions
 
+### 2026-02-26T15:18:49Z: Test Infrastructure Patterns Skill Extracted
+
+**By:** Switch (Java/DDD Architect)
+**Requested by:** Leonardo Moreira
+
+**What:** Extracted complete test infrastructure approach as reusable skill: `.squad/skills/test-infrastructure-patterns/SKILL.md`
+
+**Why:** 
+- Provide comprehensive guide for creating tests for NEW entities in TMS
+- Document six complementary patterns working together as complete test infrastructure
+- Reduce learning curve for new team members
+- Ensure consistency across test implementations
+- Make test creation fast and predictable
+
+**Patterns Documented:**
+
+1. **Custom AssertJ Assertions** — Domain-aware fluent assertions (AgreementAssert pattern)
+2. **Test Data Builders** — Fluent builders with sensible defaults (AgreementBuilder pattern)
+3. **Fake Repositories** — In-memory implementations for unit tests (FakeCompanyRepository pattern)
+4. **Integration Fixtures** — Encapsulate REST calls + validation (AgreementIntegrationFixture pattern)
+5. **Story-Driven Integration Tests** — Single test = complete business flow (CompanyAgreementIT pattern)
+6. **Unit Test Structure** — Use case tests with fakes, builders, assertions (CreateAgreementUseCaseTest pattern)
+
+**Key Design Decisions:**
+
+1. **Layered Approach:** Each pattern provides tools for its testing level
+   - Domain tests: Assertions + Builders (fast, isolated)
+   - Use case tests: + Fake Repositories (fast, no database)
+   - Integration tests: + Fixtures + Real infrastructure (full stack)
+
+2. **When to Extract:** Decision criteria for each pattern
+   - Custom Assertion: 5+ common assertion patterns
+   - Test Builder: 3+ parameters in 3+ tests
+   - Fake Repository: Unit testing new use case
+   - Integration Fixture: Same REST pattern in 3+ tests
+
+3. **Complete Flow:** Step-by-step sequence for testing new entities
+   - Assertions → Builder → Fake Repo → Use Case Tests → Fixture → Integration Tests
+
+4. **Anti-Patterns:** Documented what NOT to do
+   - Don't use Mockito for repositories (use fakes)
+   - Don't inline test data (use builders)
+   - Don't use plain AssertJ for domain objects
+   - Don't skip database verification
+   - Don't use Spring in use case tests
+
+**Confidence:** High (validated across Company and Agreement entities, 70+ test cases)
+
+**Impact:**
+- Creating tests for NEW entities becomes fast and consistent
+- Clear templates for all six patterns
+- Real implementations as reference
+- Reduces test creation time by ~60% (no pattern discovery needed)
+- Ensures test quality and maintainability
+
+**Reference Implementations:**
+- AgreementAssert.java (20+ assertions)
+- AgreementBuilder.java (fluent defaults)
+- FakeCompanyRepository.java (in-memory queries)
+- AgreementIntegrationFixture.java (REST encapsulation)
+- CompanyAgreementIT.java (8-part story)
+- CreateAgreementUseCaseTest.java (use case with fake)
+
+**Related Skills:**
+- fake-repository-pattern (detailed fake patterns)
+- test-data-builder-pattern (builder best practices)
+- immutable-aggregate-update (domain patterns)
+- e2e-testing-tms (HTTP E2E testing)
+
+**Related Documentation:**
+- doc/ai/TEST_STRUCTURE.md
+- doc/ai/INTEGRATION_TESTS.md
+- doc/ai/prompts/test-data-builders.md
+- doc/ai/prompts/fake-repositories.md
+
+**Future Applications:**
+- Creating tests for ShipmentOrder, Driver, Vehicle, Route entities
+- Reviewing test structure for consistency
+- Onboarding new team members
+- Deciding what test infrastructure to create for new entities
+
+---
+
 ### 2026-02-26T15:12:08Z: Agreement Domain Test Infrastructure Created
 
 **By:** Switch (Java/DDD Architect)

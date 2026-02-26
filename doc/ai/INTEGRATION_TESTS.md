@@ -35,30 +35,57 @@ Integration tests in TMS validate **complete business flows** across multiple en
 
 ## Philosophy
 
-### Prefer Broad Over Narrow
+### Story-Driven vs Layer-Based Testing
+
+**TMS prefers STORY-DRIVEN integration tests.**
 
 ```java
-// ✅ GOOD - One test validates entire flow
+// ✅ PREFERRED - Story-driven (business flow perspective)
 @Test
 void shouldCreateCompanyUpdateItAndCreateShipmentOrderIncrementingCounter() {
-    // Create company → Assert DB → Assert sync
-    // Update company → Assert DB → Assert sync
-    // Create order → Assert DB → Assert counter
+    // Complete user story from start to finish:
+    // 1. Company registers in the platform
+    // 2. Company updates their information
+    // 3. Company receives a shipment order
+    // 4. System tracks order count for the company
+    
+    // Each step validates domain behavior + persistence + events + cross-module sync
 }
 
-// ❌ AVOID - Too granular for integration tests
+// ❌ AVOID - Layer-based (technical perspective)
 @Test void shouldCreateCompany() { }
 @Test void shouldSyncCompanyToShipmentOrderSchema() { }
 @Test void shouldUpdateCompany() { }
 @Test void shouldIncrementCounter() { }
 ```
 
-### Why Broad Tests?
+### Why Story-Driven?
 
-1. **Realistic scenarios** - Tests actual user workflows
-2. **Event chain validation** - Ensures listeners process events in order
-3. **Fewer setups** - One setup validates multiple operations
-4. **Performance** - Fewer container startups
+1. **Business context** - Tests describe what the system does, not how
+2. **End-to-end validation** - Ensures event chains work correctly
+3. **Realistic scenarios** - Mirrors actual user workflows
+4. **Fewer setups** - One test validates multiple operations
+5. **Single source of truth** - One test tells the complete story
+
+### Key Principle
+
+> **NO LAYER TESTS WITHOUT BUSINESS CONTEXT**
+
+Integration tests should NOT test individual layers in isolation (repository, controller, listener). They should test complete business flows that exercise all layers together.
+
+```java
+// ❌ WRONG - Layer test without context
+@Test
+void repositoryShouldSaveCompany() {
+    // Tests repository in isolation
+}
+
+// ✅ RIGHT - Business flow that uses repository
+@Test
+void shouldRegisterNewCompanyInPlatform() {
+    // POST /companies → validates saved → validates events → validates sync
+}
+```
 
 ---
 
@@ -99,11 +126,82 @@ src/test/java/br/com/logistics/tms/
 
 ### Purpose
 
-Fixtures handle the **boring repetitive stuff**:
+Fixtures handle the **boring repetitive stuff** so tests can focus on business validation:
 - Making REST calls via MockMvc
+- Parsing responses and extracting IDs
 - Waiting for outbox events to be published
 - Waiting for cross-module synchronization
 - Returning typed domain IDs (not raw UUIDs)
+
+**Key Principle:** One fixture method = one complete business operation
+
+### Fixture Pattern
+
+```java
+public CompanyId createCompany(final CreateCompanyDTO dto) throws Exception {
+    // 1. REST call
+    final String responseJson = mockMvc.perform(post("/companies")...)
+        .andExpect(status().isCreated())
+        .andReturn().getResponse().getContentAsString();
+
+    // 2. Extract ID
+    final CompanyId companyId = new CompanyId(parseResponse(responseJson).companyId());
+
+    // 3. Wait for outbox published
+    await().atMost(30, TimeUnit.SECONDS)
+        .until(() -> outboxRepository
+            .findFirstByAggregateIdOrderByCreatedAtDesc(companyId.value())
+            .map(outbox -> outbox.getStatus() == OutboxStatus.PUBLISHED)
+            .orElse(false)
+        );
+
+    // 4. Wait for cross-module sync
+    await().atMost(30, TimeUnit.SECONDS)
+        .until(() -> syncRepository.existsById(companyId.value()));
+
+    return companyId;
+}
+```
+
+### Why Fixtures Extract Setup Logic
+
+Without fixtures, integration tests become verbose and hard to read:
+
+```java
+// ❌ WITHOUT FIXTURES - Repetitive, hard to read
+@Test
+void myTest() throws Exception {
+    final String json = objectMapper.writeValueAsString(dto);
+    final String response = mockMvc.perform(post("/companies")
+        .contentType("application/json")
+        .content(json))
+        .andExpect(status().isCreated())
+        .andReturn().getResponse().getContentAsString();
+    
+    final UUID id = objectMapper.readValue(response, ResponseDTO.class).companyId();
+    
+    await().atMost(30, TimeUnit.SECONDS)
+        .until(() -> outboxRepository
+            .findFirstByAggregateIdOrderByCreatedAtDesc(id)
+            .map(o -> o.getStatus() == OutboxStatus.PUBLISHED)
+            .orElse(false));
+    
+    await().atMost(30, TimeUnit.SECONDS)
+        .until(() -> syncRepository.existsById(id));
+    
+    // NOW the actual test assertion starts...
+}
+
+// ✅ WITH FIXTURES - Clean, focused on business validation
+@Test
+void myTest() throws Exception {
+    final CompanyId id = companyFixture.createCompany(dto);
+    
+    // Test immediately focuses on business validation
+    assertThatCompany(companyJpaRepository.findById(id.value()).orElseThrow())
+        .hasName("Test");
+}
+```
 
 ### CompanyIntegrationFixture
 
@@ -453,21 +551,24 @@ void shouldCreateAndUpdateCompanyThenCreateShipmentOrderAndIncrementCompanyOrder
 
 ## Best Practices
 
-### 1. One Broad Test Per Flow
+### 1. Story-Driven Tests (One Test = One Business Flow)
 
 ✅ **DO:**
 ```java
 @Test
 void shouldHandleCompanyLifecycleAndOrderCreation() {
+    // Complete business story:
     // Create → Update → Create Order → Validate all steps
+    // This tells: "A company registers, updates info, receives an order"
 }
 ```
 
 ❌ **DON'T:**
 ```java
-@Test void shouldCreateCompany() { }
-@Test void shouldUpdateCompany() { }
-@Test void shouldCreateOrder() { }
+@Test void shouldCreateCompany() { }  // Layer test
+@Test void shouldUpdateCompany() { }  // Layer test
+@Test void shouldCreateOrder() { }    // Layer test
+// These have NO business context
 ```
 
 ### 2. Use Fixtures for Actions
@@ -517,6 +618,68 @@ assertThatShipmentOrderCompany(...)
 void shouldIncrementCompanyCounterWhenMultipleOrdersCreated()
 void shouldSynchronizeCompanyUpdatesToShipmentOrderSchema()
 ```
+
+### 6. DTO Field Validation
+
+**Formatted Value Objects:**
+```java
+// ✅ CORRECT - Use raw values in builders, domain applies formatting
+CreateAgreementDTOBuilder.aCreateAgreementDTO()
+    .withCnpj("12345678901234")  // Raw CNPJ
+    .withConfiguration(Map.of("key", "value"))  // Must not be null/empty
+    .build();
+
+// Domain value object applies formatting
+// Input: "12345678901234" → Output: "12.345.678/9012-34"
+```
+
+**Configuration Field Cannot Be Null/Empty:**
+```java
+// ❌ This will throw ValidationException
+CreateAgreementDTOBuilder.aCreateAgreementDTO()
+    .withConfiguration(null)  // Domain rejects null
+    .build();
+
+CreateAgreementDTOBuilder.aCreateAgreementDTO()
+    .withConfiguration(Map.of())  // Domain rejects empty
+    .build();
+
+// ✅ Must have at least one entry
+CreateAgreementDTOBuilder.aCreateAgreementDTO()
+    .withConfiguration(Map.of("key", "value"))
+    .build();
+```
+
+**Key Points:**
+- ✅ Use raw values in DTOs (e.g., `"12345678901234"` for CNPJ)
+- ✅ Domain layer applies formatting during validation
+- ✅ Configuration fields validated in value objects (cannot be null/empty)
+- ✅ Test validation failures when appropriate
+
+### 7. Environment Setup
+
+**Use Minimal Docker Setup:**
+```bash
+# ✅ CORRECT - Use make command for minimal setup
+make start-tms
+
+# This starts ONLY:
+# - PostgreSQL (write + read databases)
+# - RabbitMQ (message broker)
+# - No OAuth2-Proxy
+# - No observability stack
+
+# ❌ AVOID - Full docker-compose for tests
+docker-compose up  # Starts unnecessary services
+```
+
+**Why Minimal Setup?**
+- ⚡ Faster startup (2 services vs 8+)
+- 💰 Lower resource usage
+- ✅ Tests don't need OAuth or observability
+- ✅ Testcontainers handles container management
+
+**See Also:** `.squad/skills/e2e-testing-tms/SKILL.md` for E2E testing patterns
 
 ❌ **DON'T:**
 ```java
@@ -658,12 +821,13 @@ When creating a new integration test:
 
 ### Key Takeaways
 
-1. **Integration tests validate complete flows** - Not individual operations
-2. **Use fixtures** - Encapsulate REST + waiting logic
-3. **Use custom assertions** - Fluent, readable, maintainable
-4. **Test event-driven architecture** - Validate outbox + listeners
-5. **Keep fixtures stateless** - Fresh instances per test
-6. **Broad > Narrow** - One test validates entire user journey
+1. **Story-driven tests** - One test = one business flow, NOT layer tests
+2. **Business context required** - Tests should describe WHAT the system does for users
+3. **Use fixtures** - Encapsulate REST + waiting logic so tests focus on validation
+4. **Use custom assertions** - Fluent, readable, maintainable
+5. **Test event-driven architecture** - Validate outbox + listeners + cross-module sync
+6. **Keep fixtures stateless** - Fresh instances per test
+7. **Single test tells complete story** - From user action to final state
 
 ### Quick Start
 

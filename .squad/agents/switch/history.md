@@ -219,6 +219,108 @@
 - When reviewing HTTP test files for consistency
 
 
+### 2026-02-26: Test Infrastructure Patterns Skill Extracted
+
+**Created Skill:**
+- `.squad/skills/test-infrastructure-patterns/SKILL.md` — Complete test infrastructure guide for TMS
+
+**Skill Metadata:**
+- **Confidence:** High (validated across Company and Agreement entities, 70+ test cases)
+- **Domain:** Testing, AssertJ, Builders, Fakes, Integration fixtures
+- **Title:** "Test Infrastructure Patterns"
+
+**Six Patterns Documented:**
+
+1. **Custom AssertJ Assertions** — Domain-aware fluent assertions
+   - Pattern: Extend AbstractAssert, static factory, fluent chainable methods
+   - Location: `src/test/java/br/com/logistics/tms/assertions/domain/{module}/`
+   - Example: AgreementAssert with 20+ assertion methods
+   - When: Entity has 5+ common assertion patterns
+
+2. **Test Data Builders** — Fluent builders with sensible defaults
+   - Pattern: Static factory `an{Entity}()`, fluent withers, build() calls domain factory
+   - Location: `src/test/java/br/com/logistics/tms/builders/domain/{module}/`
+   - Example: AgreementBuilder with defaults for all fields
+   - When: 3+ parameters, used in 3+ tests
+
+3. **Fake Repositories** — In-memory implementations for unit tests
+   - Pattern: HashMap storage, implements repository interface, NO Spring
+   - Location: `src/test/java/br/com/logistics/tms/{module}/application/repositories/`
+   - Example: FakeCompanyRepository with query methods and test helpers
+   - When: Unit testing use cases without database
+
+4. **Integration Fixtures** — Encapsulate REST calls + validation
+   - Pattern: MockMvc + ObjectMapper, methods return IDs, includes basic validation
+   - Location: `src/test/java/br/com/logistics/tms/integration/fixtures/`
+   - Example: AgreementIntegrationFixture for CRUD operations
+   - When: Same REST call pattern in 3+ integration tests
+
+5. **Story-Driven Integration Tests** — Single test = complete business flow
+   - Pattern: Extends AbstractIntegrationTest, story parts, realistic names, verify DB
+   - Location: `src/test/java/br/com/logistics/tms/integration/`
+   - Example: CompanyAgreementIT with 8-part story (create → update → delete → verify)
+   - When: Testing complete business flows end-to-end
+
+6. **Unit Test Structure** — Use case tests with fakes, builders, assertions
+   - Pattern: NO Spring, fake repos, builders for data, custom assertions for verification
+   - Location: `src/test/java/br/com/logistics/tms/{module}/application/usecases/`
+   - Example: CreateAgreementUseCaseTest with fake repository
+   - When: Testing use case business logic in isolation
+
+**Key Principles Captured:**
+- Layered approach: Domain tests (fast) → Use case tests (fast + fakes) → Integration tests (full stack)
+- Consistent patterns across all entities
+- Readable, fluent test code
+- Sensible defaults reduce boilerplate
+- Isolation at the right level (unit vs integration)
+- Story-driven integration tests document behavior
+- All test code follows TMS standards (final, immutability, value objects)
+
+**Complete Testing Flow for New Entities:**
+1. Create Custom Assertions → domain-specific validation
+2. Create Test Data Builder → reduce test setup boilerplate
+3. Create Fake Repository → enable fast use case testing
+4. Write Use Case Unit Tests → validate business logic
+5. Create Integration Fixture → encapsulate REST operations
+6. Write Story-Driven Integration Tests → validate full flows
+
+**Anti-Patterns Documented:**
+- ❌ Don't use Mockito for repositories (use fakes instead)
+- ❌ Don't inline test data creation (use builders)
+- ❌ Don't use plain AssertJ for domain objects (use custom assertions)
+- ❌ Don't mix multiple scenarios in one integration test
+- ❌ Don't skip database verification in integration tests
+- ❌ Don't use Spring context in use case tests
+
+**Why This Skill is Reusable:**
+- NOT specific to Agreement or Company — applies to ANY TMS entity
+- Provides templates for all six patterns
+- Includes real implementations from existing code
+- Guides agents creating tests for NEW entities
+- Documents "when to extract" decision criteria
+- Cross-references related skills and docs
+
+**Reference Implementations:**
+- AgreementAssert.java — 20+ fluent assertions
+- AgreementBuilder.java — Builder with sensible defaults
+- FakeCompanyRepository.java — In-memory with query methods
+- AgreementIntegrationFixture.java — REST call encapsulation
+- CompanyAgreementIT.java — 8-part business story
+- CreateAgreementUseCaseTest.java — Use case with fake repo
+
+**Related Skills:**
+- `.squad/skills/fake-repository-pattern/SKILL.md` — Detailed fake patterns
+- `.squad/skills/test-data-builder-pattern/SKILL.md` — Builder best practices
+- `.squad/skills/immutable-aggregate-update/SKILL.md` — Domain patterns
+- `.squad/skills/e2e-testing-tms/SKILL.md` — HTTP E2E testing
+
+**Future Applications:**
+- When creating tests for ShipmentOrder, Driver, Vehicle, Route entities
+- When reviewing test structure for consistency
+- When onboarding new team members to TMS testing approach
+- When deciding what test infrastructure to create for a new entity
+
+
 ### 2026-02-26: Agreement Domain Test Infrastructure Created
 
 **Created Files:**
@@ -288,3 +390,88 @@ assertThatAgreement(agreement)
 - CompanyAssert/CompanyBuilder for Company aggregate testing
 - Existing domain tests can now use these utilities for Agreement scenarios
 - Integration tests can use builder for test data setup
+
+
+### 2026-02-26: GitHub Copilot Instructions Updated — Test Infrastructure Requirements
+
+**Requested by:** Leonardo Moreira
+
+**What:** Expanded "Testing Approach" section in `.github/copilot-instructions.md` with comprehensive test requirements
+
+**Why:** 
+- Make test infrastructure mandatory for new entities (custom assertions, builders, fakes, fixtures)
+- Document story-driven integration test pattern
+- Define clear anti-patterns to prevent layer-based tests
+- Provide concrete examples of unit and integration test structure
+- Reference test-infrastructure-patterns skill for detailed patterns
+
+**Changes Made:**
+
+1. **Mandatory Test Infrastructure** — Four required components:
+   - Custom AssertJ Assertions (domain-aware validation)
+   - Test Data Builders (fluent API with defaults)
+   - Fake Repositories (in-memory for unit tests)
+   - Integration Fixtures (encapsulate REST calls)
+
+2. **Unit Test Requirements:**
+   - NO Spring context
+   - Use fakes instead of Mockito
+   - Use builders and custom assertions
+   - Example with CreateAgreementUseCaseTest
+
+3. **Integration Test Requirements:**
+   - Story-driven (one test = complete flow)
+   - Use fixtures for REST operations
+   - Verify at database level
+   - Example with CompanyAgreementStoryTest (7-part lifecycle)
+
+4. **Anti-Patterns Section:**
+   - 7 explicit "DO NOT DO" rules
+   - Clear guidance on what to avoid
+
+5. **Skills Table Update:**
+   - Added `test-infrastructure-patterns` skill (🟢 High confidence)
+
+6. **Quick Decision Tree Update:**
+   - Updated test-related paths to reference "Testing Approach" section
+   - Consolidated builder/fake references to test-infrastructure-patterns skill
+
+**Key Patterns Documented:**
+
+```java
+// Unit test pattern
+class CreateAgreementUseCaseTest {
+    private FakeCompanyRepository companyRepository;  // ✅ Fake, not mock
+    private CreateAgreementUseCase useCase;
+    
+    @Test
+    void shouldCreateAgreement() {
+        final Company source = anCompany().withName("Shoppe").build();  // ✅ Builder
+        // ... test logic ...
+        assertThatCompany(updated).hasAgreementsCount(1);  // ✅ Custom assertion
+    }
+}
+
+// Integration test pattern
+@SpringBootTest
+class CompanyAgreementStoryTest {
+    @Test
+    void completeAgreementLifecycle() {
+        // Part 1-7: Complete business story
+        final UUID id = companyFixture.createCompany(...);  // ✅ Fixture
+        // ... verify at DB level ...
+        assertThatCompany(company).hasAgreementsCount(0);  // ✅ Custom assertion
+    }
+}
+```
+
+**Impact:**
+- AI agents now have clear requirements for test infrastructure
+- Examples show EXACTLY what "story-driven" means
+- Anti-patterns prevent common mistakes (layer tests, Mockito repositories, etc.)
+- Links to comprehensive skill for detailed patterns
+
+**Decision:** Test infrastructure is now a FIRST-CLASS concern alongside domain/application/infrastructure layers. New entity checklist MUST include assertions, builders, fakes, and fixtures.
+
+**Files Modified:**
+- `.github/copilot-instructions.md` — Testing Approach section expanded from 15 lines to ~180 lines

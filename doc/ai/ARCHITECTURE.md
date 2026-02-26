@@ -226,6 +226,95 @@ public class CreateController {
 - ✅ Use `RestUseCaseExecutor` for orchestration
 - ✅ Must have `@Cqrs` annotation matching use case
 
+#### Nested Resource Routing Pattern
+
+For parent-child relationships, use nested resource routes:
+
+**✅ CORRECT - Nested routes:**
+```java
+@RestController
+@RequestMapping("companies/{companyId}/agreements")
+@Cqrs(DatabaseRole.WRITE)
+public class CreateAgreementController {
+
+    private final CreateAgreementUseCase useCase;
+    private final DefaultRestPresenter presenter;
+    private final RestUseCaseExecutor executor;
+
+    @PostMapping
+    public Object create(@PathVariable UUID companyId,  // Path variable REQUIRED
+                        @RequestBody CreateAgreementDTO dto) {
+        return executor
+                .from(useCase)
+                .withInput(new CreateAgreementUseCase.Input(companyId, dto))
+                .mapOutputTo(CreateAgreementResponseDTO.class)
+                .presentWith(output -> presenter.present(output, HttpStatus.CREATED.value()))
+                .execute();
+    }
+
+    @GetMapping("/{agreementId}")
+    public Object getById(@PathVariable UUID companyId,    // Both path variables
+                         @PathVariable UUID agreementId) {  // in method signature
+        // ...
+    }
+}
+```
+
+**Key Rules:**
+- ✅ All path variables in `@RequestMapping` MUST appear in method signature as `@PathVariable`
+- ✅ Use nested routes for parent-child resources: `/companies/{id}/agreements`
+- ✅ Parent ID validation happens in use case, not controller
+- ❌ Don't ignore path variables — if it's in the URL, use it
+
+#### DTO Field Validation
+
+**Value Objects with Formatting:**
+```java
+public record CreateAgreementDTO(
+    String cnpj,           // Input: "12345678901234" (raw)
+    Map<String, Object> configuration  // Cannot be null or empty
+) {
+    // CNPJ is formatted in domain layer during aggregate creation
+    // Controller receives raw, domain applies format
+}
+
+// Domain value object applies formatting
+public record Cnpj(String value) {
+    public Cnpj {
+        if (value == null || !isValid(value)) {
+            throw new ValidationException("Invalid CNPJ");
+        }
+        value = format(value);  // "12.345.678/9012-34"
+    }
+}
+```
+
+**Configuration Field Validation:**
+```java
+// ✅ CORRECT - Domain validates configuration
+public record Configuration(Map<String, Object> value) {
+    public Configuration {
+        if (value == null || value.isEmpty()) {
+            throw new ValidationException("Configuration cannot be null or empty");
+        }
+        value = Collections.unmodifiableMap(value);
+    }
+}
+
+// ❌ WRONG - Accepting null configuration
+public static Agreement createAgreement(..., Map<String, Object> configuration) {
+    return new Agreement(..., configuration);  // Will fail if null/empty
+}
+```
+
+**Key Points:**
+- ✅ Value objects enforce formatting (CNPJ, phone, etc.)
+- ✅ Domain layer validates required fields (configuration cannot be null/empty)
+- ✅ DTOs receive raw values, domain applies formatting
+- ❌ Never skip validation in value object constructors
+
+**See Also:** `.squad/skills/e2e-testing-tms/SKILL.md` for E2E testing patterns
+
 ### Pattern 3: Immutable Aggregate (Domain Layer)
 
 ```java
@@ -665,6 +754,104 @@ public class CreateCompanyUseCase { ... }
 - **Technical implementation**
 - Contains: REST Controllers, JPA Entities, DTOs, Listeners, Repository Implementations
 - Rules: Implements application interfaces, contains all Spring annotations
+
+### JPA Bidirectional Relationships
+
+**Critical Pattern:** When entities have bidirectional relationships (e.g., `Company` ↔ `ShipmentOrder`), special care is required to avoid circular references and transient entity errors.
+
+#### equals/hashCode Best Practice
+
+**✅ CORRECT - Use ID-only equals/hashCode:**
+```java
+@Entity
+@Table(name = "company", schema = "company")
+public class CompanyEntity {
+    @Id
+    private UUID id;
+    
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ShipmentOrderEntity> shipmentOrders = new HashSet<>();
+
+    // ID-only equals/hashCode prevents circular references
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CompanyEntity that)) return false;
+        return id != null && id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+}
+```
+
+**❌ WRONG - Lombok @Data creates circular references:**
+```java
+@Entity
+@Data  // DANGER: @Data generates equals/hashCode using ALL fields
+public class CompanyEntity {
+    private Set<ShipmentOrderEntity> shipmentOrders;
+    // equals() will recursively call equals() on child entities → StackOverflowError
+}
+```
+
+**Why ID-only?**
+- Prevents circular traversal in bidirectional relationships
+- Works correctly even when child collections aren't loaded
+- Avoids comparing uninitialized lazy-loaded collections
+
+#### Resolver Functions for Foreign Keys
+
+**Problem:** Passing transient (unsaved) entities as FK references causes `TransientObjectException`.
+
+**✅ CORRECT - Use resolver functions:**
+```java
+// Repository method
+@Transactional
+public ShipmentOrder create(final ShipmentOrder aggregate) {
+    final ShipmentOrderJpaEntity entity = ShipmentOrderJpaEntity.from(
+        aggregate,
+        id -> companyJpaRepository.findById(id)  // Resolver: UUID → CompanyEntity
+            .orElseThrow(() -> new NotFoundException("Company not found"))
+    );
+    final ShipmentOrderJpaEntity saved = jpaRepository.save(entity);
+    outboxService.saveEvents(aggregate.getDomainEvents());
+    return saved.toDomain();
+}
+
+// JpaEntity.from() method
+public static ShipmentOrderJpaEntity from(
+    final ShipmentOrder aggregate,
+    final Function<UUID, CompanyEntity> companyResolver  // Resolver function
+) {
+    final ShipmentOrderJpaEntity entity = new ShipmentOrderJpaEntity();
+    entity.setId(aggregate.getShipmentOrderId().value());
+    entity.setCompany(companyResolver.apply(aggregate.getCompanyId().value()));  // Resolve FK
+    // ...
+    return entity;
+}
+```
+
+**❌ WRONG - Direct entity creation:**
+```java
+public static ShipmentOrderJpaEntity from(final ShipmentOrder aggregate) {
+    final ShipmentOrderJpaEntity entity = new ShipmentOrderJpaEntity();
+    final CompanyEntity company = new CompanyEntity();  // Transient entity!
+    company.setId(aggregate.getCompanyId().value());
+    entity.setCompany(company);  // WILL FAIL: company is not persisted
+    return entity;
+}
+```
+
+**Key Points:**
+- ✅ Always use ID-only equals/hashCode for entities with bidirectional relationships
+- ❌ Never use Lombok @Data on JPA entities (use @Getter/@Setter selectively)
+- ✅ Use resolver functions to fetch existing entities for FK references
+- ❌ Never create transient entities and assign them as foreign keys
+
+**See Also:** `.squad/skills/e2e-testing-tms/SKILL.md` for E2E testing patterns
 
 ### CQRS Implementation
 

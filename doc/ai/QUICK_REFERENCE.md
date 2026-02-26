@@ -32,6 +32,92 @@
 
 ---
 
+## ⚠️ Common Pitfalls
+
+### JPA Entity Dangers
+
+```java
+// ❌ DANGER - Lombok @Data on entities with relationships
+@Entity
+@Data  // Generates equals/hashCode using ALL fields → circular references
+public class CompanyEntity {
+    @OneToMany(mappedBy = "company")
+    private Set<ShipmentOrderEntity> orders;  // Will cause StackOverflowError
+}
+
+// ✅ CORRECT - ID-only equals/hashCode
+@Entity
+@Getter
+@Setter
+public class CompanyEntity {
+    @Id
+    private UUID id;
+    
+    @OneToMany(mappedBy = "company")
+    private Set<ShipmentOrderEntity> orders;
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CompanyEntity that)) return false;
+        return id != null && id.equals(that.id);
+    }
+    
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+}
+
+// ❌ DANGER - Transient entity as FK reference
+public static ShipmentOrderJpaEntity from(ShipmentOrder aggregate) {
+    final CompanyEntity company = new CompanyEntity();  // NOT persisted!
+    company.setId(aggregate.getCompanyId().value());
+    entity.setCompany(company);  // TransientObjectException
+}
+
+// ✅ CORRECT - Use resolver function
+public static ShipmentOrderJpaEntity from(
+    ShipmentOrder aggregate,
+    Function<UUID, CompanyEntity> companyResolver  // Fetches persisted entity
+) {
+    entity.setCompany(companyResolver.apply(aggregate.getCompanyId().value()));
+}
+```
+
+### REST API Path Variables
+
+```java
+// ❌ WRONG - Path variable not in method signature
+@RestController
+@RequestMapping("companies/{companyId}/agreements")
+public class CreateAgreementController {
+    @PostMapping
+    public Object create(@RequestBody CreateAgreementDTO dto) {
+        // companyId is in URL but NOT ACCESSIBLE!
+    }
+}
+
+// ✅ CORRECT - All path variables in method signature
+@RestController
+@RequestMapping("companies/{companyId}/agreements")
+public class CreateAgreementController {
+    @PostMapping
+    public Object create(@PathVariable UUID companyId,  // Must be here
+                        @RequestBody CreateAgreementDTO dto) {
+        // companyId now accessible
+    }
+    
+    @GetMapping("/{agreementId}")
+    public Object getById(@PathVariable UUID companyId,    // Both
+                         @PathVariable UUID agreementId) {  // required
+        // ...
+    }
+}
+```
+
+---
+
 ## Code Snippets
 
 ### Value Objects (Records)

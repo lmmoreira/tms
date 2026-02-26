@@ -20,13 +20,14 @@ CREATE something new?
 ├─ Controller? → Use "Essential Patterns #3" below + /doc/ai/prompts/new-controller.md
 ├─ Value Object? → See /doc/ai/prompts/value-objects.md
 ├─ Event Listener? → Use "Essential Patterns #6" below + /doc/ai/prompts/new-event-listener.md
-├─ Integration Test? → See /doc/ai/INTEGRATION_TESTS.md
+├─ Test Infrastructure? → See "Testing Approach" section + .squad/skills/test-infrastructure-patterns/SKILL.md
+├─ Integration Test? → See "Testing Approach" section + /doc/ai/INTEGRATION_TESTS.md
 ├─ Database Migration? → See "Database Migrations" section + /doc/ai/prompts/new-migration.md
 ├─ HTTP Request File? → See /doc/ai/prompts/http-requests.md
 ├─ Eventual Consistency? → See /doc/ai/prompts/eventual-consistency.md
 ├─ Module? → See /doc/ai/prompts/new-module.md
-├─ Test Data Builder? → See /doc/ai/prompts/test-data-builders.md + /doc/ai/TEST_STRUCTURE.md
-├─ Fake Repository? → See /doc/ai/prompts/fake-repositories.md + /doc/ai/TEST_STRUCTURE.md
+├─ Test Data Builder? → See "Testing Approach" section + .squad/skills/test-infrastructure-patterns/SKILL.md
+├─ Fake Repository? → See "Testing Approach" section + .squad/skills/test-infrastructure-patterns/SKILL.md
 └─ ArchUnit Test? → See /doc/ai/ARCHUNIT_GUIDELINES.md + /doc/ai/ARCHUNIT_TEST_CATALOG.md
 
 UNDERSTAND a pattern?
@@ -60,6 +61,7 @@ Squad has extracted reusable patterns as skills. Reference these before implemen
 | `test-data-builder-pattern` | Creating test data with variations | 🟡 Low |
 | `immutable-aggregate-update` | Updating aggregates | 🟢 High |
 | `archunit-condition-reuse` | Writing ArchUnit tests | 🟡 Medium |
+| `test-infrastructure-patterns` | Building complete test infrastructure for entities | 🟢 High |
 
 **Location:** `.squad/skills/{name}/SKILL.md`
 
@@ -619,28 +621,148 @@ docs(ai): update architecture guide
 
 ## Testing Approach
 
-**Domain Tests:** Pure unit tests, no Spring context
+### Mandatory Test Infrastructure for New Entities
+
+When creating a new entity, you MUST build test infrastructure BEFORE or alongside the entity:
+
+1. **Custom AssertJ Assertions** — Domain-aware fluent validation
+   - Pattern: Extend `AbstractAssert<T>`, static factory `assertThat{Entity}()`, fluent chainable methods
+   - Location: `src/test/java/br/com/logistics/tms/assertions/domain/{module}/{Entity}Assert.java`
+   - When: Entity has 5+ common assertion patterns
+   - Example: `assertThatCompany(company).hasName("Test").isActive()`
+
+2. **Test Data Builders** — Fluent builders with sensible defaults
+   - Pattern: Static factory `an{Entity}()`, fluent withers, `build()` calls domain factory
+   - Location: `src/test/java/br/com/logistics/tms/builders/domain/{module}/{Entity}Builder.java`
+   - When: 3+ parameters, used in 3+ tests
+   - Example: `anAgreement().withFrom(sourceId).withType(DELIVERS_WITH).build()`
+
+3. **Fake Repositories** — In-memory implementations for unit tests
+   - Pattern: HashMap storage, implements repository interface, NO Spring dependencies
+   - Location: `src/test/java/br/com/logistics/tms/{module}/application/repositories/Fake{Entity}Repository.java`
+   - When: Unit testing use cases without database
+   - Example: `FakeCompanyRepository` with query methods and test helpers
+
+4. **Integration Fixtures** — Encapsulate REST calls + validation
+   - Pattern: MockMvc + ObjectMapper, methods return IDs, includes basic validation
+   - Location: `src/test/java/br/com/logistics/tms/integration/fixtures/{Entity}IntegrationFixture.java`
+   - When: Same REST call pattern in 3+ integration tests
+   - Example: `fixture.createAgreement(sourceId, destId) → agreementId`
+
+### Unit Test Requirements
+
+**Domain/Use Case Tests:**
+- ❌ NO Spring context (`@SpringBootTest`) — pure JUnit
+- ✅ Use fake repositories (in-memory) instead of Mockito mocks
+- ✅ Use builders for test data creation
+- ✅ Use custom assertions for verification
+- ✅ Test domain logic ONLY — no database, no HTTP
+
+**Example:**
 ```java
-@Test
-void shouldCreateCompany() {
-    Company company = Company.createCompany("Test", "12345678901234", types, config);
-    assertNotNull(company.getCompanyId());
+class CreateAgreementUseCaseTest {
+    private FakeCompanyRepository companyRepository;
+    private CreateAgreementUseCase useCase;
+
+    @BeforeEach
+    void setUp() {
+        companyRepository = new FakeCompanyRepository();
+        useCase = new CreateAgreementUseCase(companyRepository);
+    }
+
+    @Test
+    void shouldCreateAgreement() {
+        final Company source = anCompany().withName("Shoppe").build();
+        final Company dest = anCompany().withName("Loggi").build();
+        companyRepository.save(source);
+        companyRepository.save(dest);
+
+        final var output = useCase.execute(new Input(
+            source.getCompanyId().value(),
+            dest.getCompanyId().value(),
+            AgreementType.DELIVERS_WITH,
+            Map.of("discount", 10)
+        ));
+
+        final Company updated = companyRepository.findById(source.getCompanyId()).get();
+        assertThatCompany(updated)
+            .hasAgreementsCount(1);
+    }
 }
 ```
 
-**Integration Tests:** Use Testcontainers for PostgreSQL + RabbitMQ
+### Integration Test Requirements
+
+**Story-Driven Tests:**
+- ✅ One test = complete business flow (create → update → delete → verify)
+- ✅ Use fixtures to encapsulate REST operations
+- ✅ Verify at database level (JPA repositories + custom assertions)
+- ✅ Test realistic scenarios with meaningful names
+- ❌ NO layer tests (testing controllers/repositories in isolation)
+- ❌ NO technical tests without business context
+
+**Example:**
 ```java
 @SpringBootTest
+@AutoConfigureMockMvc
 @Testcontainers
-class CreateCompanyIntegrationTest {
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:latest");
+class CompanyAgreementStoryTest extends AbstractIntegrationTest {
+
+    @Test
+    @DisplayName("Complete agreement lifecycle: create → update → verify → delete")
+    void completeAgreementLifecycle() {
+        // Part 1: Setup companies
+        final UUID shoppeId = companyFixture.createCompany("Shoppe", "12345678901234");
+        final UUID loggiId = companyFixture.createCompany("Loggi", "98765432109876");
+
+        // Part 2: Create agreement
+        final UUID agreementId = agreementFixture.createAgreement(
+            shoppeId, loggiId, "DELIVERS_WITH", Map.of("discount", 10)
+        );
+
+        // Part 3: Verify persistence
+        final Company company = companyJpaRepository.findById(shoppeId).map(CompanyEntity::toCompany).get();
+        assertThatCompany(company)
+            .hasAgreementsCount(1);
+
+        // Part 4: Update agreement
+        agreementFixture.updateAgreement(agreementId, Map.of("discount", 15));
+
+        // Part 5: Verify update
+        final Company updated = companyJpaRepository.findById(shoppeId).map(CompanyEntity::toCompany).get();
+        final Agreement agreement = updated.getAgreements().iterator().next();
+        assertThatAgreement(agreement)
+            .hasConfigurationEntry("discount", 15);
+
+        // Part 6: Delete agreement
+        agreementFixture.deleteAgreement(agreementId);
+
+        // Part 7: Verify deletion
+        final Company final = companyJpaRepository.findById(shoppeId).map(CompanyEntity::toCompany).get();
+        assertThatCompany(final)
+            .hasAgreementsCount(0);
+    }
 }
 ```
 
-**Strategy:**
-- ✅ Many unit tests (domain logic)
-- ✅ Broad integration tests (full flows)
+### Anti-Patterns (DO NOT DO)
+
+❌ **Don't use Mockito for repositories** — Use fake implementations instead  
+❌ **Don't inline test data creation** — Use builders  
+❌ **Don't use plain AssertJ for domain objects** — Use custom assertions  
+❌ **Don't mix multiple scenarios in one integration test** — One story per test  
+❌ **Don't skip database verification in integration tests** — Always verify persistence  
+❌ **Don't use Spring context in use case tests** — Pure unit tests only  
+❌ **Don't test layers in isolation** — Integration tests must have business context
+
+### Test Strategy Summary
+
+- ✅ Many unit tests (domain logic, fast)
+- ✅ Broad integration tests (full business flows)
+- ✅ Custom assertions + builders + fakes = readable, maintainable tests
+- ✅ Story-driven integration tests document behavior
+
+**Reference:** See `.squad/skills/test-infrastructure-patterns/SKILL.md` for complete patterns and templates
 
 ---
 
