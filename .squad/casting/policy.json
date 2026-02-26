@@ -1,9 +1,0 @@
-{
-  "universes": {
-    "allowed": ["all"],
-    "capacity": {
-      "min": 6,
-      "max": 25
-    }
-  }
-}
